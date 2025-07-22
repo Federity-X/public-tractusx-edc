@@ -1,35 +1,13 @@
-## Summary
+## WHAT
 
-TODO: Briefly describe the PR and any important features or changes it introduces.
+_Briefly describe what your PR changes, which features it adds/modifies._
 
-In the pull request, the following things need to be resolved/newly introduced:
+## WHY
 
-- [x] THE FIRST TASK NEEDS TO BE INSERTED HERE
-- [ ] THE SECOND TASK NEEDS TO BE INSERTED HERE.. and so on..
+_Briefly state why the change was necessary._
 
-N.B: All tasks needs to be checked before merging the pull request
+## FURTHER NOTES
 
-## Related Issue/Task
+_List other areas of code that have changed but are not necessarily linked to the main feature. This could be method signature changes, package declarations, bugs that were encountered and were fixed inline, etc._
 
-**Issue/Task**: [JIRA_TASK_ID](#REPLACE_WITH_JIRA_TASK_ID_URL) - REPLACE_WITH_JIRA_TASK_ID_TITLE
-
-## Type of Change
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] This change requires a documentation update
-
-## Testing Steps
-
-Describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
-
-## Checklist:
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented on my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
+Closes # <-- _insert Issue number if one exists_
