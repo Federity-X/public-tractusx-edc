@@ -11,7 +11,7 @@ N.B: All tasks needs to be checked before merging the pull request
 
 ## Related Issue/Task
 
-**Issue/Task**: [REPLACE_WITH_ODDO_ISSUE_ID](#REPLACE_WITH_ODDO_ISSUE_URL) - REPLACE_WITH_ODDO_ISSUE_TITLE
+**Issue/Task**: [JIRA_TASK_ID](#REPLACE_WITH_JIRA_TASK_ID_URL) - REPLACE_WITH_JIRA_TASK_ID_TITLE
 
 ## Type of Change
 
