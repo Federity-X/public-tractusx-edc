@@ -52,4 +52,7 @@ tasks.withType<ShadowJar> {
 
 application {
     mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
+    applicationDefaultJvmArgs = listOf(
+        "-Dedc.fs.config=${project.rootDir}/dataspaceconnector-configuration.properties"
+    )
 }

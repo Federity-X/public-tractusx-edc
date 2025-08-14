@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  postgresql:
+    image: postgres:15
+    container_name: tractusx-edc-postgres
+    environment:
+      POSTGRES_DB: edc
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d edc"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: tractusx-edc-vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    command: ["vault", "server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
