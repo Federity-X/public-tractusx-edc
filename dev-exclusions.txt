@@ -1,0 +1,23 @@
+# TruffleHog path exclusions for development files
+# These paths contain legitimate development credentials and configurations
+
+# Development configuration files
+dataspaceconnector-configuration.properties
+docker-compose.yml
+edc-demo.sh
+dev-env.sh
+
+# Build artifacts and git objects
+.git/
+build/
+*/build/
+target/
+*/target/
+
+# Documentation with development examples
+MANUAL_TESTING_GUIDE.md
+TRUFFLEHOG_FALSE_POSITIVES.md
+
+# Helm charts and templates (contain template variables, not real secrets)
+charts/
+edc-tests/deployment/src/main/resources/helm/

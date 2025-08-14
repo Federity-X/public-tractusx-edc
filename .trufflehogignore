@@ -1,0 +1,23 @@
+# TruffleHog ignore patterns for development-only JDBC URLs
+
+# These are legitimate development connection strings, not actual secrets
+
+# Development configuration files
+
+dataspaceconnector-configuration.properties
+docker-compose.yml
+edc-demo.sh
+
+# Helm templates and values (contain templated JDBC URLs)
+
+charts/tractusx-connector/values.yaml
+charts/tractusx-connector/README.md
+edc-tests/deployment/src/main/resources/helm/tractusx-connector-test.yaml
+
+# Manual testing documentation
+
+MANUAL_TESTING_GUIDE.md
+
+# This document itself
+
+TRUFFLEHOG_FALSE_POSITIVES.md

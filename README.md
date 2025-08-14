@@ -54,25 +54,57 @@ Build Tractus-X EDC together with its Container Images
 ./gradlew dockerize
 ```
 
+### 🔧 Development Environment Setup
+
+The project uses a **two-script architecture** for secure development environment management:
+
+#### Quick Start
+
+```bash
+# 1. Start infrastructure (PostgreSQL, HashiCorp Vault)
+./setup-dev-env.sh
+
+# 2. Load development environment variables
+source dev-env.sh
+
+# 3. Run your EDC application
+./edc-demo.sh
+
+# 4. Stop infrastructure when done
+./stop-dev-env.sh
+```
+
+#### Script Responsibilities
+
+- **`setup-dev-env.sh`** - Starts Docker containers (PostgreSQL on port 5433, Vault on port 8200)
+- **`dev-env.sh`** - Provides environment variables for database connection and credentials
+- **`edc-demo.sh`** - Runs the EDC connector using the environment variables
+- **`stop-dev-env.sh`** - Stops and cleans up Docker containers
+
+This architecture ensures credentials are managed as environment variables rather than hardcoded in scripts, improving security and resolving TruffleHog false positives.
+
 ## ⚠️ Security Notice for Development Setup
 
-This repository contains development and testing files with **hardcoded credentials** that should **NEVER be used in production**:
+This repository contains development and testing files with **development credentials** that should **NEVER be used in production**:
 
+- `dev-env.sh` - Contains development environment variables and credentials
 - `docker-compose.yml` - Contains development database passwords and Vault tokens
 - `dataspaceconnector-configuration.properties` - Contains development API keys and credentials
-- `setup-dev-env.sh`, `edc-demo.sh`, `test-endpoints.sh` - Scripts with development credentials
+- `edc-demo.sh`, `test-endpoints.sh` - Scripts that use development credentials
 - Various test files and configurations
 
 These credentials (like `password`, `root`) are **intentionally weak** and designed only for local development environments.
 
+**Development Architecture**: The project separates infrastructure setup (`setup-dev-env.sh`) from credential management (`dev-env.sh`) to improve security and resolve CI security scan issues.
+
 **For production deployments:**
 
 - Use strong, randomly generated passwords and tokens
-- Store credentials in secure secret management systems
+- Store credentials in secure secret management systems (HashiCorp Vault, Kubernetes Secrets, etc.)
 - Follow the production deployment guides in the [documentation](docs/)
 - Never commit real credentials to version control
 
-**Note**: If CI security scans fail due to development JDBC URLs being flagged as secrets, see [TRUFFLEHOG_FALSE_POSITIVES.md](TRUFFLEHOG_FALSE_POSITIVES.md) for the solution.
+**Note**: If CI security scans fail due to development JDBC URLs being flagged as secrets, see [TRUFFLEHOG_FALSE_POSITIVES.md](TRUFFLEHOG_FALSE_POSITIVES.md) for comprehensive solutions.
 
 ## Known Incompatibilities
 

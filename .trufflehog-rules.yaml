@@ -1,0 +1,91 @@
+# Custom TruffleHog Rules for Tractus-X EDC
+# This file demonstrates advanced rule-based filtering for the EDC project
+
+# Global configuration
+version: "3.0"
+allow_verification_overlap: true
+
+# Custom detectors and exclusions
+rules:
+  # Exclude development JDBC URLs with context awareness
+  - id: dev-jdbc-exclude
+    description: "Exclude development JDBC URLs with DEV-ONLY markers"
+    pattern: 'jdbc:(postgresql|mysql)://localhost:(5433|3307).*'
+    keywords:
+      - "DEV-ONLY"
+      - "development"
+      - "localhost"
+      - "edc-demo"
+    paths:
+      - "**/*demo*.sh"
+      - "**/*development*"
+      - "**/docker-compose*.yml"
+    action: exclude
+    confidence: high
+
+  # Alert on production-like database URLs
+  - id: prod-jdbc-detect
+    description: "Detect potentially production database URLs"
+    pattern: 'jdbc:(postgresql|mysql)://(?!localhost)[\w\.-]+:\d+/\w+'
+    exclude_keywords:
+      - "example"
+      - "test"
+      - "localhost"
+    action: alert
+    confidence: high
+
+  # Exclude test data and mock credentials
+  - id: test-data-exclude
+    description: "Exclude test data and mock credentials"
+    patterns:
+      - 'password.*test'
+      - 'secret.*mock'
+      - 'token.*fake'
+    paths:
+      - "**/test/**"
+      - "**/*test*.properties"
+      - "**/samples/**"
+    action: exclude
+    confidence: medium
+
+  # Enhanced detection for real AWS keys (not test/mock)
+  - id: aws-key-enhanced
+    description: "Detect real AWS credentials with context"
+    pattern: 'AKIA[0-9A-Z]{16}'
+    exclude_keywords:
+      - "AKIAIOSFODNN7EXAMPLE"  # AWS documentation example
+      - "test"
+      - "mock"
+      - "fake"
+      - "example"
+    action: alert
+    confidence: very_high
+
+# Path-based exclusions
+exclude_paths:
+  - "build/**"
+  - "**/target/**"
+  - "**/.gradle/**"
+  - "**/node_modules/**"
+  - "**/*.jar"
+  - "**/*.war"
+  - "**/allure-results/**"
+
+# File type exclusions  
+exclude_extensions:
+  - ".class"
+  - ".jar"
+  - ".war"
+  - ".zip"
+  - ".tar.gz"
+
+# Entropy thresholds
+entropy:
+  base64: 4.5
+  hex: 3.0
+  
+# Additional settings
+settings:
+  max_file_size: "10MB"
+  timeout: "30s"
+  verify_timeout: "10s"
