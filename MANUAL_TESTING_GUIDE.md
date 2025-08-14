@@ -4,6 +4,18 @@ This guide provides step-by-step instructions for manually testing your Tractus-
 
 ---
 
+## ⚠️ Security Notice
+
+**This guide uses development credentials that should NEVER be used in production:**
+
+- API Key: `password`
+- Database password: `password`
+- Vault root token: `root`
+
+These are intentionally weak credentials for local development only. In production, use strong, randomly generated credentials stored securely.
+
+---
+
 ## 📋 Prerequisites
 
 Before starting, ensure:

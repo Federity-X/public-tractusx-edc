@@ -5,7 +5,7 @@
 
 set -e
 
-API_KEY="password"
+API_KEY="password"  # DEV-ONLY: This is a development credential, not for production
 MANAGEMENT_URL="http://localhost:8181/management"
 PROTOCOL_URL="http://localhost:8080/api"
 

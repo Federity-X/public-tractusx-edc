@@ -1,0 +1,20 @@
+# TruffleHog ignore file for development secrets
+# These are known development/testing credentials and not real secrets
+
+# Local development environment files
+docker-compose.yml
+dataspaceconnector-configuration.properties
+setup-dev-env.sh
+stop-dev-env.sh
+edc-demo.sh
+test-endpoints.sh
+
+# Documentation files containing example credentials
+API_REFERENCE.md
+MANUAL_TESTING_GUIDE.md
+README.md
+
+# Test configuration files that contain development credentials
+edc-tests/deployment/src/main/resources/helm/tractusx-connector-test.yaml
+edc-tests/deployment/src/main/resources/helm/tractusx-connector-memory-test.yaml
+edc-tests/e2e-fixtures/src/testFixtures/java/org/eclipse/tractusx/edc/tests/runtimes/PostgresExtension.java

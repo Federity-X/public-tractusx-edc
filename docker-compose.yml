@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: edc
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: password # DEV-ONLY: This is a development credential, not for production
     ports:
       - "5433:5432"
     volumes:
@@ -21,7 +21,7 @@ services:
     image: hashicorp/vault:1.15
     container_name: tractusx-edc-vault
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_ROOT_TOKEN_ID: root # DEV-ONLY: This is a development token, not for production
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     ports:
       - "8200:8200"

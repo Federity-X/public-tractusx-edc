@@ -54,6 +54,24 @@ Build Tractus-X EDC together with its Container Images
 ./gradlew dockerize
 ```
 
+## ⚠️ Security Notice for Development Setup
+
+This repository contains development and testing files with **hardcoded credentials** that should **NEVER be used in production**:
+
+- `docker-compose.yml` - Contains development database passwords and Vault tokens
+- `dataspaceconnector-configuration.properties` - Contains development API keys and credentials
+- `setup-dev-env.sh`, `edc-demo.sh`, `test-endpoints.sh` - Scripts with development credentials
+- Various test files and configurations
+
+These credentials (like `password`, `root`) are **intentionally weak** and designed only for local development environments.
+
+**For production deployments:**
+
+- Use strong, randomly generated passwords and tokens
+- Store credentials in secure secret management systems
+- Follow the production deployment guides in the [documentation](docs/)
+- Never commit real credentials to version control
+
 ## Known Incompatibilities
 
 - Hashicorp Vault 1.18.1 is not compatible with the EDC due to a bug in the vault concerning path handling
@@ -69,17 +87,10 @@ See [LICENSE](https://github.com/eclipse-tractusx/tractusx-edc/blob/main/LICENSE
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
 [contributors-shield]: https://img.shields.io/github/contributors/eclipse-tractusx/tractusx-edc.svg?style=for-the-badge
-
 [contributors-url]: https://github.com/eclipse-tractusx/tractusx-edc/graphs/contributors
-
 [stars-shield]: https://img.shields.io/github/stars/eclipse-tractusx/tractusx-edc.svg?style=for-the-badge
-
 [stars-url]: https://github.com/eclipse-tractusx/tractusx-edc/stargazers
-
 [license-shield]: https://img.shields.io/github/license/eclipse-tractusx/tractusx-edc.svg?style=for-the-badge
-
 [license-url]: https://github.com/eclipse-tractusx/tractusx-edc/blob/main/LICENSE
-
 [release-shield]: https://img.shields.io/github/v/release/eclipse-tractusx/tractusx-edc.svg?style=for-the-badge
-
 [release-url]: https://github.com/eclipse-tractusx/tractusx-edc/releases
