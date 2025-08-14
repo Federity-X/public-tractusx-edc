@@ -72,6 +72,8 @@ These credentials (like `password`, `root`) are **intentionally weak** and desig
 - Follow the production deployment guides in the [documentation](docs/)
 - Never commit real credentials to version control
 
+**Note**: If CI security scans fail due to development JDBC URLs being flagged as secrets, see [TRUFFLEHOG_FALSE_POSITIVES.md](TRUFFLEHOG_FALSE_POSITIVES.md) for the solution.
+
 ## Known Incompatibilities
 
 - Hashicorp Vault 1.18.1 is not compatible with the EDC due to a bug in the vault concerning path handling
