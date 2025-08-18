@@ -1,9 +1,9 @@
 # Tractus-X EDC
 
-The Tractus-X EDC repository creates runnable applications out of EDC extensions from the 
+The Tractus-X EDC repository creates runnable applications out of EDC extensions from the
 [EDC Connector](https://github.com/eclipse-edc/Connector) platform.
 
-When running an EDC connector from the Tractus-X EDC repository there are three different setups to choose from. They 
+When running an EDC connector from the Tractus-X EDC repository there are three different setups to choose from. They
 only vary by using different extensions for
 
 - Resolving of Connector-Identities
@@ -21,7 +21,7 @@ The three supported setups are.
     - [Control Plane](../edc-controlplane/edc-runtime-memory/README.md)
     - [Data Plane](../edc-dataplane/edc-dataplane-base/README.md)
 - Setup 2: PostgreSQL & HashiCorp Vault
-  - PostgreSQL persistence 
+  - PostgreSQL persistence
   - HashiCorp Vault
   - Planes:
     - [Control Plane](../edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/README.md)
@@ -32,6 +32,7 @@ The three supported setups are.
 - [MXD: Minimum viable tractusX Dataspace](https://github.com/eclipse-tractusx/tutorial-resources/tree/main/mxd)
 - [Migration guides](migration)
 - [Development](development/README.md)
+- [**Creating Extensions Guide**](EXTENSION_CREATION_GUIDE.md) - Step-by-step guide for creating new extensions
 - [Application: Control Plane](../edc-controlplane)
 - [Application: Data Plane](../edc-dataplane)
 - [Extension: Business Partner Numbers validation](../edc-extensions/bpn-validation/README.md)
