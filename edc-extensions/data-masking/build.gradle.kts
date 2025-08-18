@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2025 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -19,26 +19,27 @@
 
 plugins {
     `java-library`
-    id("application")
-    alias(libs.plugins.shadow)
+    `maven-publish`
 }
 
 dependencies {
-    runtimeOnly(project(":edc-controlplane:edc-controlplane-base"))
-    runtimeOnly(project(":edc-extensions:data-masking"))
-
+    implementation(project(":spi:core-spi"))
     implementation(project(":core:core-utils"))
+    
+    // Event and monitoring for audit logging
     implementation(libs.edc.spi.core)
-
+    
+    // Control plane for Asset domain objects
+    implementation(libs.edc.spi.controlplane)
+    
+    // Transform and JSON-LD dependencies
+    implementation(libs.edc.spi.transform)
+    implementation(libs.edc.spi.jsonld)
+    implementation(libs.edc.lib.transform)
+    
+    // JSON processing for data transformation
+    implementation(libs.jakartaJson)
+    
+    // Test dependencies
     testImplementation(libs.edc.junit)
-    testImplementation(libs.edc.lib.boot)
-}
-
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    mergeServiceFiles()
-    archiveFileName.set("${project.name}.jar")
-}
-
-application {
-    mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
 }

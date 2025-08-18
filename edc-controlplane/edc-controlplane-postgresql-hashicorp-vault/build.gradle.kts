@@ -33,6 +33,7 @@ configurations.all {
 
 dependencies {
     runtimeOnly(project(":edc-controlplane:edc-controlplane-base"))
+    runtimeOnly(project(":edc-extensions:data-masking"))
 
     runtimeOnly(libs.edc.bom.controlplane.feature.sql)
     runtimeOnly(libs.edc.bom.federatedcatalog.feature.sql)

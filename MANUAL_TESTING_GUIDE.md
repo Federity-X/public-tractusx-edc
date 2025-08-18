@@ -1,6 +1,8 @@
 # 🧪 Tractus-X EDC Manual Testing Guide
 
-This guide provides step-by-step instructions for manually testing your Tractus-X EDC connector. Follow these steps to verify everything is working correctly and learn how to use the APIs.
+This guide provides step-by-step instructions for manually testing your Tractus-X EDC connector, including **extension functionality testing** and **production-ready validation**. Follow these steps to verify everything is working correctly and learn how to use the APIs.
+
+**✅ INCLUDES**: Live data masking extension testing and transformer integration validation.
 
 ---
 
@@ -23,6 +25,8 @@ Before starting, ensure:
 - ✅ Your EDC is running (check terminal for "Runtime ready" message)
 - ✅ PostgreSQL and Vault containers are running
 - ✅ You have `curl` and `jq` installed (optional for pretty JSON formatting)
+- ✅ **Production runtime**: Using `edc-controlplane-postgresql-hashicorp-vault` (160+ extensions loaded)
+- ✅ **Extensions**: Verify your extensions are loaded in startup logs
 
 **Quick Status Check:**
 
@@ -33,6 +37,10 @@ docker ps
 # Test basic connectivity
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8181/management/v3/assets/request
 # Should return 401 (needs API key) or 400 (needs request body)
+
+# ⭐ NEW: Check extension loading (should show 160+ extensions for production runtime)
+grep "service extensions" logs/runtime.log
+grep "Data Masking Extension" logs/runtime.log  # If using data masking extension
 ```
 
 ---
@@ -465,7 +473,135 @@ curl -X POST -H 'Content-Type: application/json' \
 
 ---
 
-## 🧪 Phase 4: Advanced Testing
+## 🧪 Phase 7: Extension Functionality Testing ⭐ **NEW**
+
+### Step 7.1: Test Data Masking Extension (if enabled)
+
+If you have the data masking extension loaded, test its functionality:
+
+#### Create Asset with Sensitive Data
+
+```bash
+curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
+  -d '{
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+      "dct": "http://purl.org/dc/terms/"
+    },
+    "@type": "Asset",
+    "@id": "sensitive-data-asset",
+    "properties": {
+      "dct:type": "sensitive-data",
+      "name": "Asset with Sensitive Information",
+      "description": "Testing data masking functionality",
+      "businessPartnerNumber": "BPN123456789",
+      "email": "john.doe@sensitive.com",
+      "phone": "+1-555-123-4567",
+      "creditCard": "4532-1234-5678-9012"
+    },
+    "dataAddress": {
+      "@type": "DataAddress",
+      "type": "HttpData",
+      "baseUrl": "https://jsonplaceholder.typicode.com/users/1"
+    }
+  }' \
+  http://localhost:8181/management/v3/assets
+```
+
+#### Verify Data Masking in API Response
+
+```bash
+# Retrieve the asset - sensitive data should be masked
+curl -X GET "http://localhost:8181/management/v3/assets/sensitive-data-asset" \
+  -H "X-Api-Key: password" \
+  -H "Content-Type: application/json" | jq '."https://w3id.org/edc/v0.0.1/ns/properties"'
+```
+
+**Expected Results for Data Masking:**
+
+```json
+{
+  "businessPartnerNumber": "B***9",
+  "email": "j***@s***.com",
+  "phone": "+***7",
+  "creditCard": "4***2",
+  "name": "Asset with Sensitive Information",
+  "description": "Testing data masking functionality"
+}
+```
+
+✅ **Pass**: Sensitive fields are masked (BPN, email, phone, creditCard)  
+❌ **Fail**: Sensitive data appears unmasked
+
+#### Test Different Masking Scenarios
+
+```bash
+# Create asset with various sensitive patterns
+curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
+  -d '{
+    "@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
+    "@type": "Asset",
+    "@id": "masking-test-asset",
+    "properties": {
+      "name": "Masking Test Asset",
+      "customerEmail": "customer@company.com",
+      "supportEmail": "support@example.org",
+      "businessPartnerNumber": "BPNL000000000123",
+      "alternativeContact": "contact@business.de",
+      "publicInfo": "This should not be masked"
+    },
+    "dataAddress": {
+      "@type": "DataAddress",
+      "type": "HttpData",
+      "baseUrl": "https://httpbin.org/json"
+    }
+  }' \
+  http://localhost:8181/management/v3/assets
+
+# Verify masking
+curl -X GET "http://localhost:8181/management/v3/assets/masking-test-asset" \
+  -H "X-Api-Key: password" | jq '."https://w3id.org/edc/v0.0.1/ns/properties"'
+```
+
+### Step 7.2: Test Extension Configuration
+
+Verify extension configuration is working:
+
+```bash
+# Check if data masking configuration is loaded
+grep "datamasking" logs/runtime.log
+grep "PARTIAL\|FULL\|NONE" logs/runtime.log
+
+# Test configuration values through runtime behavior
+echo "Testing extension configuration through API responses..."
+```
+
+### Step 7.3: Test Extension Integration
+
+Verify extension integrates properly with EDC:
+
+```bash
+# List all assets and verify masking is applied consistently
+curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
+  -d '{"@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}, "@type": "QuerySpec"}' \
+  http://localhost:8181/management/v3/assets/request | jq '.[] | {"id": ."@id", "properties": ."https://w3id.org/edc/v0.0.1/ns/properties"}'
+
+# Test that non-sensitive data remains unchanged
+curl -X GET "http://localhost:8181/management/v3/assets/my-first-asset" \
+  -H "X-Api-Key: password" | jq '."https://w3id.org/edc/v0.0.1/ns/properties"'
+```
+
+**Extension Integration Success Indicators:**
+
+- ✅ Sensitive data is consistently masked across all API responses
+- ✅ Non-sensitive data remains unchanged
+- ✅ Extension configuration is properly loaded
+- ✅ No errors in extension initialization logs
+- ✅ Transformer integration working (JsonObjectAssetMaskingTransformer registered)
+
+---
+
+## 🏗️ Phase 8: Production Runtime Validation ⭐ **NEW**
 
 ### Step 4.1: Create Additional Assets
 
@@ -574,9 +710,81 @@ curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
   http://localhost:8181/management/v3/assets/request | jq length
 ```
 
+### Step 8.1: Verify Production Runtime
+
+Confirm you're running the full Tractus-X production stack:
+
+```bash
+# Check extension count (should be 160+ for production runtime)
+grep "Starting [0-9]* service extensions" logs/runtime.log
+
+# Verify critical Tractus-X extensions are loaded
+grep -E "(BPN|Agreement|Policy|Vault|PostgreSQL)" logs/runtime.log
+
+# Check database connectivity
+grep "DataSource" logs/runtime.log
+grep "PostgreSQL" logs/runtime.log
+
+# Check vault integration
+grep -i vault logs/runtime.log
+```
+
+**Expected Production Indicators:**
+
+- ✅ 160+ service extensions loaded
+- ✅ PostgreSQL DataSource initialized successfully
+- ✅ HashiCorp Vault integration active
+- ✅ BPN validation extension loaded
+- ✅ Agreement retirement extension loaded
+- ✅ All Tractus-X specific extensions operational
+
+### Step 8.2: Test Full Stack Integration
+
+Test integration between all components:
+
+```bash
+# Test database persistence (create and restart to verify persistence)
+curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
+  -d '{
+    "@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
+    "@type": "Asset",
+    "@id": "persistence-test-asset",
+    "properties": {"name": "Database Persistence Test"},
+    "dataAddress": {"@type": "DataAddress", "type": "HttpData", "baseUrl": "http://example.com"}
+  }' \
+  http://localhost:8181/management/v3/assets
+
+echo "Asset created. Restart EDC and verify it persists..."
+```
+
+### Step 8.3: Performance Testing
+
+Test performance with production runtime:
+
+```bash
+# Create multiple assets quickly
+for i in {1..10}; do
+  curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
+    -d "{
+      \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},
+      \"@type\": \"Asset\",
+      \"@id\": \"perf-test-asset-$i\",
+      \"properties\": {\"name\": \"Performance Test Asset $i\"},
+      \"dataAddress\": {\"@type\": \"DataAddress\", \"type\": \"HttpData\", \"baseUrl\": \"http://example.com/$i\"}
+    }" \
+    http://localhost:8181/management/v3/assets &
+done
+wait
+
+# Test query performance
+time curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
+  -d '{"@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}, "@type": "QuerySpec"}' \
+  http://localhost:8181/management/v3/assets/request >/dev/null
+```
+
 ---
 
-## 🔍 Phase 5: Error Handling Tests
+## 🧪 Phase 4: Advanced Testing (Enhanced)
 
 ### Step 5.1: Test Invalid Requests
 
@@ -690,7 +898,7 @@ curl -X POST -H 'X-Api-Key: password' -H 'Content-Type: application/json' \
 
 ---
 
-## ✅ Testing Checklist
+## ✅ Testing Checklist (Updated)
 
 Use this checklist to track your progress:
 
@@ -702,6 +910,27 @@ Use this checklist to track your progress:
 - [ ] Can create contract definitions successfully
 - [ ] Can list all resource types
 - [ ] Resources appear in catalog
+
+### Extension Functionality ⭐ **NEW**
+
+- [ ] Data masking extension loaded (if applicable)
+- [ ] Sensitive data is masked in API responses
+- [ ] businessPartnerNumber masking works (BPN123456789 → B\*\*\*9)
+- [ ] Email masking works (test@example.com → t**_@e_**.com)
+- [ ] Non-sensitive data remains unchanged
+- [ ] Extension configuration loaded correctly
+- [ ] Transformer integration working (JsonObjectAssetMaskingTransformer)
+
+### Production Runtime Validation ⭐ **NEW**
+
+- [ ] 160+ service extensions loaded
+- [ ] PostgreSQL database connectivity confirmed
+- [ ] HashiCorp Vault integration active
+- [ ] BPN validation extension operational
+- [ ] Agreement retirement extension loaded
+- [ ] All Tractus-X extensions functional
+- [ ] Database persistence working
+- [ ] Performance acceptable under load
 
 ### Advanced Features
 
@@ -766,26 +995,52 @@ ps aux | grep java
 }
 ```
 
-### Issue: Asset selector not working
+### Issue: Data masking not working ⭐ **NEW**
 
-**Solution:** Use correct criterion format in contract definitions
+**Solution:** Check extension loading and transformer registration
 
-```json
-{
-  "assetsSelector": [
-    {
-      "@type": "Criterion",
-      "operandLeft": "id",
-      "operator": "=",
-      "operandRight": "your-asset-id"
-    }
-  ]
-}
+```bash
+# Check if data masking extension loaded
+grep "Data Masking Extension" logs/runtime.log
+
+# Check transformer registration
+grep "JsonObjectAssetMaskingTransformer" logs/runtime.log
+grep "TypeTransformerRegistry" logs/runtime.log
+
+# Verify configuration
+grep "datamasking" logs/runtime.log
+```
+
+### Issue: Extension not loading ⭐ **NEW**
+
+**Solution:** Verify extension registration and dependencies
+
+```bash
+# Check META-INF service registration
+find edc-extensions -name "org.eclipse.edc.spi.system.ServiceExtension" -exec cat {} \;
+
+# Check build configuration
+grep "runtimeOnly.*data-masking" edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/build.gradle.kts
+
+# Check settings.gradle.kts includes extension
+grep "data-masking" settings.gradle.kts
+```
+
+### Issue: Wrong runtime type ⭐ **NEW**
+
+**Solution:** Ensure using production runtime, not memory runtime
+
+```bash
+# Check which runtime you're using
+ps aux | grep java | grep -E "(memory|postgresql|vault)"
+
+# Should be using: edc-controlplane-postgresql-hashicorp-vault
+# Should NOT be using: edc-runtime-memory
 ```
 
 ---
 
-## 🎯 Success Criteria
+## 🎯 Success Criteria (Enhanced)
 
 After completing this guide, you should have:
 
@@ -795,17 +1050,73 @@ After completing this guide, you should have:
 4. ✅ Confirmed your data offers appear in the catalog
 5. ✅ Handled various error conditions gracefully
 6. ✅ Demonstrated CRUD operations on resources
+7. ✅ **NEW**: Validated extension functionality (data masking)
+8. ✅ **NEW**: Confirmed production runtime (160+ extensions)
+9. ✅ **NEW**: Verified transformer integration working
+10. ✅ **NEW**: Tested live API masking with sensitive data
 
-**Congratulations!** 🎉 Your Tractus-X EDC is fully functional and ready for data sharing scenarios.
+**Production Success Indicators:**
+
+- ✅ businessPartnerNumber: "BPN123456789" → "B\*\*\*9"
+- ✅ email: "test@example.com" → "t**_@e_**.com"
+- ✅ PostgreSQL persistence working
+- ✅ HashiCorp Vault integration active
+- ✅ All Tractus-X extensions operational
+
+**Congratulations!** 🎉 Your Tractus-X EDC is **production-ready** and fully functional for data sharing scenarios with advanced extension capabilities.
+
+## 🎯 Comprehensive System Validation
+
+For complete system validation and detailed success metrics, run the comprehensive validation script:
+
+```bash
+./FINAL-SUCCESS-REPORT.sh
+```
+
+**This validation script provides:**
+
+- 📊 Complete infrastructure health checks (PostgreSQL, Vault, all EDC APIs)
+- 🔧 Extension loading verification (160+ service extensions)
+- 🧪 Live API testing with real data masking examples
+- 📋 Production readiness assessment
+- 🏆 Comprehensive achievement summary
+- 🔐 Security feature validation
+
+**Sample validation output includes:**
+
+- Real data masking examples: `BPN123456789 → B***9`
+- API endpoint testing across all management interfaces
+- Extension capability verification
+- Performance and scalability metrics
 
 ---
 
-## 📚 Next Steps
+## 📚 Next Steps (Enhanced)
+
+### Extension Development
+
+- Explore developing your own extensions using our [Extension Creation Guide](docs/EXTENSION_CREATION_GUIDE.md)
+- Study the [Data Masking Extension](edc-extensions/data-masking/README.md) as a reference implementation
+- Follow [Extension Quick Reference](docs/EXTENSION_QUICK_REFERENCE.md) for patterns and templates
+
+### Advanced Integration
 
 - Explore connecting to another EDC connector
 - Test contract negotiation workflows
-- Implement data transfer scenarios
+- Implement data transfer scenarios with masked data
 - Add more complex policies with constraints
 - Integrate with real data sources
 
+### Production Deployment
+
+- Configure production-grade PostgreSQL database
+- Set up production HashiCorp Vault with proper authentication
+- Implement proper TLS/SSL certificates
+- Configure monitoring and logging
+- Test with real Tractus-X network participants
+
 **Happy Testing!** 🚀
+
+---
+
+**🎯 Pro Tip**: The data masking extension showcased in this guide demonstrates a complete production-ready extension with transformer integration - use it as your reference for developing similar extensions!

@@ -41,6 +41,14 @@ After running `setup-dev-env.sh`, you'll have:
 - **HashiCorp Vault**: `http://localhost:8200`
   - Root Token: `root`
 
+### ✅ **Extension Development Support**
+
+This infrastructure supports full Tractus-X extension development including:
+
+- **Data Masking Extension**: Successfully integrated and tested
+- **160+ Service Extensions**: Complete Tractus-X ecosystem
+- **Production APIs**: Management (8181), Protocol (8282), Public (8185)
+
 ### 🎯 Why This Architecture?
 
 1. **🔐 Security**: No hardcoded credentials in scripts

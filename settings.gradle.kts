@@ -65,6 +65,7 @@ include(":edc-extensions:cx-policy")
 include(":edc-extensions:dcp:tx-dcp")
 include(":edc-extensions:dcp:tx-dcp-sts-dim")
 include(":edc-extensions:data-flow-properties-provider")
+include(":edc-extensions:data-masking")
 include(":edc-extensions:validators:empty-asset-selector")
 
 include(":edc-extensions:agreements")
@@ -104,6 +105,7 @@ include(":edc-tests:runtime:iatp:runtime-memory-iatp-ih")
 include(":edc-tests:runtime:iatp:runtime-memory-sts")
 include(":edc-tests:runtime:mock-connector")
 include(":edc-tests:runtime:runtime-postgresql")
+include(":edc-tests:runtime-with-data-masking")
 
 // modules for controlplane artifacts
 include(":edc-controlplane")

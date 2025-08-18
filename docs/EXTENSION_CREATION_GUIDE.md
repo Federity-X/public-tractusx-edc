@@ -1,6 +1,15 @@
 # Creating an Extension in Tractus-X EDC
 
-This guide explains how to create a new extension in the Tractus-X Eclipse Dataspace Connector (EDC) project.
+T### Step 0: Choose the Right Runtime
+
+#### ✅ **For Tractus-X Production Extensions:**
+
+- **Use**: `edc-controlplane-postgresql-hashicorp-vault` for full compatibility
+- **Includes**: PostgreSQL persistence, Vault secrets, all Tractus-X extensions (160+)
+- **Required for**: BPN validation, agreement retirement, EDR index, data masking, etc.
+- **Example**: Data Masking Extension successfully integrated and tested
+
+#### For Development/Testing Only: explains how to create a new extension in the Tractus-X Eclipse Dataspace Connector (EDC) project.
 
 ## 📋 Prerequisites
 
@@ -8,6 +17,8 @@ This guide explains how to create a new extension in the Tractus-X Eclipse Datas
 - Gradle 8.x
 - Understanding of Eclipse EDC extension mechanism
 - Familiarity with dependency injection patterns
+- Docker (for production runtime testing)
+- Basic understanding of PostgreSQL and HashiCorp Vault (for full Tractus-X integration)
 
 ## 🏗️ Extension Structure Overview
 
@@ -38,6 +49,26 @@ edc-extensions/
 ```
 
 ## 🚀 Step-by-Step Creation Process
+
+### Step 0: Choose the Right Runtime
+
+#### For Tractus-X Production Extensions:
+
+- Use `edc-controlplane-postgresql-hashicorp-vault` for full compatibility
+- Includes: PostgreSQL persistence, Vault secrets, all Tractus-X extensions
+- Required for: BPN validation, agreement retirement, EDR index, etc.
+
+#### For Simple Development/Testing:
+
+- Use `edc-runtime-memory` for basic functionality
+- Limitations: No persistence, no secrets management, limited Tractus-X features
+
+#### Runtime Comparison:
+
+| Runtime                                     | Use Case            | Tractus-X Features | Infrastructure     |
+| ------------------------------------------- | ------------------- | ------------------ | ------------------ |
+| edc-runtime-memory                          | Development/Testing | Basic              | None               |
+| edc-controlplane-postgresql-hashicorp-vault | Production          | Full               | PostgreSQL + Vault |
 
 ### Step 1: Create Extension Directory Structure
 
@@ -102,6 +133,39 @@ dependencies {
     testImplementation(libs.assertj.core)
 }
 ```
+
+### Step 2.5: Infrastructure Setup (For Production Runtimes)
+
+**⚠️ Required for `edc-controlplane-postgresql-hashicorp-vault` runtime**
+
+#### Required Services:
+
+1. **PostgreSQL Database**:
+
+   ```bash
+   docker run --name edc-postgres \
+     -e POSTGRES_DB=edc \
+     -e POSTGRES_USER=edc \
+     -e POSTGRES_PASSWORD=password \
+     -p 5433:5432 -d postgres:13
+   ```
+
+2. **HashiCorp Vault**:
+
+   ```bash
+   docker run --name edc-vault \
+     --cap-add=IPC_LOCK \
+     -e 'VAULT_DEV_ROOT_TOKEN_ID=root' \
+     -p 8200:8200 -d vault:latest
+   ```
+
+3. **Configure Vault Secrets** (required for OAuth):
+   ```bash
+   curl -X POST \
+     -H "X-Vault-Token: root" \
+     -d '{"data": {"secret": "test-client-secret"}}' \
+     http://localhost:8200/v1/secret/data/test-clientid-alias
+   ```
 
 ### Step 3: Create the Main Extension Class
 
@@ -323,7 +387,158 @@ include(":edc-extensions:my-complex-extension:my-extension-core")
 ./gradlew build
 ```
 
-## 📚 Advanced Extension Patterns
+### Step 9: Production Runtime Integration
+
+#### For Production Extensions (Tractus-X compatible):
+
+1. **Add extension to production runtime** (`edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/build.gradle.kts`):
+
+   ```kotlin
+   dependencies {
+       // ... existing dependencies
+       runtimeOnly(project(":edc-extensions:my-custom-extension"))
+   }
+   ```
+
+2. **Create production configuration** (`tractus-x-config.properties`):
+
+   ```properties
+   # Core EDC Configuration
+   edc.participant.id=BPNL000000000001
+   edc.api.auth.key=password
+
+   # Database Configuration (PostgreSQL)
+   edc.datasource.edc.url=jdbc:postgresql://localhost:5433/edc
+   edc.datasource.edc.user=edc
+   edc.datasource.edc.password=password
+
+   # Vault Configuration
+   edc.vault.hashicorp.url=http://localhost:8200
+   edc.vault.hashicorp.token=root
+   edc.vault.hashicorp.api.secret.path=/v1/secret
+   edc.vault.hashicorp.api.health.check.path=/v1/sys/health
+
+   # API Endpoints
+   web.http.default.port=8080
+   web.http.default.path=/api
+   web.http.management.port=8181
+   web.http.management.path=/management
+   web.http.protocol.port=8282
+   web.http.protocol.path=/protocol
+   web.http.public.port=8185
+   web.http.public.path=/public
+   web.http.control.port=9999
+   web.http.control.path=/control
+
+   # Tractus-X Specific Configuration
+   edc.oauth.token.url=https://keycloak.example.com/auth/realms/miw_test/protocol/openid-connect/token
+   edc.oauth.client.id=miw_private_client
+   edc.oauth.private.key.alias=test-clientid-alias
+   edc.oauth.certificate.alias=test-clientid-alias
+   edc.oauth.provider.audience=miw_private_client
+
+   tx.sts.oauth.token.url=https://sts.example.com/token
+   tx.sts.oauth.client.id=sts-client
+   tx.sts.oauth.client.secret.alias=sts-client-secret
+   tx.sts.dim.url=https://dim.example.com
+
+   tx.ssi.miw.url=https://miw.example.com
+   tx.ssi.miw.authority.id=BPNL000000000001
+   tx.ssi.oauth.token.url=https://keycloak.example.com/auth/realms/miw_test/protocol/openid-connect/token
+   tx.ssi.oauth.client.id=miw_private_client
+   tx.ssi.oauth.client.secret.alias=miw-client-secret
+
+   tx.dpf.consumer.proxy.port=8186
+   tx.edr.state-machine.iteration-wait-millis=1000
+   tx.bdrs.server.url=https://bdrs.example.com
+
+   # Your Extension Configuration
+   edc.mycustom.setting=production-value
+   ```
+
+3. **Build production runtime**:
+
+   ```bash
+   ./gradlew :edc-controlplane:edc-controlplane-postgresql-hashicorp-vault:clean :edc-controlplane:edc-controlplane-postgresql-hashicorp-vault:shadowJar
+   ```
+
+4. **Run with full Tractus-X stack**:
+   ```bash
+   java -Dedc.fs.config=tractus-x-config.properties \
+     -jar edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/build/libs/edc-controlplane-postgresql-hashicorp-vault.jar
+   ```
+
+### Step 10: Production Testing and Validation
+
+#### Verify Extension Loading:
+
+**Check logs for:**
+
+- Extension initialization message: "My Custom Extension started successfully"
+- Total extensions loaded: "160+ service extensions" indicates full Tractus-X stack
+- No ERROR or WARN messages related to your extension
+
+#### Live API Testing:
+
+```bash
+# Test Management API
+curl -X GET http://localhost:8181/management \
+  -H "X-Api-Key: password"
+
+# Test extension-specific endpoints
+curl -X GET http://localhost:8181/management/v3/your-extension-endpoint \
+  -H "X-Api-Key: password"
+
+# Verify functionality
+curl -X POST http://localhost:8181/management/v3/your-extension/test \
+  -H "X-Api-Key: password" \
+  -H "Content-Type: application/json" \
+  -d '{"test": "data"}'
+```
+
+#### Production Validation Checklist:
+
+- ✅ Extension loads without errors
+- ✅ All required services initialized
+- ✅ Database connection established (PostgreSQL)
+- ✅ Vault integration working
+- ✅ API endpoints responding
+- ✅ Extension functionality verified
+- ✅ No runtime warnings or errors
+
+## � Troubleshooting
+
+### Extension Not Loading
+
+- **Check**: META-INF/services file path and content
+- **Check**: Build dependencies and module inclusion in settings.gradle.kts
+- **Check**: Runtime dependencies in target runtime's build.gradle.kts
+
+### Configuration Issues
+
+- **Missing Tractus-X URLs**: Add all required STS, BDRS, MIW endpoints
+- **Database Connection**: Verify PostgreSQL is running on correct port (5433)
+- **Vault Access**: Confirm Vault token and secret paths are correct
+
+### Runtime Failures
+
+- **Dependency Conflicts**: Use proper exclusions in build.gradle.kts
+- **Missing Infrastructure**: Ensure PostgreSQL and Vault are running before starting EDC
+- **Port Conflicts**: Check no other services using same ports (8181, 8200, 5433)
+
+### API Testing Issues
+
+- **Authentication**: Verify X-Api-Key header matches edc.api.auth.key configuration
+- **Endpoints**: Confirm management API port (8181) is correct
+- **Content-Type**: Include proper headers for POST requests
+
+### Performance Issues
+
+- **Extension Size**: Keep extensions lightweight (aim for < 50KB)
+- **Initialization**: Avoid heavy operations in initialize() method
+- **Dependencies**: Only include necessary dependencies
+
+## �📚 Advanced Extension Patterns
 
 ### Multi-Module Extension
 
@@ -500,6 +715,9 @@ Study these existing extensions for patterns:
 8. **Use extension categories**: Add categories in `@Extension` annotation for better organization
 9. **Handle runtime conflicts**: Use proper exclusions when needed
 10. **Test with real runtime**: Verify your extension works in actual runtime configurations
+11. **Choose appropriate runtime**: Use production runtime for Tractus-X compatibility
+12. **Set up infrastructure**: Ensure PostgreSQL and Vault are running for production runtime
+13. **Validate in production context**: Test with live APIs and full Tractus-X stack
 
 ### Extension Categories
 
@@ -524,9 +742,26 @@ Common categories:
 
 To include your extension in a runtime, you have several options:
 
-### Option 1: Direct Dependency
+### Option 1: Production Runtime (Recommended for Tractus-X)
 
-Add it to the runtime's `build.gradle.kts`:
+Add it to `edc-controlplane-postgresql-hashicorp-vault` runtime's `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    runtimeOnly(project(":edc-extensions:my-custom-extension"))
+}
+```
+
+**This is the recommended approach for Tractus-X extensions** as it provides:
+
+- Full Tractus-X ecosystem compatibility
+- PostgreSQL persistence
+- Vault secrets management
+- All required Tractus-X extensions (BPN validation, agreement retirement, etc.)
+
+### Option 2: Development Runtime (Limited functionality)
+
+For basic development only, add to `edc-runtime-memory`:
 
 ```kotlin
 dependencies {
@@ -534,7 +769,9 @@ dependencies {
 }
 ```
 
-### Option 2: Runtime Base Integration
+**⚠️ Note**: Memory runtime has significant limitations for Tractus-X development.
+
+### Option 3: Runtime Base Integration
 
 Many extensions are automatically included via base runtime modules. Check if your extension is already included in:
 
@@ -580,5 +817,28 @@ configurations.all {
 3. **Check runtime inclusions**: Verify if your extension is automatically included in base runtimes
 4. **Test with real runtimes**: Don't just unit test - verify integration with actual runtime configurations
 5. **Keep dependencies minimal**: Only include what your extension actually needs
+6. **Start with production runtime**: Use `edc-controlplane-postgresql-hashicorp-vault` from the beginning for Tractus-X compatibility
+7. **Set up infrastructure first**: Get PostgreSQL and Vault running before testing
+8. **Use comprehensive configuration**: Include all Tractus-X specific URLs and parameters
+9. **Validate with live APIs**: Test your extension with actual API calls, not just unit tests
+10. **Monitor extension loading**: Check logs to ensure your extension loads with the 160+ other Tractus-X extensions
 
 This guide provides a complete foundation for creating extensions in the Tractus-X EDC project. The helper script (`create-extension.sh`) is regularly updated and often contains more current patterns than manual examples, so prefer using it for new extensions.
+
+## 🎯 Key Takeaways
+
+**For Production-Ready Extensions:**
+
+- Always use `edc-controlplane-postgresql-hashicorp-vault` runtime
+- Set up Docker infrastructure (PostgreSQL + Vault)
+- Use comprehensive Tractus-X configuration
+- Test with live API endpoints
+- Validate with full 160+ extension stack
+
+**Common Mistakes to Avoid:**
+
+- Using memory runtime for production extensions
+- Incomplete Tractus-X configuration (missing STS, BDRS URLs)
+- No infrastructure setup
+- Only unit testing without live validation
+- Not checking extension loading in logs

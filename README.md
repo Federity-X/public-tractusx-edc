@@ -9,6 +9,12 @@
 
 Container images and deployments of the Eclipse Dataspace Components for the Tractus-X project.
 
+This project includes comprehensive data privacy and security extensions, including:
+
+- **Data Masking Extension**: Automatically masks sensitive information in API responses and data transfers
+- Production-ready security and compliance features
+- Full integration with Tractus-X ecosystem components
+
 Please also refer to:
 
 - [Our docs](https://github.com/eclipse-tractusx/tractusx-edc/tree/main/docs)

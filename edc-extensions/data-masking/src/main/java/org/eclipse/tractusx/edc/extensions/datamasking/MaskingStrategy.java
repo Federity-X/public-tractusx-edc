@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2025 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,28 +17,27 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-plugins {
-    `java-library`
-    id("application")
-    alias(libs.plugins.shadow)
-}
+package org.eclipse.tractusx.edc.extensions.datamasking;
 
-dependencies {
-    runtimeOnly(project(":edc-controlplane:edc-controlplane-base"))
-    runtimeOnly(project(":edc-extensions:data-masking"))
+/**
+ * Enumeration of masking strategies.
+ */
+public enum MaskingStrategy {
+    /**
+     * Partial masking - shows first and last characters.
+     * Example: "john@example.com" → "j***@e***.com"
+     */
+    PARTIAL,
 
-    implementation(project(":core:core-utils"))
-    implementation(libs.edc.spi.core)
+    /**
+     * Full masking - replaces entire value with asterisks.
+     * Example: "john@example.com" → "***"
+     */
+    FULL,
 
-    testImplementation(libs.edc.junit)
-    testImplementation(libs.edc.lib.boot)
-}
-
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    mergeServiceFiles()
-    archiveFileName.set("${project.name}.jar")
-}
-
-application {
-    mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
+    /**
+     * Hash masking - replaces value with hash.
+     * Example: "john@example.com" → "HASH_a1b2c3d4"
+     */
+    HASH
 }
