@@ -120,12 +120,33 @@ public class DataMaskingServiceImpl implements DataMaskingService {
             } else if (value.getValueType() == JsonValue.ValueType.OBJECT) {
                 JsonObject nestedObject = (JsonObject) value;
                 builder.add(key, maskJsonObject(nestedObject));
+            } else if (value.getValueType() == JsonValue.ValueType.ARRAY) {
+                jakarta.json.JsonArray array = (jakarta.json.JsonArray) value;
+                builder.add(key, maskJsonArray(array));
             } else {
                 builder.add(key, value);
             }
         }
 
         return builder.build();
+    }
+
+    private jakarta.json.JsonArray maskJsonArray(jakarta.json.JsonArray jsonArray) {
+        var arrayBuilder = Json.createArrayBuilder();
+
+        for (JsonValue item : jsonArray) {
+            if (item.getValueType() == JsonValue.ValueType.OBJECT) {
+                JsonObject objectItem = (JsonObject) item;
+                arrayBuilder.add(maskJsonObject(objectItem));
+            } else if (item.getValueType() == JsonValue.ValueType.ARRAY) {
+                jakarta.json.JsonArray nestedArray = (jakarta.json.JsonArray) item;
+                arrayBuilder.add(maskJsonArray(nestedArray));
+            } else {
+                arrayBuilder.add(item);
+            }
+        }
+
+        return arrayBuilder.build();
     }
 
     @Override

@@ -91,11 +91,22 @@ public class DataMaskingExtension implements ServiceExtension {
         var maskingService = createDataMaskingService(context);
         var assetTransformer = new JsonObjectAssetMaskingTransformer(jsonFactory, maskingService);
 
-        // Register with management-api context specifically
-        monitor.info("Registering Asset transformer with Management API TypeTransformerRegistry...");
-        var managementApiTransformerRegistry = transformerRegistry.forContext("management-api");
-        managementApiTransformerRegistry.register(assetTransformer);
-        monitor.info("Asset masking transformer registered successfully with management-api context");
+        // Register with management-api context specifically (only if transformer
+        // registry is available)
+        if (transformerRegistry != null) {
+            monitor.info("Registering Asset transformer with Management API TypeTransformerRegistry...");
+            var managementApiTransformerRegistry = transformerRegistry.forContext("management-api");
+            if (managementApiTransformerRegistry != null) {
+                managementApiTransformerRegistry.register(assetTransformer);
+                monitor.info("Asset masking transformer registered successfully with management-api context");
+            } else {
+                monitor.info(
+                        "Management API TypeTransformerRegistry context not available - skipping transformer registration");
+            }
+        } else {
+            monitor.info(
+                    "TypeTransformerRegistry not available (test environment) - skipping transformer registration");
+        }
 
         monitor.info("Data Masking Extension initialized successfully");
     }
@@ -103,7 +114,8 @@ public class DataMaskingExtension implements ServiceExtension {
     @Provider
     public DataMaskingService createDataMaskingService(ServiceExtensionContext context) {
         var strategy = context.getSetting(MASKING_STRATEGY, "PARTIAL");
-        var fields = context.getSetting(MASKING_FIELDS, "email,name,firstName,lastName,ssn,phone,creditCard");
+        var fields = context.getSetting(MASKING_FIELDS,
+                "email,name,firstName,lastName,ssn,phone,creditCard,personalId,taxId,businessPartnerNumber");
         var auditEnabled = context.getSetting(AUDIT_ENABLED, "true");
 
         var config = DataMaskingConfig.builder()
