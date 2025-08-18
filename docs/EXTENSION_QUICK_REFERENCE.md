@@ -35,10 +35,12 @@ edc-extensions/my-extension/
 ## 🔧 Key Annotations
 
 ```java
-@Extension(value = "My Extension")           // Marks the main extension class
-@Inject                                      // Inject dependencies
-@Provider                                    // Provide services to other extensions
-@Setting(value = "Description", required = false) // Configuration settings
+@Extension(value = "My Extension")                    // Marks the main extension class
+@Extension(value = "My Extension", categories = {"policy"}) // With categories
+@Inject                                               // Inject dependencies
+@Provider                                             // Provide services to other extensions
+@Provider(isDefault = true)                           // Provide default implementation
+@Setting(value = "Description", key = "edc.my.setting", required = false) // Configuration settings
 ```
 
 ## 📝 Extension Template
@@ -47,7 +49,7 @@ edc-extensions/my-extension/
 @Extension(value = "My Extension")
 public class MyExtension implements ServiceExtension {
 
-    @Setting(value = "My setting", required = false)
+    @Setting(value = "My setting", key = "edc.my.setting", required = false)
     public static final String MY_SETTING = "edc.my.setting";
 
     @Inject
@@ -60,6 +62,8 @@ public class MyExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
+        var setting = context.getSetting(MY_SETTING, "default-value");
+        monitor.info("Initializing with setting: " + setting);
         // Initialize your extension
     }
 
@@ -77,11 +81,10 @@ public class MyExtension implements ServiceExtension {
 implementation(project(":spi:core-spi"))
 implementation(project(":core:core-utils"))
 
-// Policy engine
+// Common EDC SPIs
+implementation(libs.edc.spi.catalog)
+implementation(libs.edc.spi.contract)
 implementation(libs.edc.spi.policyengine)
-
-// Management API
-implementation(libs.edc.spi.management.api)
 
 // JSON processing
 implementation(libs.jakartaJson)
@@ -90,22 +93,33 @@ implementation(libs.jakartaJson)
 testImplementation(libs.edc.junit)
 testImplementation(libs.mockito.core)
 testImplementation(libs.assertj.core)
+
+// BOMs for runtime modules
+runtimeOnly(libs.edc.bom.controlplane.base)
+runtimeOnly(libs.edc.bom.controlplane.dcp)
 ```
 
 ## 🧪 Testing Pattern
 
 ```java
-@ExtendWith(EdcExtension.class)
+@ExtendWith(DependencyInjectionExtension.class)
 class MyExtensionTest {
 
+    @BeforeEach
+    void setup(ServiceExtensionContext context) {
+        // Register mock services if needed
+        // context.registerService(SomeService.class, mock(SomeService.class));
+    }
+
     @Test
-    void shouldInitializeExtension(MyExtension extension) {
+    void shouldInitializeExtension(MyExtension extension, ServiceExtensionContext context) {
+        extension.initialize(context);
         assertThat(extension.name()).isEqualTo("My Extension");
     }
 
     @Test
-    void shouldProvideService(EdcExtension runtime) {
-        var service = runtime.getContext().getService(MyService.class);
+    void shouldProvideService(MyExtension extension, ServiceExtensionContext context) {
+        var service = extension.createMyService(context);
         assertThat(service).isNotNull();
     }
 }
@@ -114,9 +128,13 @@ class MyExtensionTest {
 ## ⚙️ Configuration
 
 ```java
-// In extension class
-@Setting(value = "Description", required = false, defaultValue = "default")
+// In extension class - with key attribute
+@Setting(value = "Description", key = "edc.my.setting", required = false, defaultValue = "default")
 public static final String SETTING_KEY = "edc.my.setting";
+
+// Complex configuration example
+@Setting(value = "Endpoint URL", key = "edc.my.endpoint", required = false)
+private String endpointUrl;
 
 // In initialize method
 var value = context.getSetting(SETTING_KEY, "fallback-default");
@@ -135,17 +153,28 @@ org.eclipse.tractusx.edc.extensions.myext.MyExtension
 
 ```java
 @Provider
-public MyApiController createApiController() {
+public MyApiController createApiController(ServiceExtensionContext context) {
     return new MyApiController(webService, monitor);
 }
 ```
 
-### Policy Function
+### Policy Function Registration
 
 ```java
-@Provider
-public PolicyFunction createPolicyFunction() {
-    return new MyPolicyFunction();
+@Override
+public void initialize(ServiceExtensionContext context) {
+    policyEngine.registerFunction(CatalogPolicyContext.class, Permission.class,
+                                 "myConstraint", new MyPolicyFunction<>());
+    ruleBindingRegistry.bind("myConstraint", "catalog");
+}
+```
+
+### Default Service Provider
+
+```java
+@Provider(isDefault = true)
+public MyService createDefaultService() {
+    return new InMemoryMyService();
 }
 ```
 
@@ -163,11 +192,46 @@ public void initialize(ServiceExtensionContext context) {
 1. **Enable debug logging**: `edc.monitor.level=DEBUG`
 2. **Check service registration**: Look for your service in startup logs
 3. **Verify dependencies**: Ensure all `@Inject` fields are resolved
-4. **Test in isolation**: Use `EdcExtension` for unit testing
+4. **Test with real runtime**: Verify integration beyond unit tests
+5. **Check extension loading**: Look for extension name in startup sequence
+6. **Validate configuration**: Ensure all required settings are provided
+7. **Use proper test extension**: `DependencyInjectionExtension` for unit tests
+
+## 🚀 Runtime Integration
+
+```kotlin
+// Direct inclusion in runtime
+dependencies {
+    implementation(project(":edc-extensions:my-extension"))
+}
+
+// With BOM and exclusions
+configurations.all {
+    exclude(group = "org.eclipse.edc", module = "conflicting-module")
+}
+
+dependencies {
+    runtimeOnly(libs.edc.bom.controlplane.base)
+    implementation(project(":edc-extensions:my-extension"))
+}
+
+// Multi-module extension registration in settings.gradle.kts
+include(":edc-extensions:my-extension")
+include(":edc-extensions:my-extension:my-extension-api")
+include(":edc-extensions:my-extension:my-extension-core")
+```
 
 ## 📖 Resources
 
 - [Full Creation Guide](EXTENSION_CREATION_GUIDE.md)
-- [Existing Extensions](../edc-extensions/)
+- [Existing Extensions](../edc-extensions/) - Study real implementations
 - [EDC Documentation](https://eclipse-edc.github.io/docs/)
-- [Helper Script](../create-extension.sh)
+- [Helper Script](../create-extension.sh) - **Most up-to-date patterns**
+
+## 💡 Quick Tips
+
+- **Use helper script first**: `./create-extension.sh` has current best practices
+- **Study existing extensions**: `bpn-validation`, `cx-policy`, `event-subscriber`
+- **Check base runtime inclusions**: Many extensions auto-included via `edc-controlplane-base`
+- **Test configuration keys**: Use actual key values in `@Setting` annotations
+- **Use categories**: Organize extensions with `@Extension(categories = {...})`
