@@ -112,6 +112,33 @@ These credentials (like `password`, `root`) are **intentionally weak** and desig
 
 **Note**: If CI security scans fail due to development JDBC URLs being flagged as secrets, see [TRUFFLEHOG_FALSE_POSITIVES.md](TRUFFLEHOG_FALSE_POSITIVES.md) for comprehensive solutions.
 
+## 📚 Developer Resources
+
+### For Non-Java Developers
+
+New to Java development or the EDC ecosystem? We've got you covered!
+
+**[📖 Dependency Management Guide for Non-Java Developers](DEPENDENCY_MANAGEMENT_GUIDE.md)**
+
+This comprehensive guide explains:
+
+- **What is Dependency Management?** - Think of it like a restaurant's supply chain
+- **What is Dependency Injection?** - Like room service for your code
+- **Gradle Build System** - How we manage libraries and build the project
+- **EDC Extension System** - How different features plug together
+- **Practical Examples** - Real code from our data masking extension
+- **Best Practices** - Do's and don'ts for the team
+- **Troubleshooting** - Common issues and solutions
+
+Perfect for developers coming from **JavaScript/npm**, **Python/pip**, **C#/.NET**, or other ecosystems who want to understand how Java dependency management works in this project.
+
+**🎯 Key Concepts You'll Learn:**
+
+- How `build.gradle.kts` files work (like `package.json` but for Java)
+- What `@Inject`, `@Provider`, and `@Extension` annotations do
+- How extensions interact with each other
+- Why dependency injection makes code more testable and flexible
+
 ## Known Incompatibilities
 
 - Hashicorp Vault 1.18.1 is not compatible with the EDC due to a bug in the vault concerning path handling
