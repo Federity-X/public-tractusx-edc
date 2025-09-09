@@ -387,6 +387,39 @@ curl -H "X-Api-Key: password" http://localhost:8181/management/...
 # Check if correct port is being used (8181 for management)
 ```
 
+#### 6. **Management API 404 Errors**
+
+**Root Cause**: There is **NO root `/management/` endpoint** in EDC. The management API only exposes **specific resource endpoints**.
+
+```bash
+# ❌ These will return 404 (Not Found):
+curl -H "X-Api-Key: password" http://localhost:8181/management/
+curl -H "X-Api-Key: password" http://localhost:8181/management/health
+curl -H "X-Api-Key: password" http://localhost:8181/management/version
+
+# ✅ These work correctly (resource-specific endpoints):
+curl -H "X-Api-Key: password" -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}, "@type": "QuerySpec"}' \
+  http://localhost:8181/management/v3/assets/request
+
+curl -H "X-Api-Key: password" -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"}, "@type": "QuerySpec"}' \
+  http://localhost:8181/management/v3/policydefinitions/request
+```
+
+**Available Management API Endpoints:**
+
+- `/management/v3/assets/request` - List assets
+- `/management/v3/policydefinitions/request` - List policies
+- `/management/v3/contractdefinitions/request` - List contract definitions
+- `/management/v3/contractnegotiations/request` - List negotiations
+- `/management/v3/transferprocesses/request` - List transfers
+- `/management/v3/edrs/request` - List EDR entries
+
+**Note**: EDC uses **resource-specific endpoints** with versioning (v3) rather than a general API root.
+
 ### Verification Commands
 
 ```bash
@@ -423,9 +456,12 @@ echo "API Key: $DEV_API_KEY"
 
 ### API Documentation
 
-- Management API: `http://localhost:8181/management/` (when running)
-- Protocol API: `http://localhost:8080/api/` (DSP endpoints)
-- OpenAPI specs generated during build in `resources/openapi/yaml`
+- **Management API**: `http://localhost:8181/management/v3/{resource}/request` (resource-specific endpoints)
+- **Protocol API**: `http://localhost:8080/api/dsp/` (DSP endpoints)
+- **Data Plane API**: `http://localhost:8081/public/` (data transfer)
+- **OpenAPI specs**: Generated during build in `resources/openapi/yaml`
+
+**Important**: There is no root `/management/` endpoint - EDC only exposes specific resource endpoints!
 
 ### Extension Examples
 
