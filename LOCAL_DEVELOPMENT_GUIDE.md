@@ -1,6 +1,6 @@
 # Tractus-X EDC Local Development Guide
 
-*A comprehensive guide for setting up and working with the Tractus-X Eclipse Dataspace Connector (EDC) locally*
+_A comprehensive guide for setting up and working with the Tractus-X Eclipse Dataspace Connector (EDC) locally_
 
 ## 📋 Table of Contents
 
@@ -24,7 +24,8 @@
 
 The EDC follows a **distributed architecture** with two main components:
 
-#### 1. **Control Plane** 
+#### 1. **Control Plane**
+
 - **Management Layer**: Handles resource management, contract negotiation, and data transfer coordination
 - **Key Responsibilities**:
   - Asset, Policy & Contract Definition CRUD operations
@@ -33,6 +34,7 @@ The EDC follows a **distributed architecture** with two main components:
   - Identity and access management
 
 #### 2. **Data Plane**
+
 - **Data Transfer Engine**: Handles the actual data movement
 - **Key Responsibilities**:
   - Physical data transfer between systems
@@ -86,12 +88,14 @@ The project uses a **secure two-script architecture** for development environmen
 ```
 
 This script:
+
 - ✅ Validates Docker is running
 - 🚀 Starts PostgreSQL (port 5433) and HashiCorp Vault (port 8200)
 - ⏳ Waits for services to be healthy
 - 📊 Provides connection details
 
 **Expected Output:**
+
 ```
 🎉 Setup complete! Services are running:
   📊 PostgreSQL: localhost:5433
@@ -123,6 +127,7 @@ source dev-env.sh
 ```
 
 This loads development credentials and database connection strings:
+
 - `DEV_POSTGRES_URL`: JDBC connection string
 - `DEV_DB_USER` & `DEV_DB_PASSWORD`: Database credentials
 - `DEV_API_KEY`: API authentication key
@@ -141,6 +146,7 @@ This loads development credentials and database connection strings:
 ```
 
 **Build Success Indicators:**
+
 - `BUILD SUCCESSFUL` message
 - JAR files created in `build/libs/` directories
 - No compilation errors
@@ -156,6 +162,7 @@ java -jar edc-controlplane/edc-runtime-memory/build/libs/edc-runtime-memory.jar 
 ```
 
 **Startup Success Indicators:**
+
 ```
 INFO Runtime test-runtime ready
 INFO 148 service extensions started
@@ -182,6 +189,7 @@ curl -H "X-Api-Key: password" \
 ```
 
 This script demonstrates:
+
 - Creating assets with data addresses
 - Setting up access and contract policies
 - Creating contract definitions
@@ -191,16 +199,19 @@ This script demonstrates:
 ## 🎯 What We Built
 
 ### 1. **Infrastructure Layer**
+
 - **PostgreSQL Database**: Persistent storage for EDC entities
 - **HashiCorp Vault**: Secure secrets management
 - **Docker Network**: Isolated development environment
 
 ### 2. **EDC Runtime**
+
 - **Control Plane**: Management APIs and protocol endpoints
 - **In-Memory Storage**: Quick development setup
 - **Multiple API Endpoints**: Management, Protocol, Data Plane
 
 ### 3. **Sample Data**
+
 - **Demo Asset**: HTTP data source pointing to JSONPlaceholder
 - **Access Policy**: ODRL-based permission rules
 - **Contract Policy**: Usage constraints and obligations
@@ -208,36 +219,41 @@ This script demonstrates:
 
 ### 4. **API Endpoints**
 
-| Port | Endpoint | Purpose |
-|------|----------|---------|
+| Port | Endpoint       | Purpose                       |
+| ---- | -------------- | ----------------------------- |
 | 8181 | Management API | CRUD operations for resources |
-| 8080 | Protocol API | DSP communication |
-| 8081 | Data Plane API | Data transfer operations |
-| 8084 | DSP Protocol | Inter-connector communication |
+| 8080 | Protocol API   | DSP communication             |
+| 8081 | Data Plane API | Data transfer operations      |
+| 8084 | DSP Protocol   | Inter-connector communication |
 
 ## 🎓 Key Learning Points
 
 ### 1. **EDC Architecture Understanding**
+
 - **Separation of Concerns**: Control vs Data plane responsibilities
 - **API-Driven**: Everything managed through REST APIs
 - **Standards-Based**: ODRL policies, JSON-LD contexts, DSP protocol
 
 ### 2. **Resource Management**
+
 - **Assets**: Data source definitions with metadata and data addresses
 - **Policies**: ODRL-based access and usage rules
 - **Contract Definitions**: Binding assets to policies for offers
 
 ### 3. **JSON-LD Context**
+
 - All API requests use JSON-LD format
 - Context definitions for semantic interoperability
 - Proper namespace handling for Tractus-X extensions
 
 ### 4. **Development Practices**
+
 - **Secure Credentials Management**: Separate infrastructure from config
 - **Gradle Build System**: Multi-module project structure
 - **Extension Architecture**: Modular, pluggable components
 
 ### 5. **Authentication & Authorization**
+
 - **API Key Authentication**: Simple development setup
 - **Policy-Based Access Control**: ODRL constraint evaluation
 - **Verifiable Credentials**: DID-based identity (in production)
@@ -282,11 +298,13 @@ kill %1  # or specific PID
 ## 🚀 Next Steps
 
 ### 1. **Explore Extensions** (Immediate)
+
 - **Policy Validation**: Study `edc-extensions/cx-policy/`
 - **BPN Validation**: Examine `edc-extensions/bpn-validation/`
 - **Data Plane Proxy**: Investigate `edc-extensions/dataplane/`
 
 ### 2. **Build Custom Extensions** (Short Term)
+
 ```bash
 # Create new extension module
 mkdir -p edc-extensions/my-extension/src/main/java
@@ -295,16 +313,19 @@ mkdir -p edc-extensions/my-extension/src/main/java
 ```
 
 ### 3. **Advanced Configuration** (Medium Term)
+
 - **PostgreSQL Runtime**: Switch from memory to persistent storage
 - **HashiCorp Vault Integration**: Use real secrets management
 - **Multi-Connector Setup**: Test inter-connector communication
 
 ### 4. **Production Preparation** (Long Term)
+
 - **Identity Trust Setup**: DID-based authentication
 - **Policy Compliance**: Catena-X framework policies
 - **Kubernetes Deployment**: Helm charts for production
 
 ### 5. **Testing & Quality**
+
 - **Unit Tests**: Extend test coverage for new features
 - **Integration Tests**: End-to-end workflow testing
 - **DSP Compatibility**: Multi-version protocol testing
@@ -314,6 +335,7 @@ mkdir -p edc-extensions/my-extension/src/main/java
 ### Common Issues
 
 #### 1. **Docker Not Running**
+
 ```bash
 # Error: Docker is not running
 docker info  # Should show Docker status
@@ -321,6 +343,7 @@ docker info  # Should show Docker status
 ```
 
 #### 2. **Port Conflicts**
+
 ```bash
 # Check what's using ports
 lsof -i :5433  # PostgreSQL
@@ -331,6 +354,7 @@ lsof -i :8181  # EDC Management
 ```
 
 #### 3. **Environment Variables Not Loaded**
+
 ```bash
 # Wrong: This won't set variables in current shell
 ./dev-env.sh
@@ -343,6 +367,7 @@ echo $DEV_POSTGRES_URL
 ```
 
 #### 4. **EDC Startup Issues**
+
 ```bash
 # Check logs
 tail -f edc.log
@@ -354,6 +379,7 @@ tail -f edc.log
 ```
 
 #### 5. **API Authentication Errors**
+
 ```bash
 # All Management API requests need API key
 curl -H "X-Api-Key: password" http://localhost:8181/management/...
@@ -382,11 +408,13 @@ echo "API Key: $DEV_API_KEY"
 ## 📚 Resources
 
 ### Documentation
+
 - [EDC Official Documentation](https://eclipse-edc.github.io/docs/)
 - [Tractus-X EDC Repository](https://github.com/eclipse-tractusx/tractusx-edc)
 - [Catena-X Standards](https://catena-x.net/en/standard-library)
 
 ### Key Files in Project
+
 - `README.md` - Project overview and quick start
 - `DEVELOPER_GUIDE.md` - Development environment details
 - `docker-compose.yml` - Infrastructure setup
@@ -394,11 +422,13 @@ echo "API Key: $DEV_API_KEY"
 - `gradle/libs.versions.toml` - Dependency versions
 
 ### API Documentation
+
 - Management API: `http://localhost:8181/management/` (when running)
 - Protocol API: `http://localhost:8080/api/` (DSP endpoints)
 - OpenAPI specs generated during build in `resources/openapi/yaml`
 
 ### Extension Examples
+
 - **Policy Validation**: `/edc-extensions/cx-policy/`
 - **BPN Validation**: `/edc-extensions/bpn-validation/`
 - **Dataplane Proxy**: `/edc-extensions/dataplane/`
@@ -414,12 +444,12 @@ You now have a fully functional Tractus-X EDC development environment with:
 ✅ **EDC Runtime**: Memory-based development setup  
 ✅ **Sample Data**: Assets, policies, and contract definitions  
 ✅ **API Access**: Management and protocol endpoints  
-✅ **Build System**: Gradle with extension support  
+✅ **Build System**: Gradle with extension support
 
 **Happy Coding!** 🚀
 
 ---
 
-*Last Updated: September 9, 2025*  
-*Environment: macOS with Docker Desktop*  
-*EDC Version: 0.11.0-SNAPSHOT*
+_Last Updated: September 9, 2025_  
+_Environment: macOS with Docker Desktop_  
+_EDC Version: 0.11.0-SNAPSHOT_
