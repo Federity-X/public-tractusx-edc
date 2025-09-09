@@ -463,6 +463,116 @@ echo "API Key: $DEV_API_KEY"
 
 **Important**: There is no root `/management/` endpoint - EDC only exposes specific resource endpoints!
 
+---
+
+## 🧪 Testing Documentation & Scripts
+
+We've created multiple testing resources for different use cases:
+
+### 📋 **Testing Files Overview**
+
+| File                        | Purpose                             | Best For                          |
+| --------------------------- | ----------------------------------- | --------------------------------- |
+| **MANUAL_TESTING_GUIDE.md** | 68-step comprehensive testing guide | Learning EDC, thorough validation |
+| **test-endpoints.sh**       | Automated endpoint health checks    | Quick validation, CI/CD pipelines |
+| **test-api.sh**             | Simple command reference generator  | Fast command lookup               |
+| **EDC_API_REFERENCE.md**    | Complete curl command documentation | Complete API reference            |
+
+### 🎯 **When to Use Each Testing Tool**
+
+#### **MANUAL_TESTING_GUIDE.md** - Comprehensive Learning & Validation
+
+- ✅ **68 detailed steps** with explanations and expected results
+- ✅ **Phase-based approach**: Connectivity → Resources → Verification → Advanced → Error handling
+- ✅ **HashiCorp Vault integration** testing (secrets, OAuth configs)
+- ✅ **Troubleshooting guide** with common issues and solutions
+- ✅ **Testing checklist** to track progress
+- 🎯 **Use for**: First-time setup, comprehensive system validation, learning EDC architecture
+
+#### **test-endpoints.sh** - Quick Health Checks
+
+```bash
+./test-endpoints.sh  # Automated testing of all endpoints
+```
+
+- ✅ **Automated connectivity checks** for all major endpoints
+- ✅ **Color-coded output** (🟢 success, 🟡 expected errors, 🔴 failures)
+- ✅ **HTTP status validation** with proper interpretation
+- ✅ **Three test categories**: Management API, Protocol (DSP), Data Plane
+- 🎯 **Use for**: Daily development, CI/CD validation, endpoint discovery
+
+#### **test-api.sh** - Quick Command Reference
+
+```bash
+./test-api.sh  # Display ready-to-use curl commands
+```
+
+- ✅ **Configuration display** (API keys, URLs)
+- ✅ **Copy-paste ready commands** for basic operations
+- ✅ **Points to complete documentation**
+- 🎯 **Use for**: Quick command lookup, developer onboarding
+
+#### **EDC_API_REFERENCE.md** - Complete API Documentation
+
+- ✅ **60+ complete curl commands** with proper headers and JSON-LD payloads
+- ✅ **All endpoint categories**: Assets, Policies, Contracts, Transfers, EDRs, DSP
+- ✅ **Authentication examples** (Management API keys, Data Plane tokens)
+- ✅ **Testing flows** showing complete lifecycle scenarios
+- 🎯 **Use for**: Complete API interactions, production integration
+
+### 🚀 **Recommended Testing Workflow**
+
+```bash
+# 1. Quick health check (30 seconds)
+./test-endpoints.sh
+
+# 2. Get basic commands (instant reference)
+./test-api.sh
+
+# 3. Comprehensive testing (first time or thorough validation)
+# Follow MANUAL_TESTING_GUIDE.md step by step
+
+# 4. API development (ongoing work)
+# Use EDC_API_REFERENCE.md for complete curl commands
+```
+
+### 💡 **Quick API Test Examples**
+
+```bash
+# List all assets
+curl -H "X-Api-Key: password" \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"@context":{"@vocab":"https://w3id.org/edc/v0.0.1/ns/"},"@type":"QuerySpec","limit":10}' \
+  "http://localhost:8181/management/v3/assets/request"
+
+# Create a test asset
+curl -H "X-Api-Key: password" \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{
+    "@context":{"@vocab":"https://w3id.org/edc/v0.0.1/ns/"},
+    "@type":"Asset",
+    "@id":"test-asset-123",
+    "properties":{"name":"Test Asset"},
+    "dataAddress":{"@type":"DataAddress","type":"HttpData","baseUrl":"https://jsonplaceholder.typicode.com/posts"}
+  }' \
+  "http://localhost:8181/management/v3/assets"
+
+# Quick endpoint health check
+./test-endpoints.sh | grep "✅\|❌\|⚠️"
+```
+
+**📄 See EDC_API_REFERENCE.md for:**
+
+- ✅ Complete curl commands for all 60+ endpoints
+- ✅ JSON-LD request/response examples
+- ✅ Authentication headers and token usage
+- ✅ DSP protocol endpoints for connector communication
+- ✅ Data plane endpoints with EDR token authentication
+- ✅ Business Partner Group management (Tractus-X extension)
+- ✅ Complete testing flows with sample data creation
+
 ### Extension Examples
 
 - **Policy Validation**: `/edc-extensions/cx-policy/`
@@ -472,7 +582,42 @@ echo "API Key: $DEV_API_KEY"
 
 ---
 
-## 🎉 Conclusion
+## � **Next Steps & Recommended Actions**
+
+After completing this setup, here's your recommended path:
+
+### **Immediate Next Steps**
+
+```bash
+# 1. Verify everything works (30 seconds)
+./test-endpoints.sh
+
+# 2. Get familiar with basic commands
+./test-api.sh
+
+# 3. Run comprehensive validation (30 minutes)
+# Open and follow MANUAL_TESTING_GUIDE.md
+```
+
+### **Development Workflow**
+
+1. **Daily Development**: Use `./test-endpoints.sh` for quick health checks
+2. **Learning Mode**: Follow `MANUAL_TESTING_GUIDE.md` step-by-step (68 detailed steps)
+3. **API Integration**: Reference `EDC_API_REFERENCE.md` for complete curl commands
+4. **Quick Commands**: Use `./test-api.sh` for instant command lookup
+
+### **What You Can Do Now**
+
+- ✅ **Explore Management API** at http://localhost:8181/management/v3/
+- ✅ **Test Protocol API** at http://localhost:8080/api/dsp/
+- ✅ **Access Data Plane** at http://localhost:8081/public/
+- ✅ **View logs** with `tail -f edc.log`
+- ✅ **Create assets, policies, contracts** using provided curl commands
+- ✅ **Test complete data sharing workflows**
+
+---
+
+## �🎉 Conclusion
 
 You now have a fully functional Tractus-X EDC development environment with:
 
@@ -480,9 +625,11 @@ You now have a fully functional Tractus-X EDC development environment with:
 ✅ **EDC Runtime**: Memory-based development setup  
 ✅ **Sample Data**: Assets, policies, and contract definitions  
 ✅ **API Access**: Management and protocol endpoints  
-✅ **Build System**: Gradle with extension support
+✅ **Build System**: Gradle with extension support  
+✅ **Complete Testing Suite**: 4 testing tools for different scenarios  
+✅ **Comprehensive Documentation**: Step-by-step guides and API references
 
-**Happy Coding!** 🚀
+**Ready for EDC development!** 🚀
 
 ---
 
