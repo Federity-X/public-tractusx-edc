@@ -1,1 +1,42 @@
-zsh: command not found: nohup
+[0;32mINFO 2025-09-09T19:23:31.873755 Booting EDC runtime[0m
+[0;33mWARNING 2025-09-09T19:23:31.902383 A configuration value for 'edc.runtime.id' was found. Explicitly configuring this is not supported anymore and may get removed in the future. A random value will be assigned.[0m
+[0;33mWARNING 2025-09-09T19:23:32.037998 Using the InMemoryVault is not suitable for production scenarios and should be replaced with an actual Vault![0m
+[0;33mWARNING 2025-09-09T19:23:32.039295 Deprecated property used: 'edc.vault.secrets'. Please consider using the new property 'tx.edc.vault.secrets' instead.[0m
+[0;33mWARNING 2025-09-09T19:23:32.040694 A service of the type org.eclipse.edc.spi.security.Vault was already registered and has now been replaced with a InMemoryVault instance.[0m
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+[0;32mINFO 2025-09-09T19:23:32.128932 HTTPS enforcement it not enabled, please enable it in a production environment[0m
+[0;33mWARNING 2025-09-09T19:23:32.249498 Config value: no setting found for 'edc.hostname', falling back to default value 'localhost'[0m
+[0;32mINFO 2025-09-09T19:23:32.342744 DIM URL not configured, will use the standard EDC Remote STS client[0m
+[0;33mWARNING 2025-09-09T19:23:32.418315 Error caching context URL 'https://w3id.org/dspace/2024/1/context.json' for URI 'jar:file:/Users/wahidulazam/projects/tractusx-edc/edc-controlplane/edc-runtime-memory/build/libs/edc-runtime-memory.jar!/document/dspace.jsonld'. Subsequent attempts to expand this context URL may fail.[0m
+[0;33mWARNING 2025-09-09T19:23:32.438407 No config value found for 'tx.edc.iam.iatp.credentialservice.url'. As a fallback, the credentialService URL from this connector's DID document will be resolved.[0m
+[0;32mINFO 2025-09-09T19:23:32.441423 No default scope from configuration. Using the default ones [org.eclipse.tractusx.vc.type:MembershipCredential:read, org.eclipse.tractusx.vc.type:DataExchangeGovernanceCredential:read, org.eclipse.tractusx.vc.type:BpnCredential:read][0m
+[0;32mINFO 2025-09-09T19:23:32.44168 No default scope from configuration. Using the default ones [org.eclipse.tractusx.vc.type:MembershipCredential:read, org.eclipse.tractusx.vc.type:DataExchangeGovernanceCredential:read, org.eclipse.tractusx.vc.type:BpnCredential:read][0m
+[0;32mINFO 2025-09-09T19:23:32.441893 No default scope from configuration. Using the default ones [org.eclipse.tractusx.vc.type:MembershipCredential:read, org.eclipse.tractusx.vc.type:DataExchangeGovernanceCredential:read, org.eclipse.tractusx.vc.type:BpnCredential:read][0m
+[0;33mWARNING 2025-09-09T19:23:32.443167 No TransactionContext registered, a no-op implementation will be used, not suitable for production environments[0m
+[0;33mWARNING 2025-09-09T19:23:32.502941 [ConsumerProxyAPI] The 'class org.eclipse.tractusx.edc.dataplane.proxy.consumer.api.TokenBasedAuthenticationService' is only here temporarily and should be replaced with the upstream variant once that is available for standalone use![0m
+[0;33mWARNING 2025-09-09T19:23:32.506684 [DataPlane Token Refresh] Config property 'tx.edc.dataplane.token.refresh.endpoint' was not specified, the default 'http://localhost:8081/public' will be used.[0m
+[0;33mWARNING 2025-09-09T19:23:32.549716 TargetNode file is not configured ('tx.edc.catalog.node.list.file'). Federated Catalog Crawler will be inactive.[0m
+[0;33mWARNING 2025-09-09T19:23:32.613404 No TokenDecorator was registered. The 'scope' field of outgoing protocol messages will be empty[0m
+[0;32mINFO 2025-09-09T19:23:32.632461 S3: edc.aws.access.key and edc.aws.secret.access.key were not found in the vault, DefaultCredentialsProvider will be used[0m
+[0;33mWARNING 2025-09-09T19:23:32.639418 The list of trusted issuers is empty[0m
+[0;33mWARNING 2025-09-09T19:23:32.640132 [Delegated API Authentication] No audience configured for delegated authentication, defaulting to the participantId[0m
+[0;33mWARNING 2025-09-09T19:23:32.646641 An execution period of 2 seconds is very low (threshold = 10). This might result in the work queue to be ever growing. A longer execution period or more crawler threads (currently using 2) should be considered.[0m
+Sep 09, 2025 7:23:32 PM io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics unwrapThreadPoolExecutor
+INFO: Cannot unwrap ThreadPoolExecutor for monitoring from java.util.concurrent.Executors$DelegatedScheduledExecutorService due to java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.util.concurrent.ScheduledExecutorService java.util.concurrent.Executors$DelegatedScheduledExecutorService.e accessible: module java.base does not "opens java.util.concurrent" to unnamed module @185d8b6
+Sep 09, 2025 7:23:33 PM org.glassfish.jersey.internal.Errors logErrors
+WARNING: The following warnings have been detected: WARNING: The (sub)resource method getVersion in org.eclipse.edc.connector.api.management.version.v1.VersionApiController contains empty path annotation.
+
+Sep 09, 2025 7:23:33 PM io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics unwrapThreadPoolExecutor
+INFO: Cannot unwrap ThreadPoolExecutor for monitoring from java.util.concurrent.Executors$DelegatedScheduledExecutorService due to java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.util.concurrent.ScheduledExecutorService java.util.concurrent.Executors$DelegatedScheduledExecutorService.e accessible: module java.base does not "opens java.util.concurrent" to unnamed module @185d8b6
+Sep 09, 2025 7:23:33 PM io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics unwrapThreadPoolExecutor
+INFO: Cannot unwrap ThreadPoolExecutor for monitoring from java.util.concurrent.Executors$DelegatedScheduledExecutorService due to java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.util.concurrent.ScheduledExecutorService java.util.concurrent.Executors$DelegatedScheduledExecutorService.e accessible: module java.base does not "opens java.util.concurrent" to unnamed module @185d8b6
+Sep 09, 2025 7:23:33 PM io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics unwrapThreadPoolExecutor
+INFO: Cannot unwrap ThreadPoolExecutor for monitoring from java.util.concurrent.Executors$DelegatedScheduledExecutorService due to java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.util.concurrent.ScheduledExecutorService java.util.concurrent.Executors$DelegatedScheduledExecutorService.e accessible: module java.base does not "opens java.util.concurrent" to unnamed module @185d8b6
+Sep 09, 2025 7:23:33 PM io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics unwrapThreadPoolExecutor
+INFO: Cannot unwrap ThreadPoolExecutor for monitoring from java.util.concurrent.Executors$DelegatedScheduledExecutorService due to java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.util.concurrent.ScheduledExecutorService java.util.concurrent.Executors$DelegatedScheduledExecutorService.e accessible: module java.base does not "opens java.util.concurrent" to unnamed module @185d8b6
+Sep 09, 2025 7:23:33 PM io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics unwrapThreadPoolExecutor
+INFO: Cannot unwrap ThreadPoolExecutor for monitoring from java.util.concurrent.Executors$DelegatedScheduledExecutorService due to java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.util.concurrent.ScheduledExecutorService java.util.concurrent.Executors$DelegatedScheduledExecutorService.e accessible: module java.base does not "opens java.util.concurrent" to unnamed module @185d8b6
+[0;32mINFO 2025-09-09T19:23:33.153921 148 service extensions started[0m
+[0;32mINFO 2025-09-09T19:23:33.154265 Runtime test-runtime ready[0m

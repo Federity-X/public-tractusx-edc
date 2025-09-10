@@ -18,7 +18,53 @@ _A comprehensive guide for setting up and working with the Tractus-X Eclipse Dat
 
 ### What is Tractus-X EDC?
 
-**Tractus-X EDC** is an automotive industry dataspace implementation based on the Eclipse Dataspace Connector. It's specifically designed for the **Catena-X** automotive ecosystem - a collaborative data space for the automotive value chain.
+**Tractus-X EDC** is an automotive in---
+
+## ⚠️ **Critical Security & Production Parity Issue**
+
+### **Authentication Bypass Discovered**
+
+**IMPORTANT**: The development environment has an authentication issue that does NOT reflect production behavior.
+
+**Problem**: Both authentication extensions are loaded, causing delegated auth to bypass API key validation:
+
+- `auth-tokenbased` (API key authentication)
+- `auth-delegated` (JWT-based authentication) ← **Higher priority, misconfigured**
+
+**Evidence**: Run `./test-authentication-issue.sh` - all requests succeed regardless of API key validity.
+
+**Impact**:
+
+- ❌ False confidence in development
+- ❌ Authentication bugs not caught until production
+- ❌ Security vulnerabilities in deployed code
+
+**Solutions**: See `PRODUCTION_PARITY_GUIDE.md` for detailed fixes including:
+
+1. Disabling delegated authentication for development
+2. Configuring proper JWT authentication
+3. Custom build excluding problematic extensions
+
+**Quick Test**:
+
+```bash
+./test-authentication-issue.sh  # Shows authentication bypass
+```
+
+---
+
+## 🎉 Conclusion
+
+You now have a fully functional Tractus-X EDC development environment with:
+
+✅ **Infrastructure**: PostgreSQL + HashiCorp Vault  
+✅ **EDC Runtime**: Memory-based development setup  
+✅ **Sample Data**: Assets, policies, and contract definitions  
+✅ **API Access**: Management and protocol endpoints  
+✅ **Build System**: Gradle with extension support  
+✅ **Complete Testing Suite**: 5 testing tools for different scenarios  
+✅ **Comprehensive Documentation**: Step-by-step guides and API references  
+⚠️ **Security Analysis**: Authentication issue identified with solutions providedace implementation based on the Eclipse Dataspace Connector. It's specifically designed for the **Catena-X** automotive ecosystem - a collaborative data space for the automotive value chain.
 
 ### Core Architecture
 
