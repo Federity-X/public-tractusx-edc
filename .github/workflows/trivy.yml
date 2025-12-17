@@ -56,9 +56,9 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: "config"
           # ignore-unfixed: true
@@ -68,7 +68,7 @@ jobs:
           output: "trivy-results-config.sarif"
           severity: "CRITICAL,HIGH"
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: "trivy-results-config.sarif"
@@ -88,7 +88,7 @@ jobs:
           - edc-controlplane-postgresql-hashicorp-vault
           - edc-dataplane-hashicorp-vault
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
         ## This step will fail if the docker images is not found
       - name: "Check if image exists"
@@ -100,7 +100,7 @@ jobs:
         ## the next two steps will only execute if the image exists check was successful
       - name: Run Trivy vulnerability scanner
         if: success() && steps.imageCheck.outcome != 'failure'
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: "tractusx/${{ matrix.image }}:sha-${{ needs.git-sha7.outputs.value }}"
           format: "sarif"
@@ -110,6 +110,6 @@ jobs:
           timeout: "10m0s"
       - name: Upload Trivy scan results to GitHub Security tab
         if: success() && steps.imageCheck.outcome != 'failure'
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: "trivy-results-${{ matrix.image }}.sarif"

@@ -30,6 +30,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.docker)
     alias(libs.plugins.nexus)
+    alias(libs.plugins.edc.build)
 }
 
 val txScmConnection: String by project
@@ -42,7 +43,8 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath(libs.edc.build.plugin)
+        val edcVersion: String = libs.versions.edc.asProvider().get()
+        classpath("org.eclipse.edc.autodoc:org.eclipse.edc.autodoc.gradle.plugin:$edcVersion")
     }
 }
 
@@ -54,8 +56,11 @@ project.subprojects.forEach {
 
 }
 
+val edcBuildId = libs.plugins.edc.build.get().pluginId
+
 allprojects {
-    apply(plugin = "org.eclipse.edc.edc-build")
+    apply(plugin = edcBuildId)
+    apply(plugin = "org.eclipse.edc.autodoc")
 
     dependencies {
 
@@ -63,29 +68,29 @@ allprojects {
 
         constraints {
             plugins.apply("org.gradle.java-test-fixtures")
-            implementation("org.yaml:snakeyaml:2.4") {
+            implementation("org.yaml:snakeyaml:2.5") {
                 because("version 1.33 has vulnerabilities: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-1471.")
             }
             implementation("net.minidev:json-smart:2.6.0") {
                 because("version 2.4.8 has vulnerabilities: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-1370.")
             }
             implementation("com.azure:azure-core-http-netty:1.16.0") {
-                because("Depends on netty-handler:4.1.115.Final that has a vulnerability: https://ossindex.sonatype.org/component/pkg:maven/io.netty/netty-handler@4.1.115.Final")
+                because("Version 1.15.12 depends on netty libs that have two vulnerabilities: https://mvnrepository.com/artifact/com.azure/azure-core-http-netty/1.15.12")
             }
-            implementation("software.amazon.awssdk:netty-nio-client:2.31.77") {
-                because("Depends on netty-handler:4.1.115.Final that has a vulnerability: https://ossindex.sonatype.org/component/pkg:maven/io.netty/netty-handler@4.1.115.Final")
+            implementation("io.netty:netty-codec-http2:4.2.7.Final") {
+                because("Version 4.1.123.Final vulnerability: https://www.cve.org/CVERecord?id=CVE-2025-8916")
             }
-            testImplementation("com.networknt:json-schema-validator:1.5.8") {
+            testImplementation("com.networknt:json-schema-validator:1.5.9") {
                 because("There's a conflict between mockserver-netty and identity-hub dependencies for testing, forcing json-schema-validator to 1.5.6 is solving that.")
             }
-            testFixturesApi("com.networknt:json-schema-validator:1.5.8") {
+            testFixturesApi("com.networknt:json-schema-validator:1.5.9") {
                 because("There's a conflict between mockserver-netty and identity-hub dependencies for testing, forcing json-schema-validator to 1.5.6 is solving that.")
             }
         }
     }
 
     configure<org.eclipse.edc.plugins.autodoc.AutodocExtension> {
-        processorVersion.set(edcVersion)
+        processorVersion.set(edcVersion.asProvider())
         outputDirectory.set(project.layout.buildDirectory.asFile.get())
     }
 

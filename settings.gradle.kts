@@ -22,11 +22,11 @@ rootProject.name = "tractusx-edc"
 // this is needed to have access to snapshot builds of plugins
 pluginManagement {
     repositories {
+        gradlePluginPortal()
+        mavenCentral()
         maven {
             url = uri("https://central.sonatype.com/repository/maven-snapshots/")
         }
-        mavenCentral()
-        gradlePluginPortal()
     }
 }
 
@@ -62,12 +62,14 @@ include(":edc-extensions:edr:edr-api-v2")
 include(":edc-extensions:edr:edr-callback")
 include(":edc-extensions:edr:edr-index-lock-sql")
 include(":edc-extensions:cx-policy")
+include(":edc-extensions:cx-policy-legacy")
 include(":edc-extensions:dcp:tx-dcp")
 include(":edc-extensions:dcp:tx-dcp-sts-dim")
 include(":edc-extensions:data-flow-properties-provider")
 include(":edc-extensions:validators:empty-asset-selector")
 include(":edc-extensions:log4j2-monitor")
 include("edc-extensions:connector-discovery:connector-discovery-api")
+include(":edc-extensions:dataspace-protocol")
 
 include(":edc-extensions:agreements")
 include(":edc-extensions:agreements:retirement-evaluation-core")
@@ -93,6 +95,7 @@ include(":edc-extensions:agreements-bpns")
 include(":edc-extensions:agreements-bpns:bpns-evaluation-core")
 include(":edc-extensions:agreements-bpns:bpns-evaluation-store-sql")
 include(":edc-extensions:agreements-bpns:bpns-evaluation-spi")
+include(":edc-extensions:token-interceptor")
 
 // test modules
 include(":edc-tests:e2e-fixtures")
@@ -108,18 +111,19 @@ include(":edc-tests:e2e:policy-tests")
 include(":edc-tests:e2e:transfer-tests")
 include("edc-tests:e2e:discovery-tests")
 include(":edc-tests:e2e:dcp-tck-tests")
+include(":edc-tests:e2e:dsp-compatibility-tests")
 include(":edc-tests:runtime:dataplane-cloud")
+include(":edc-tests:runtime:runtime-dsp")
 include(":edc-tests:runtime:iatp:iatp-extensions")
 include(":edc-tests:runtime:iatp:runtime-memory-iatp-dim-ih")
 include(":edc-tests:runtime:iatp:runtime-memory-iatp-ih")
 include(":edc-tests:runtime:iatp:runtime-memory-sts")
 include(":edc-tests:runtime:mock-connector")
 include(":edc-tests:runtime:runtime-postgresql")
-include(":edc-tests:runtime:runtime-dsp")
 include("edc-tests:runtime:runtime-discovery:runtime-discovery-base")
 include("edc-tests:runtime:runtime-discovery:runtime-discovery-no-protocols")
 include("edc-tests:runtime:runtime-discovery:runtime-discovery-with-dsp-v08")
-include(":edc-tests:dsp-compatibility-tests:compatibility-test-runner")
+
 
 // modules for controlplane artifacts
 include(":edc-controlplane")
@@ -135,8 +139,8 @@ include(":edc-dataplane:edc-dataplane-hashicorp-vault")
 include(":samples:testing-with-mocked-connector")
 
 plugins {
-    id("com.gradle.develocity") version "4.1"
-    id("com.gradle.common-custom-user-data-gradle-plugin") version "2.3"
+    id("com.gradle.develocity") version "4.2.2"
+    id("com.gradle.common-custom-user-data-gradle-plugin") version "2.4.0"
 }
 
 // Develocity

@@ -1,4 +1,4 @@
-/*
+/********************************************************************************
  * Copyright (c) 2024 Bayerische Motoren Werke Aktiengesellschaft (BMW AG)
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -15,25 +15,30 @@
  * under the License.
  *
  * SPDX-License-Identifier: Apache-2.0
- */
+ ********************************************************************************/
 
 package org.eclipse.tractusx.edc.policy.cx.contractreference;
 
 import org.eclipse.edc.participant.spi.ParticipantAgentPolicyContext;
-import org.eclipse.edc.policy.engine.spi.AtomicConstraintRuleFunction;
 import org.eclipse.edc.policy.model.Operator;
 import org.eclipse.edc.policy.model.Permission;
+import org.eclipse.tractusx.edc.policy.cx.common.ValueValidatingConstraintFunction;
+
+import java.util.Set;
 
 
 /**
  * This is a placeholder constraint function for ContractReference. It always returns true but allows
  * the validation of policies to be strictly enforced.
  */
-public class ContractReferenceConstraintFunction<C extends ParticipantAgentPolicyContext> implements AtomicConstraintRuleFunction<Permission, C> {
+public class ContractReferenceConstraintFunction<C extends ParticipantAgentPolicyContext> extends ValueValidatingConstraintFunction<Permission, C> {
     public static final String CONTRACT_REFERENCE = "ContractReference";
 
-    @Override
-    public boolean evaluate(Operator operator, Object rightOperand, Permission permission, C c) {
-        return true;
+    public ContractReferenceConstraintFunction() {
+        super(
+                Set.of(Operator.IS_ALL_OF),
+                "[\\s\\S]+",
+                true
+        );
     }
 }

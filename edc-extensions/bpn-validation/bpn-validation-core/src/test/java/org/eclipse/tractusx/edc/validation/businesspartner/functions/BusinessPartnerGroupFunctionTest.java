@@ -25,6 +25,7 @@ import org.eclipse.edc.policy.model.Operator;
 import org.eclipse.edc.policy.model.Permission;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.result.StoreResult;
+import org.eclipse.tractusx.edc.spi.identity.mapper.BdrsClient;
 import org.eclipse.tractusx.edc.validation.businesspartner.spi.store.BusinessPartnerStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,20 +39,17 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.eclipse.edc.policy.model.Operator.EQ;
 import static org.eclipse.edc.policy.model.Operator.GEQ;
 import static org.eclipse.edc.policy.model.Operator.GT;
 import static org.eclipse.edc.policy.model.Operator.HAS_PART;
-import static org.eclipse.edc.policy.model.Operator.IN;
 import static org.eclipse.edc.policy.model.Operator.IS_A;
-import static org.eclipse.edc.policy.model.Operator.IS_ALL_OF;
 import static org.eclipse.edc.policy.model.Operator.IS_ANY_OF;
 import static org.eclipse.edc.policy.model.Operator.IS_NONE_OF;
 import static org.eclipse.edc.policy.model.Operator.LEQ;
 import static org.eclipse.edc.policy.model.Operator.LT;
-import static org.eclipse.edc.policy.model.Operator.NEQ;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class BusinessPartnerGroupFunctionTest {
@@ -60,11 +58,12 @@ class BusinessPartnerGroupFunctionTest {
     public static final String TEST_GROUP_2 = "test-group-2";
     private static final String TEST_BPN = "BPN000TEST";
     private final BusinessPartnerStore store = mock();
+    private final BdrsClient bdrsClient = mock();
     private final ParticipantAgent agent = mock();
     private final Monitor monitor = mock();
     private final Permission unusedPermission = Permission.Builder.newInstance().build();
     private final ParticipantAgentPolicyContext context = new TestParticipantAgentPolicyContext(agent);
-    private final BusinessPartnerGroupFunction<ParticipantAgentPolicyContext> function = new BusinessPartnerGroupFunction<>(store, monitor);
+    private final BusinessPartnerGroupLegacyFunction<ParticipantAgentPolicyContext> function = new BusinessPartnerGroupLegacyFunction<>(store, bdrsClient, monitor);
 
     @ParameterizedTest(name = "Invalid operator {0}")
     @ArgumentsSource(InvalidOperatorProvider.class)
@@ -101,6 +100,30 @@ class BusinessPartnerGroupFunctionTest {
         var result = function.evaluate(operator, allowedGroups, unusedPermission, context);
 
         assertThat(result).isEqualTo(expectedOutcome);
+    }
+    
+    @Test
+    void evaluate_whenMissingIdentity_shouldReturnFalse() {
+        var allowedGroups = List.of(TEST_GROUP_1, TEST_GROUP_2);
+        var result = function.evaluate(IS_ANY_OF, allowedGroups, unusedPermission, context);
+        
+        assertThat(result).isFalse();
+        assertThat(context.getProblems()).hasSize(1)
+                .anyMatch(it -> it.contains("Identity of the participant agent cannot be null"));
+    }
+    
+    @Test
+    void evaluate_whenIdentityIsDid_shouldResolveBpn() {
+        var did = "did:web:foo";
+        var allowedGroups = List.of(TEST_GROUP_1, TEST_GROUP_2);
+        when(agent.getIdentity()).thenReturn(did);
+        when(bdrsClient.resolveBpn(did)).thenReturn(TEST_BPN);
+        when(store.resolveForBpn(TEST_BPN)).thenReturn(StoreResult.success(allowedGroups));
+        
+        var result = function.evaluate(IS_ANY_OF, allowedGroups, unusedPermission, context);
+        
+        assertThat(result).isTrue();
+        verify(bdrsClient).resolveBpn(did);
     }
 
     @Test
@@ -146,25 +169,6 @@ class BusinessPartnerGroupFunctionTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
             return Stream.of(
-                    Arguments.of("Matching groups", EQ, List.of(TEST_GROUP_1, TEST_GROUP_2), true),
-                    Arguments.of("Disjoint groups", EQ, List.of("test-group", "different-group"), false),
-                    Arguments.of("Overlapping groups", EQ, List.of("different-group"), false),
-
-                    Arguments.of("Disjoint groups", NEQ, List.of("different-group", "another-different-group"), true),
-                    Arguments.of("Overlapping groups", NEQ, List.of(TEST_GROUP_1, "different-group"), true),
-                    Arguments.of("Matching groups", NEQ, List.of(TEST_GROUP_1, TEST_GROUP_2), false),
-                    Arguments.of("Empty groups", NEQ, List.of(), true),
-
-                    Arguments.of("Matching groups", IN, List.of(TEST_GROUP_1, TEST_GROUP_2), true),
-                    Arguments.of("Overlapping groups", IN, List.of(TEST_GROUP_1, "different-group"), true),
-                    Arguments.of("Disjoint groups", IN, List.of("different-group", "another-different-group"), false),
-
-                    Arguments.of("Disjoint groups", IS_ALL_OF, List.of("different-group", "another-different-group"), false),
-                    Arguments.of("Matching groups", IS_ALL_OF, List.of(TEST_GROUP_1, TEST_GROUP_2), true),
-                    Arguments.of("Overlapping groups", IS_ALL_OF, List.of(TEST_GROUP_1, TEST_GROUP_2, "different-group", "another-different-group"), true),
-                    Arguments.of("Overlapping groups (1 overlap)", IS_ALL_OF, List.of(TEST_GROUP_1, "different-group"), false),
-                    Arguments.of("Overlapping groups (1 overlap)", IS_ALL_OF, List.of(TEST_GROUP_1), false),
-
                     Arguments.of("Disjoint groups", IS_ANY_OF, List.of("different-group", "another-different-group"), false),
                     Arguments.of("Matching groups", IS_ANY_OF, List.of(TEST_GROUP_1, TEST_GROUP_2), true),
                     Arguments.of("Overlapping groups (1 overlap)", IS_ANY_OF, List.of(TEST_GROUP_1, "different-group", "another-different-group"), true),
@@ -184,14 +188,6 @@ class BusinessPartnerGroupFunctionTest {
             var assignedBpnGroups = List.of(TEST_GROUP_1, TEST_GROUP_2);
 
             return Stream.of(
-                    Arguments.of(EQ, assignedBpnGroups, false),
-                    Arguments.of(EQ, List.of(), true),
-                    Arguments.of(NEQ, assignedBpnGroups, true),
-                    Arguments.of(NEQ, List.of(), false),
-                    Arguments.of(IN, assignedBpnGroups, false),
-                    Arguments.of(IN, List.of(), true),
-                    Arguments.of(IS_ALL_OF, assignedBpnGroups, false),
-                    Arguments.of(IS_ALL_OF, List.of(), true),
                     Arguments.of(IS_ANY_OF, assignedBpnGroups, false),
                     Arguments.of(IS_ANY_OF, List.of(), true),
                     Arguments.of(IS_NONE_OF, assignedBpnGroups, true),

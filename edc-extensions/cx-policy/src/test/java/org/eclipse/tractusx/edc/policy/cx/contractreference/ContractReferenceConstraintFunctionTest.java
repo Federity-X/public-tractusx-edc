@@ -25,6 +25,8 @@ import org.eclipse.edc.policy.model.Operator;
 import org.eclipse.tractusx.edc.policy.cx.TestParticipantAgentPolicyContext;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -39,4 +41,23 @@ class ContractReferenceConstraintFunctionTest {
         assertThat(function.evaluate(Operator.EQ, "contractRef", null, context)).isTrue();
     }
 
+    @Test
+    void validate_whenOperatorAndRightOperandAreValid_thenSuccess() {
+        var result = function.validate(Operator.IS_ALL_OF, "valid-test", null);
+        assertThat(result.succeeded()).isTrue();
+    }
+
+    @Test
+    void validate_whenInvalidOperator_thenFailure() {
+        var result = function.validate(Operator.IS_ANY_OF, "valid-test", null);
+        assertThat(result.failed()).isTrue();
+        assertThat(result.getFailureDetail()).contains("Invalid operator");
+    }
+
+    @Test
+    void validate_whenInvalidValueType_thenFailure() {
+        var result = function.validate(Operator.IS_ALL_OF, List.of("invalid"), null);
+        assertThat(result.failed()).isTrue();
+        assertThat(result.getFailureDetail()).contains("Invalid right-operand: ");
+    }
 }

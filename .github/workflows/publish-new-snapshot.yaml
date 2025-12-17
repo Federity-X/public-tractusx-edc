@@ -44,8 +44,8 @@ on:
 
 
 concurrency:
-  # cancel only running jobs on pull requests
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  # cancel older running jobs on the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -74,7 +74,7 @@ jobs:
     outputs:
       VERSION: ${{ steps.get-version.outputs.VERSION }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: "Get version"
         id: get-version
         run: |

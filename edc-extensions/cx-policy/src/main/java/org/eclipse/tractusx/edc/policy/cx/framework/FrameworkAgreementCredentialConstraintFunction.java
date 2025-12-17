@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static org.eclipse.tractusx.edc.edr.spi.CoreConstants.CX_CREDENTIAL_NS;
-import static org.eclipse.tractusx.edc.edr.spi.CoreConstants.CX_POLICY_NS;
+import static org.eclipse.tractusx.edc.edr.spi.CoreConstants.CX_POLICY_2025_09_NS;
 
 
 /**
@@ -85,10 +85,10 @@ public class FrameworkAgreementCredentialConstraintFunction<C extends Participan
         var rightOperand = rightValue.toString();
         Result<List<Predicate<VerifiableCredential>>> predicateResult;
 
-        if (leftOperand.startsWith(CX_POLICY_NS + FRAMEWORK_AGREEMENT_LITERAL + ".")) { // legacy notation
+        if (leftOperand.startsWith(CX_POLICY_2025_09_NS + FRAMEWORK_AGREEMENT_LITERAL + ".")) { // legacy notation
             predicateResult = getFilterPredicateLegacy(leftOperand, rightOperand);
 
-        } else if (leftOperand.startsWith(CX_POLICY_NS + FRAMEWORK_AGREEMENT_LITERAL)) { // new notation
+        } else if (leftOperand.startsWith(CX_POLICY_2025_09_NS + FRAMEWORK_AGREEMENT_LITERAL)) { // new notation
             predicateResult = getFilterPredicate(rightOperand);
         } else { //invalid notation
             context.reportProblem("Constraint left-operand must start with '%s' but was '%s'.".formatted(FRAMEWORK_AGREEMENT_LITERAL, leftValue));
@@ -120,7 +120,7 @@ public class FrameworkAgreementCredentialConstraintFunction<C extends Participan
      */
     @Override
     public boolean canHandle(Object leftValue) {
-        return leftValue instanceof String && leftValue.toString().startsWith(CX_POLICY_NS + FRAMEWORK_AGREEMENT_LITERAL);
+        return leftValue instanceof String && leftValue.toString().startsWith(CX_POLICY_2025_09_NS + FRAMEWORK_AGREEMENT_LITERAL);
     }
 
     @Override
@@ -129,10 +129,10 @@ public class FrameworkAgreementCredentialConstraintFunction<C extends Participan
             return Result.failure("Invalid operator: this constraint only allows the following operators: %s, but received '%s'.".formatted(Operator.EQ, operator));
         }
 
-        return rightValue instanceof String s && s.equals("DataExchangeGovernance:2.0") ?
+        return rightValue instanceof String s && s.equals("DataExchangeGovernance:1.0") ?
                 Result.success() :
                 Result.failure("Invalid right-operand: allowed values are '%s'."
-                        .formatted("DataExchangeGovernance:2.0"));
+                        .formatted("DataExchangeGovernance:1.0"));
     }
 
     @NotNull
@@ -160,7 +160,7 @@ public class FrameworkAgreementCredentialConstraintFunction<C extends Participan
      * Converts the left- and right-operand (legacy notation) into either 1 or 2 predicates, depending on whether the version was encoded or not.
      */
     private Result<List<Predicate<VerifiableCredential>>> getFilterPredicateLegacy(String leftOperand, String rightOperand) {
-        var subType = leftOperand.replace(CX_POLICY_NS + FRAMEWORK_AGREEMENT_LITERAL + ".", "");
+        var subType = leftOperand.replace(CX_POLICY_2025_09_NS + FRAMEWORK_AGREEMENT_LITERAL + ".", "");
         if (subType.isEmpty()) {
             return Result.failure("Left-operand must contain the sub-type 'FrameworkAgreement.<subtype>'.");
         }

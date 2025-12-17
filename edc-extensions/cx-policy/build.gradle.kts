@@ -1,5 +1,6 @@
 /********************************************************************************
  * Copyright (c) 2023 Bayerische Motoren Werke Aktiengesellschaft (BMW AG)
+ * Copyright (c) 2025 Fraunhofer-Gesellschaft zur Förderung der angewandten Forschung e.V.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -19,18 +20,32 @@
 
 plugins {
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
+    api(project(":edc-extensions:bpn-validation:bpn-validation-spi"))
     implementation(project(":spi:core-spi"))
     implementation(project(":core:core-utils"))
+    implementation(project(":spi:bdrs-client-spi"))
     implementation(libs.edc.spi.catalog)
     implementation(libs.edc.spi.contract)
     implementation(libs.edc.spi.identitytrust)
     implementation(libs.edc.spi.policyengine)
     implementation(libs.edc.spi.vc)
     implementation(libs.jakartaJson)
+    implementation(libs.edc.spi.jsonld)
     testImplementation(libs.jacksonJsonP)
     testImplementation(libs.titaniumJsonLd)
+
+    //validator dependencies
+    api(libs.edc.spi.controlplane)
+    implementation(libs.edc.lib.validator)
+
     testImplementation(libs.edc.junit)
+    implementation("com.networknt:json-schema-validator:1.5.9") {
+        because("There's a conflict between mockserver-netty and identity-hub dependencies for testing, forcing json-schema-validator to 1.5.9 is solving that.")
+    }
+    testFixturesImplementation(libs.edc.junit)
+    testFixturesImplementation(libs.edc.spi.jsonld)
 }

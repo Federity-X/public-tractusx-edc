@@ -31,7 +31,8 @@ import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
-import org.eclipse.tractusx.edc.validation.businesspartner.functions.BusinessPartnerNumberPermissionFunction;
+import org.eclipse.tractusx.edc.spi.identity.mapper.BdrsClient;
+import org.eclipse.tractusx.edc.validation.businesspartner.functions.BusinessPartnerNumberPermissionLegacyFunction;
 
 import static org.eclipse.edc.connector.controlplane.catalog.spi.policy.CatalogPolicyContext.CATALOG_SCOPE;
 import static org.eclipse.edc.connector.controlplane.contract.spi.policy.ContractNegotiationPolicyContext.NEGOTIATION_SCOPE;
@@ -67,6 +68,8 @@ public class BusinessPartnerNumberValidationExtension implements ServiceExtensio
     private RuleBindingRegistry ruleBindingRegistry;
     @Inject
     private PolicyEngine policyEngine;
+    @Inject
+    private BdrsClient bdrsClient;
 
     @Override
     public String name() {
@@ -75,13 +78,12 @@ public class BusinessPartnerNumberValidationExtension implements ServiceExtensio
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-
-        bindToScope(TransferProcessPolicyContext.class, new BusinessPartnerNumberPermissionFunction<>(), TRANSFER_SCOPE);
-        bindToScope(ContractNegotiationPolicyContext.class, new BusinessPartnerNumberPermissionFunction<>(), NEGOTIATION_SCOPE);
-        bindToScope(CatalogPolicyContext.class, new BusinessPartnerNumberPermissionFunction<>(), CATALOG_SCOPE);
+        bindToLegacyScope(TransferProcessPolicyContext.class, new BusinessPartnerNumberPermissionLegacyFunction<>(bdrsClient), TRANSFER_SCOPE);
+        bindToLegacyScope(ContractNegotiationPolicyContext.class, new BusinessPartnerNumberPermissionLegacyFunction<>(bdrsClient), NEGOTIATION_SCOPE);
+        bindToLegacyScope(CatalogPolicyContext.class, new BusinessPartnerNumberPermissionLegacyFunction<>(bdrsClient), CATALOG_SCOPE);
     }
 
-    private <C extends PolicyContext> void bindToScope(Class<C> contextType, AtomicConstraintRuleFunction<Permission, C> function, String scope) {
+    private <C extends PolicyContext> void bindToLegacyScope(Class<C> contextType, AtomicConstraintRuleFunction<Permission, C> function, String scope) {
         ruleBindingRegistry.bind("USE", scope);
         ruleBindingRegistry.bind(ODRL_SCHEMA + "use", scope);
         ruleBindingRegistry.bind(BUSINESS_PARTNER_CONSTRAINT_KEY, scope);

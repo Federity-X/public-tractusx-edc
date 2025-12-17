@@ -19,17 +19,19 @@
 
 plugins {
     `java-library`
+    id("application")
 }
 
+
 dependencies {
-    api(project(":edc-controlplane:edc-controlplane-base")) {
-        exclude(module = "tx-dcp")
-        exclude(module = "tx-dcp-sts-dim")
-    }
-
-    api(project(":edc-dataplane:edc-dataplane-base")) {
-        exclude("org.eclipse.edc", "data-plane-selector-client")
-    }
-
+    runtimeOnly(project(":edc-tests:runtime:runtime-postgresql"))
     runtimeOnly(libs.tck.extension)
+}
+
+application {
+    mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
+}
+
+edcBuild {
+    publish.set(false)
 }
