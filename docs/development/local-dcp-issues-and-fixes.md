@@ -1,0 +1,556 @@
+# Local DCP Deployment — Issues, Fixes & Changes
+
+This document captures every issue encountered while building the local DCP deployment for
+Tractus-X EDC (v0.12.0-SNAPSHOT / EDC 0.15.1) with per-company Identity Hubs, and the
+exact fix applied for each one.
+
+---
+
+## Table of Contents
+
+1. [Architecture: Shared vs Per-Company Identity Hub](#1-architecture-shared-vs-per-company-identity-hub)
+2. [VP Cache Audience Mismatch (`edc.participant.id`)](#2-vp-cache-audience-mismatch)
+3. [Stale Data Plane Registrations (localhost URLs)](#3-stale-data-plane-registrations)
+4. [Data Plane Hostname Resolution (`edc.hostname`)](#4-data-plane-hostname-resolution)
+5. [Transfer Proxy Key Format (Raw Hex → EC P-256 JWK)](#5-transfer-proxy-key-format)
+6. [Credential Definition Mapping Format](#6-credential-definition-mapping-format)
+7. [JWT VC Signature Algorithm (`Ed25519` vs `EdDSA`)](#7-jwt-vc-signature-algorithm)
+8. [Credential `vc_format` and `usage` Flags](#8-credential-vc_format-and-usage-flags)
+9. [DataExchangeGovernanceCredential Missing from Trusted Issuer Types](#9-dataexchangegovernancecredential-missing)
+10. [Policy Assigner: BPN vs DID](#10-policy-assigner-bpn-vs-did)
+11. [JSON-LD `IRI_CONFUSED_WITH_PREFIX` — Compact IRIs in leftOperand](#11-json-ld-iri_confused_with_prefix)
+12. [Policy Action Type Mismatch (`"use"` vs `"odrl:use"`)](#12-policy-action-type-mismatch)
+13. [Diagnostic Logging in `VerifiablePresentationCacheImpl`](#13-diagnostic-logging)
+14. [Bootstrap Script — Full E2E Automation](#14-bootstrap-script)
+
+---
+
+## 1. Architecture: Shared vs Per-Company Identity Hub
+
+**Problem:** The original Identity Hub deployment plan used a single shared `identityhub`
+container managing both provider and consumer participants. The DIDs were
+`did:web:identityhub:provider` and `did:web:identityhub:consumer`. This worked for basic
+identity, but the DCP authentication flow requires each connector to have its own STS
+(Security Token Service) endpoint and its own credential store.
+
+**Fix:** Moved to a **per-company architecture** where each company (provider, consumer) has
+its own IdentityHub instance, Vault, and PostgreSQL database:
+
+| Component      | Provider Stack               | Consumer Stack                |
+|----------------|------------------------------|-------------------------------|
+| Identity Hub   | `provider-ih` (:7181/7292)   | `consumer-ih` (:8182/8293)    |
+| Vault          | `provider-vault` (:8201)     | `consumer-vault` (:8202)      |
+| PostgreSQL     | `provider-postgres` (:6432)  | `consumer-postgres` (:6433)   |
+
+**DIDs changed to:**
+- Provider: `did:web:provider-ih:provider`
+- Consumer: `did:web:consumer-ih:consumer`
+- Issuer: `did:web:issuerservice:issuer` (on the shared issuer stack)
+
+**Files created:**
+- `deployment/local/docker-compose.yaml` — 14 containers across provider, consumer, issuer, and BDRS stacks
+- `deployment/local/config/provider-ih.properties`, `consumer-ih.properties` — per-company IH configuration
+
+---
+
+## 2. VP Cache Audience Mismatch
+
+**Problem:** After the catalog request succeeded, VP (Verifiable Presentation) validation
+failed with:
+
+```
+Token audience claim (aud -> [did:web:consumer-ih:consumer]) did not contain
+expected audience: consumer
+```
+
+The VP token's `aud` claim contained the full DID (`did:web:consumer-ih:consumer`),
+but the connector was configured with `edc.participant.id=consumer` (short name),
+so the audience comparison failed.
+
+**Root Cause:** The `credentialValidationService.validate()` method resolves the
+`ownDid` from `edc.participant.id` and checks it against the JWT `aud` claim. When
+`edc.participant.id` is a short name rather than the full DID, the audience check fails.
+
+**Fix:** Set `edc.participant.id` to the **full DID** on control planes:
+
+```properties
+# provider-cp.properties
+edc.participant.id=did:web:provider-ih:provider
+
+# consumer-cp.properties
+edc.participant.id=did:web:consumer-ih:consumer
+```
+
+Data planes keep the short name (they don't participate in DCP VP validation):
+```properties
+# provider-dp.properties / consumer-dp.properties
+edc.participant.id=provider
+```
+
+A separate property `edc.participant.context.id` carries the short name for
+participant-context-scoped operations:
+```properties
+edc.participant.context.id=provider
+```
+
+**Files changed:**
+- `deployment/local/config/provider-cp.properties` — `edc.participant.id=did:web:provider-ih:provider`
+- `deployment/local/config/consumer-cp.properties` — `edc.participant.id=did:web:consumer-ih:consumer`
+
+---
+
+## 3. Stale Data Plane Registrations
+
+**Problem:** After restarting data planes with updated configuration, transfers failed
+because the `edc_data_plane_instance` table in each CP's database still contained old
+registrations pointing to `localhost` URLs from a previous run.
+
+**Root Cause:** Data plane self-registration persists in PostgreSQL. Restarting a DP with
+a new hostname doesn't remove the old registration — it adds a new one, potentially
+causing the CP to route to the stale entry.
+
+**Fix:** Manually deleted stale registrations from both CP databases before restarting:
+
+```sql
+DELETE FROM edc_data_plane_instance
+WHERE url LIKE '%localhost%';
+```
+
+Then restarted data planes so they re-registered with the correct Docker hostnames.
+
+**Prevention:** The bootstrap script now ensures connectors start fresh. In a clean
+deployment, this is not an issue since the databases start empty.
+
+---
+
+## 4. Data Plane Hostname Resolution
+
+**Problem:** After transfer initiation, the provider CP tried to contact the provider DP
+at `localhost:19196` (host-mapped port) instead of `provider-dp:8084` (Docker internal).
+This failed because inside the Docker network, `localhost` doesn't resolve to the
+host machine.
+
+**Root Cause:** Without explicitly setting `edc.hostname`, the data plane self-registers
+using the system's hostname, which inside Docker resolves to a container ID or `localhost`.
+The CP then tries to proxy requests to this address.
+
+**Fix:** Added `edc.hostname` to both data plane configurations:
+
+```properties
+# provider-dp.properties
+edc.hostname=provider-dp
+
+# consumer-dp.properties
+edc.hostname=consumer-dp
+```
+
+This ensures the DP registers itself with the Docker container name, which is resolvable
+from any container on the `edc-net` network.
+
+**Files changed:**
+- `deployment/local/config/provider-dp.properties` — added `edc.hostname=provider-dp`
+- `deployment/local/config/consumer-dp.properties` — added `edc.hostname=consumer-dp`
+
+---
+
+## 5. Transfer Proxy Key Format
+
+**Problem:** Data transfers reached `STARTED` state, but the EDR (Endpoint Data Reference)
+contained an invalid access token. Data pull requests returned authentication errors.
+
+**Root Cause:** The transfer proxy signing key was stored in Vault as a **raw hex string**.
+EDC 0.15.1 expects the transfer proxy key to be an **EC P-256 JWK (JSON Web Key)** in
+JSON format. The key parser silently failed or produced garbage tokens.
+
+**Fix:** Generated proper EC P-256 JWK keys and stored them as JSON in Vault:
+
+```json
+// Provider transfer proxy key
+{
+  "kty": "EC",
+  "crv": "P-256",
+  "x": "Wpd-wxJHzg88SJI_6zE4S6EPwQiuosxvE_XI4n5dWWQ",
+  "y": "kd2DdngBbh3eBC2TYrTnz2mUF35UoXGl2Bg-85E_bPg",
+  "d": "9SZ3iNHpAWy6L_L6AuTqXEzkUI8rdT5Q9dDfHexMcZk",
+  "kid": "provider-transfer-proxy-key"
+}
+```
+
+The Vault storage function was also updated to use `jq` for safe JSON construction,
+since the JWK value contains embedded quotes that break naive string interpolation:
+
+```bash
+store_vault_secret() {
+    local payload
+    payload=$(jq -n --arg v "$value" '{"data": {"content": $v}}')
+    curl -sf -X PUT "${vault_url}/v1/secret/data/${key}" \
+        -H "X-Vault-Token: ${VAULT_TOKEN}" \
+        -d "${payload}" > /dev/null
+}
+```
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — JWK keys in Step 3 (vault secret storage), `store_vault_secret()` uses `jq`
+
+---
+
+## 6. Credential Definition Mapping Format
+
+**Problem:** Credential issuance failed when requesting `BpnCredential` and
+`DataExchangeGovernanceCredential`. The issuer service returned errors about invalid
+credential definition mappings.
+
+**Root Cause:** The credential definition mapping format in the Issuer Service API
+requires `input`/`output`/`required` fields, not the simpler format we initially used.
+
+**Fix:** Used the correct mapping format in the bootstrap script:
+
+```json
+{
+  "input": "holderIdentifier",
+  "output": "credentialSubject.holderIdentifier",
+  "required": false
+}
+```
+
+For BPN credentials:
+```json
+[
+  {"input": "holderIdentifier", "output": "credentialSubject.holderIdentifier", "required": false},
+  {"input": "bpn", "output": "credentialSubject.id", "required": false}
+]
+```
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 9 (credential + attestation definitions)
+
+---
+
+## 7. JWT VC Signature Algorithm
+
+**Problem:** Verifiable Credential validation failed during VP verification. The JWT VCs
+issued by the issuer service could not be verified.
+
+**Root Cause:** The issuer uses an Ed25519 key. The JWT header for VCs must specify
+`"alg": "Ed25519"` (the key type identifier), **not** `"alg": "EdDSA"` (the generic
+algorithm family). The EDC credential validation code specifically checks for `"Ed25519"`.
+
+**Fix:** Ensured the issuer's signing key and VC issuance configuration use `"Ed25519"` as
+the algorithm identifier. The bootstrap script constructs JWTs with:
+
+```json
+{"kid": "did:web:issuerservice:issuer#issuer-key", "alg": "Ed25519"}
+```
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 10 (credential request JWT construction)
+
+---
+
+## 8. Credential `vc_format` and `usage` Flags
+
+**Problem:** After credentials were issued and stored in the holder Identity Hubs, catalog
+requests still failed. VPs were empty — no credentials were being selected for presentation.
+
+**Root Cause:** Credentials stored in the holder's database had incorrect metadata:
+- `vc_format = 0` (unknown) instead of `vc_format = 1` (JWT)
+- `usage = 0` or `null` instead of the value indicating "available for holder presentation"
+
+The credential query filtered by these fields, so credentials with wrong values were never
+included in VPs.
+
+**Fix:** Added a post-issuance fixup step in bootstrap that directly updates the holder databases:
+
+```sql
+-- Fix credentials in provider-ih's database
+UPDATE credential SET vc_format = 1 WHERE vc_format != 1;
+UPDATE credential SET usage = 'Holder' WHERE usage IS NULL OR usage != 'Holder';
+
+-- Same for consumer-ih's database
+```
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 11b (fix credential vc_format and usage)
+
+---
+
+## 9. DataExchangeGovernanceCredential Missing from Trusted Issuer Types
+
+**Problem:** Contract negotiations failed with policy evaluation errors. The policy required
+a `DataExchangeGovernanceCredential`, but this credential type was not being requested
+during DCP authentication.
+
+**Root Cause:** The `edc.iam.trusted-issuer.issuer.supportedtypes` property on control
+planes only listed `MembershipCredential` and `BpnCredential`. The
+`DataExchangeGovernanceCredential` was missing, so the VP request never asked for it,
+and the returned VP didn't include it.
+
+**Fix:** Added `DataExchangeGovernanceCredential` to the supported types on both CPs:
+
+```properties
+edc.iam.trusted-issuer.issuer.supportedtypes=["MembershipCredential","BpnCredential","DataExchangeGovernanceCredential"]
+```
+
+**Files changed:**
+- `deployment/local/config/provider-cp.properties`
+- `deployment/local/config/consumer-cp.properties`
+
+**Note:** The data plane configuration files still only list `MembershipCredential` and
+`BpnCredential` since DPs don't evaluate contract policies.
+
+---
+
+## 10. Policy Assigner: BPN vs DID
+
+**Problem:** Contract negotiations returned `400 — Policy not fulfilled`. The consumer's
+negotiation request was rejected by the provider because the policy didn't match.
+
+**Root Cause:** The `odrl:assigner` field in the negotiation request was set to the
+provider's DID (`did:web:provider-ih:provider`). However, the provider's contract
+policy has `assigner = BPNL000000000001` (the BPN). In DSP v0.8, the
+`BpnExtractionFunction` maps the provider's identity to its BPN for policy comparison,
+so the assigner must match the BPN, not the DID.
+
+**Fix:** Use the provider's BPN as the assigner in negotiation requests:
+
+```json
+{
+  "odrl:assigner": {"@id": "BPNL000000000001"}
+}
+```
+
+**NOT** `{"@id": "did:web:provider-ih:provider"}`.
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 15 (contract negotiation)
+- `deployment/local/scripts/test-transfer.sh` — Step 3 (negotiation)
+
+---
+
+## 11. JSON-LD `IRI_CONFUSED_WITH_PREFIX`
+
+**Problem:** After CP restart, new contract negotiations failed with:
+
+```
+Failed to compact JSON-LD: When compacting an IRI would result in an IRI which
+could be confused with a compact IRI [code=IRI_CONFUSED_WITH_PREFIX].
+```
+
+The error occurred in `TitaniumJsonLd.compact()` during serialization of the outgoing
+DSP contract request message on the consumer CP.
+
+**Root Cause:** The `leftOperand` value in the stored policy was a **compact IRI**
+(`cx-policy:FrameworkAgreement`) instead of the **full IRI**
+(`https://w3id.org/catenax/2025/9/policy/FrameworkAgreement`).
+
+When the `JsonObjectFromPolicyTransformer` built the JSON-LD for the DSP message, it
+placed this compact IRI directly as `{"@id": "cx-policy:FrameworkAgreement"}`. During
+compaction, the DSP v0.8 scope's context includes `cx-policy` as a registered prefix
+(mapped to `https://w3id.org/catenax/policy/` — the **old** deprecated URL). The
+Titanium JSON-LD library detected that compacting the IRI would produce an ambiguous
+result and threw `IRI_CONFUSED_WITH_PREFIX`.
+
+**Why the compact IRI was stored:** When the negotiation request body used
+`"odrl:leftOperand": "cx-policy:FrameworkAgreement"`, the management API did **not**
+expand this value into a full IRI, even when `cx-policy` was included in the request
+`@context`. This is because the ODRL context defines `leftOperand` with
+`"@type": "@vocab"`, and the EDC management API processes the embedded policy using
+a nested context (`cx-odrl.jsonld`) that doesn't include the `cx-policy` prefix mapping
+from the top-level request context.
+
+**Additional complication:** The codebase has two different `cx-policy` namespace URLs:
+- `CX_POLICY_NS = "https://w3id.org/catenax/policy/"` — old, deprecated (registered for DSP v0.8 scope)
+- `CX_POLICY_2025_09_NS = "https://w3id.org/catenax/2025/9/policy/"` — new (used in context document `cx-policy-v1.jsonld`)
+
+This asymmetry in `CxJsonLdExtension.java` means the DSP v0.8 scope maps `cx-policy` to
+the old URL, while the JSON-LD context document maps it to the new URL.
+
+**Fix:** Use **full IRIs** for `leftOperand` values in negotiation requests, wrapped in
+`{"@id": "..."}`:
+
+```json
+{
+  "odrl:leftOperand": {"@id": "https://w3id.org/catenax/2025/9/policy/FrameworkAgreement"},
+  "odrl:operator": {"@id": "odrl:eq"},
+  "odrl:rightOperand": "DataExchangeGovernance:1.0"
+}
+```
+
+**NOT** `"odrl:leftOperand": "cx-policy:FrameworkAgreement"`.
+
+**Related upstream issue:** [eclipse-edc/Connector#4160](https://github.com/eclipse-edc/Connector/issues/4160)
+and [PR #4235](https://github.com/eclipse-edc/Connector/pull/4235) — same error pattern,
+fixed with `MissingPrefixes` validator (already in 0.15.1), but that fix only covers
+incoming expansion, not outgoing compaction of stored compact IRIs.
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 15 (uses full IRIs)
+- `deployment/local/scripts/test-transfer.sh` — Step 3 (uses full IRIs)
+
+---
+
+## 12. Policy Action Type Mismatch
+
+**Problem:** After fixing the IRI issue (Issue #11), negotiations progressed further but
+were then rejected by the consumer with:
+
+```
+Policy in the contract agreement is not equal to the one in the contract offer
+```
+
+**Root Cause:** The negotiation request used `"odrl:action": "use"` (plain string).
+The consumer management API stored this as `action.type = "use"`. However, the provider
+received and expanded the DSP message, storing `action.type = "http://www.w3.org/ns/odrl/2/use"`
+(full IRI). When the provider sent the agreement back, the consumer's DSP endpoint
+expanded it to the full IRI form.
+
+`PolicyEquality` (in `control-plane-contract`) compares policies by serializing both to
+Jackson JSON trees and doing structural comparison. Since
+`"use" != "http://www.w3.org/ns/odrl/2/use"`, the comparison failed.
+
+**Fix:** Use `{"@id": "odrl:use"}` for the action, which gets properly expanded to the
+full IRI `http://www.w3.org/ns/odrl/2/use` during management API processing:
+
+```json
+{
+  "odrl:permission": [{
+    "odrl:action": {"@id": "odrl:use"},
+    ...
+  }]
+}
+```
+
+**NOT** `"odrl:action": "use"`.
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 15
+- `deployment/local/scripts/test-transfer.sh` — Step 3
+
+---
+
+## 13. Diagnostic Logging in `VerifiablePresentationCacheImpl`
+
+**Problem:** VP validation failures produced no logs at all. The original code used a
+functional chain (`compose`) that swallowed failure details, making it impossible to
+determine which validation step failed.
+
+**Fix:** Replaced the functional chain with explicit step-by-step validation, logging
+each step's pass/fail status:
+
+```java
+// BEFORE (original code)
+return validateRequestedCredentials(presentations, scopes)
+        .compose(ignore -> credentialValidationService.validate(...))
+        .compose(ignore -> verifyPresentationIssuer(...))
+        .succeeded();
+
+// AFTER (with diagnostics)
+var step1 = validateRequestedCredentials(presentations, scopes);
+if (step1.failed()) {
+    monitor.warning("VP validation FAILED at step 1 (validateRequestedCredentials): "
+        + step1.getFailureDetail());
+    return false;
+}
+monitor.warning("VP validation PASSED step 1 (validateRequestedCredentials)");
+
+var step2 = credentialValidationService.validate(presentations, ownDid, Collections.emptyList());
+if (step2.failed()) {
+    monitor.warning("VP validation FAILED at step 2 for ownDid=%s: %s"
+        .formatted(ownDid, step2.getFailureDetail()));
+    return false;
+}
+// ... step 3 ...
+```
+
+This was critical for diagnosing Issue #2 (audience mismatch).
+
+**Files changed:**
+- `edc-extensions/dcp/verifiable-presentation-cache/src/main/java/org/eclipse/tractusx/edc/iam/dcp/cache/VerifiablePresentationCacheImpl.java`
+
+---
+
+## 14. Bootstrap Script — Full E2E Automation
+
+**Problem:** There was no automated way to set up the complete DCP deployment. Each step
+(participant creation, credential issuance, vault seeding, etc.) had to be done manually,
+with many subtle ordering requirements and format expectations.
+
+**Fix:** Created a comprehensive bootstrap script (`bootstrap.sh`) that automates the
+entire setup in 16 steps:
+
+| Step  | Description |
+|-------|-------------|
+| 0     | Check prerequisites (health checks for IH, Vault, DB) |
+| 0b    | Create BDRS database on issuer-postgres |
+| 0c    | Store BDRS management API key in issuer-vault |
+| 1     | Create provider participant in provider-ih |
+| 2     | Create consumer participant in consumer-ih |
+| 3     | Store secrets in per-company vaults (STS secrets, transfer proxy JWK keys) |
+| 4     | Verify STS token acquisition |
+| 5     | Create issuer participant in issuerservice |
+| 6     | Register holders (provider, consumer) in issuerservice |
+| 7     | Fix key IDs to full DID URL format |
+| 8     | Add service endpoints to DID documents |
+| 9     | Create attestation + credential definitions |
+| 10    | Request credentials via DCP (Membership, BPN, DataExchangeGovernance) |
+| 11    | Verify credentials (expecting 3 each) |
+| 11b   | Fix credential `vc_format` and `usage` flags |
+| 12    | Seed BDRS server (BPN↔DID mappings) |
+| 13    | Create asset, policies, and contract definitions on provider |
+| 14    | Verify catalog access from consumer |
+| 15    | Negotiate contract (with full IRIs and correct action format) |
+| 16    | Start data transfer and pull data (full E2E verification) |
+
+Also created `test-transfer.sh` — a standalone E2E test that runs Steps 14–16 on an
+already-bootstrapped deployment.
+
+**Files created:**
+- `deployment/local/scripts/bootstrap.sh` (~1068 lines)
+- `deployment/local/scripts/test-transfer.sh` (~237 lines)
+
+---
+
+## Summary of All Changed/Created Files
+
+### New Files (entire `deployment/local/` directory)
+
+| File | Purpose |
+|------|---------|
+| `deployment/local/docker-compose.yaml` | 14-container Docker Compose with per-company architecture |
+| `deployment/local/Dockerfile` | Multi-stage build for EDC connector images |
+| `deployment/local/README.md` | Deployment documentation |
+| `deployment/local/config/provider-cp.properties` | Provider control plane configuration |
+| `deployment/local/config/provider-dp.properties` | Provider data plane configuration |
+| `deployment/local/config/consumer-cp.properties` | Consumer control plane configuration |
+| `deployment/local/config/consumer-dp.properties` | Consumer data plane configuration |
+| `deployment/local/config/provider-ih.properties` | Provider Identity Hub configuration |
+| `deployment/local/config/consumer-ih.properties` | Consumer Identity Hub configuration |
+| `deployment/local/config/provider-init.sql` | Provider PostgreSQL init (creates EDC + IH databases) |
+| `deployment/local/config/consumer-init.sql` | Consumer PostgreSQL init (creates EDC + IH databases) |
+| `deployment/local/config/ih-logging.properties` | Identity Hub logging configuration |
+| `deployment/local/scripts/bootstrap.sh` | Full bootstrap automation (1068 lines) |
+| `deployment/local/scripts/test-transfer.sh` | E2E transfer test script (237 lines) |
+| `deployment/local/scripts/seed-vault.sh` | Vault seeding helper |
+| `docs/development/local-dcp-deployment-plan.md` | Architecture and deployment plan |
+
+### Modified Files (from `dcp` branch)
+
+| File | Change |
+|------|--------|
+| `edc-extensions/dcp/verifiable-presentation-cache/src/main/java/.../VerifiablePresentationCacheImpl.java` | Added diagnostic logging to `areCredentialsValid()` — breaks out functional chain into step-by-step validation with WARN-level logging for each step |
+
+---
+
+## Key Configuration Requirements (Quick Reference)
+
+| Property | Required Value | Why |
+|----------|---------------|-----|
+| `edc.participant.id` (CP) | Full DID (e.g., `did:web:provider-ih:provider`) | VP audience validation |
+| `edc.participant.id` (DP) | Short name (e.g., `provider`) | Not used for DCP auth |
+| `edc.participant.context.id` | Short name (e.g., `provider`) | Participant context scoping |
+| `edc.hostname` (DP) | Docker container name (e.g., `provider-dp`) | DP self-registration URL |
+| `edc.iam.trusted-issuer.issuer.supportedtypes` | Include `DataExchangeGovernanceCredential` | Policy evaluation needs this VC |
+| Transfer proxy key (Vault) | EC P-256 JWK JSON | EDR token signing/verification |
+| `odrl:assigner` (negotiation) | Provider BPN, not DID | DSP v0.8 BPN extraction |
+| `odrl:action` (negotiation) | `{"@id": "odrl:use"}` | Policy comparison requires full IRI |
+| `odrl:leftOperand` (negotiation) | Full IRI with `{"@id": "..."}` | Avoids `IRI_CONFUSED_WITH_PREFIX` |
