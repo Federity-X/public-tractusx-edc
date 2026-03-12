@@ -21,6 +21,9 @@
 
 package org.eclipse.tractusx.edc.protocol.core.identifier;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.eclipse.edc.iam.verifiablecredentials.spi.model.VerifiableCredential;
 import org.eclipse.edc.protocol.spi.ParticipantIdExtractionFunction;
 import org.eclipse.edc.spi.EdcException;
@@ -28,10 +31,6 @@ import org.eclipse.edc.spi.iam.ClaimToken;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.result.Result;
 import org.eclipse.tractusx.edc.core.utils.credentials.CredentialTypePredicate;
-
-import java.util.List;
-import java.util.Optional;
-
 import static org.eclipse.tractusx.edc.edr.spi.CoreConstants.CX_CREDENTIAL_NS;
 
 /**
