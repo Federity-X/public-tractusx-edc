@@ -102,7 +102,7 @@ graph TB
 | Component | Role |
 |-----------|------|
 | **Control Plane (CP)** | Orchestrates catalog browsing, contract negotiation, transfer initiation. Hosts the Management API for external clients and the DSP endpoint for connector-to-connector protocol. |
-| **Data Plane (DP)** | Handles actual data transfer — serves data for PULL requests (via EDR tokens) and pushes data to webhooks for PUSH transfers. |
+| **Data Plane (DP)** | Handles actual data transfer — serves data for PULL requests (via EDR tokens) and pushes data to consumer-provided HTTP endpoints for PUSH transfers. |
 | **IdentityHub (IH)** | Per-company wallet. Manages DIDs, stores Verifiable Credentials, provides STS (Security Token Service) for DCP authentication. |
 | **Issuer Service** | Trusted credential issuer. Issues MembershipCredential, BpnCredential, and DataExchangeGovernanceCredential to participants. |
 | **BDRS Server** | Central directory mapping BPNs (Business Partner Numbers) to DIDs. Used during DCP authentication to resolve participant identities. |
@@ -191,9 +191,51 @@ sequenceDiagram
 
 ## Data Transfer Patterns
 
-This deployment supports both data transfer modes:
+This deployment supports both data transfer modes defined by the
+[Dataspace Protocol (DSP)](https://docs.internationaldataspaces.org/ids-knowledgebase/dataspace-protocol).
 
-### HttpData-PULL (Consumer fetches data)
+### Why Does the Consumer Always Initiate?
+
+A common question: if the provider is the one pushing data, why does the **consumer** start the
+transfer? The answer is **data sovereignty** — the core principle of dataspace architectures.
+
+In a traditional point-to-point integration, the provider could simply POST data to a known URL.
+But in a dataspace, every data exchange must be **governed**:
+
+| Principle | What It Ensures |
+|-----------|-----------------|
+| **Contract-backed** | No data flows without a signed contract agreement between both parties |
+| **Policy enforcement** | Usage policies (e.g., "only for quality analysis", "FrameworkAgreement required") are verified at transfer time |
+| **Audit trail** | Every transfer is tied to a contract agreement ID, enabling full traceability |
+| **Dynamic destinations** | The consumer decides where data should be delivered — different endpoint per use case |
+| **Revocability** | Either party can terminate an active transfer at any time |
+
+The consumer's transfer request is the **authorization gate**: it triggers the provider's Control
+Plane to verify a valid contract exists and all policies are satisfied before any data moves.
+
+**Traditional API** — provider sends data unilaterally → no governance, no audit, no policy check.
+
+**Dataspace (DSP)** — consumer says *"I have contract X for asset Y, deliver to my endpoint"* →
+provider verifies → then pushes → governed data exchange.
+
+### PULL vs PUSH — What's Different?
+
+| Aspect | HttpData-PULL | HttpData-PUSH |
+|--------|--------------|---------------|
+| **Who fetches data?** | Consumer (via EDR token) | Provider Data Plane |
+| **Who receives data?** | Consumer's client application | Any HTTP endpoint the consumer provides (REST API, data ingestion service, webhook, etc.) |
+| **Consumer Data Plane needed?** | No (client calls provider DP directly) | **No** (only an HTTP endpoint that can receive POST requests) |
+| **Provider Data Plane needed?** | Yes (serves data via public API) | Yes (fetches from source + POSTs to consumer's endpoint) |
+| **Transfer lifecycle** | STARTED → consumer polls EDR → fetches when ready | STARTED → provider pushes immediately |
+| **Use case** | On-demand data retrieval | Event-driven delivery, notifications, data pipelines |
+
+> **Non-finite (streaming) PUSH**: For continuous data feeds, the consumer initiates a non-finite
+> PUSH transfer. The transfer stays in `STARTED` state indefinitely, and the provider keeps pushing
+> data to the consumer's endpoint as events occur. Either party can terminate the transfer when done.
+
+### Sequence Diagrams
+
+#### HttpData-PULL (Consumer fetches data)
 
 ```mermaid
 sequenceDiagram
@@ -218,7 +260,12 @@ sequenceDiagram
     ProviderDP-->>Client: Data response
 ```
 
-### HttpData-PUSH (Provider pushes data to webhook)
+#### HttpData-PUSH (Provider pushes data to consumer's endpoint)
+
+The consumer specifies their HTTP endpoint URL (any REST API, data ingestion service, webhook, etc.)
+in the `dataDestination`. The provider's Data Plane fetches data from the source and POSTs it to
+that endpoint. In our local tests, we use a webhook service (e.g., webhook.site) as a stand-in
+since there is no real consumer backend.
 
 ```mermaid
 sequenceDiagram
@@ -227,14 +274,14 @@ sequenceDiagram
     participant ProviderCP as Provider CP
     participant ProviderDP as Provider DP
     participant DataSource as Data Source
-    participant Webhook as Webhook Endpoint
+    participant ConsumerEndpoint as Consumer HTTP Endpoint
 
-    Client->>ConsumerCP: POST /v3/transferprocesses<br/>(transferType: HttpData-PUSH,<br/>dataDestination: webhook URL)
+    Client->>ConsumerCP: POST /v3/transferprocesses<br/>(transferType: HttpData-PUSH,<br/>dataDestination: consumer endpoint URL)
     ConsumerCP->>ProviderCP: DSP TransferRequest
     ProviderCP->>ProviderDP: Push data to destination
     ProviderDP->>DataSource: Fetch data
     DataSource-->>ProviderDP: Data
-    ProviderDP->>Webhook: POST data to webhook
+    ProviderDP->>ConsumerEndpoint: POST data to consumer endpoint
     Note over ConsumerCP: Transfer state → STARTED
 ```
 
@@ -419,7 +466,7 @@ Each participant (provider, consumer) receives 3 VCs from the issuer:
 |--------|---------|
 | [`scripts/bootstrap.sh`](scripts/bootstrap.sh) | Full environment bootstrap (16 steps): participant creation, vault seeding, credential issuance, BDRS seeding, asset/policy setup, E2E verification |
 | [`scripts/test-transfer.sh`](scripts/test-transfer.sh) | E2E transfer test: catalog → negotiate → PULL transfer → pull data |
-| [`scripts/test-push-transfer.sh`](scripts/test-push-transfer.sh) | E2E PUSH transfer test: asset creation → negotiate → PUSH data to webhook |
+| [`scripts/test-push-transfer.sh`](scripts/test-push-transfer.sh) | E2E PUSH transfer test: asset creation → negotiate → PUSH data to consumer endpoint (uses webhook.site as stand-in) |
 | [`scripts/demo-management-api.sh`](scripts/demo-management-api.sh) | Comprehensive 20-operation Management API demo covering all endpoints |
 
 ---
