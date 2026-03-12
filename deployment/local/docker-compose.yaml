@@ -1,0 +1,292 @@
+#
+# Tractus-X EDC Connector Stack — Local Docker Compose
+#
+# Architecture (per MXD reference):
+#   Provider Stack: provider-vault, provider-postgres, provider-ih, provider-cp, provider-dp
+#   Consumer Stack: consumer-vault, consumer-postgres, consumer-ih, consumer-cp, consumer-dp
+#   Central:        bdrs-server
+#   Issuer Stack:   (separate docker-compose from IdentityHub repo — see below)
+#
+# Each company has its OWN vault, database, and IdentityHub (wallet).
+# The connector + IH share the same vault (like production).
+#
+# Prerequisites:
+#   1. Issuer stack running on edc-net
+#      IdentityHub repo: https://github.com/Federity-X/public-tractusx-identityhub/tree/dcp-flow-local-deployment-with-upstream-0.15.1
+#   2. Build IH image in IH repo: docker build -t identityhub:local runtimes/identityhub/
+#   3. Build EDC shadow JARs:
+#        ./gradlew :edc-controlplane:edc-controlplane-postgresql-hashicorp-vault:shadowJar
+#        ./gradlew :edc-dataplane:edc-dataplane-hashicorp-vault:shadowJar
+#   4. Build EDC Docker images:
+#        docker build -t edc-controlplane:local --build-arg JAR=edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/build/libs/edc-controlplane-postgresql-hashicorp-vault.jar -f deployment/local/Dockerfile .
+#        docker build -t edc-dataplane:local --build-arg JAR=edc-dataplane/edc-dataplane-hashicorp-vault/build/libs/edc-dataplane-hashicorp-vault.jar -f deployment/local/Dockerfile .
+#   5. Run bootstrap:
+#        cd deployment/local && bash scripts/bootstrap.sh
+#
+# Usage:
+#   cd deployment/local
+#   docker compose up -d
+#
+
+services:
+
+  # ============================================================================
+  #  PROVIDER COMPANY STACK
+  # ============================================================================
+
+  # ---------- Provider Vault ----------
+  provider-vault:
+    image: hashicorp/vault:1.15
+    container_name: provider-vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    ports:
+      - "8201:8200"
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:8200/v1/sys/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - edc-net
+
+  # ---------- Provider PostgreSQL ----------
+  provider-postgres:
+    image: postgres:16-alpine
+    container_name: provider-postgres
+    environment:
+      POSTGRES_USER: provider
+      POSTGRES_PASSWORD: provider
+      POSTGRES_DB: provider
+    ports:
+      - "6432:5432"
+    volumes:
+      - provider-postgres-data:/var/lib/postgresql/data
+      - ./config/provider-init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U provider"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - edc-net
+
+  # ---------- Provider Identity Hub (Wallet) ----------
+  provider-ih:
+    image: identityhub:local
+    container_name: provider-ih
+    depends_on:
+      provider-postgres:
+        condition: service_healthy
+      provider-vault:
+        condition: service_healthy
+    environment:
+      JAVA_TOOL_OPTIONS: >-
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    ports:
+      - "7181:8181"     # default / health
+      - "7292:9292"     # STS
+      - "7131:13131"    # credentials
+      - "7100:80"       # DID (did:web resolution)
+      - "7151:15151"    # identity (management)
+      - "5007:5005"     # JVM debug
+    volumes:
+      - ./config/provider-ih.properties:/app/configuration.properties:ro
+      - ./config/ih-logging.properties:/app/logging.properties:ro
+    networks:
+      - edc-net
+
+  # ---------- Provider Control Plane ----------
+  provider-cp:
+    image: edc-controlplane:local
+    container_name: provider-cp
+    depends_on:
+      provider-postgres:
+        condition: service_healthy
+      provider-vault:
+        condition: service_healthy
+    ports:
+      - "19191:8080"    # default / health
+      - "19193:8081"    # management API
+      - "19192:8083"    # control
+      - "19194:8084"    # DSP protocol
+      - "19195:8085"    # catalog
+    volumes:
+      - ./config/provider-cp.properties:/app/configuration.properties:ro
+    networks:
+      - edc-net
+
+  # ---------- Provider Data Plane ----------
+  provider-dp:
+    image: edc-dataplane:local
+    container_name: provider-dp
+    depends_on:
+      provider-postgres:
+        condition: service_healthy
+      provider-vault:
+        condition: service_healthy
+    ports:
+      - "19196:8080"    # default / health
+      - "19197:8081"    # public API
+      - "19198:8084"    # control / signaling
+    volumes:
+      - ./config/provider-dp.properties:/app/configuration.properties:ro
+    networks:
+      - edc-net
+
+  # ============================================================================
+  #  CONSUMER COMPANY STACK
+  # ============================================================================
+
+  # ---------- Consumer Vault ----------
+  consumer-vault:
+    image: hashicorp/vault:1.15
+    container_name: consumer-vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    ports:
+      - "8202:8200"
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:8200/v1/sys/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - edc-net
+
+  # ---------- Consumer PostgreSQL ----------
+  consumer-postgres:
+    image: postgres:16-alpine
+    container_name: consumer-postgres
+    environment:
+      POSTGRES_USER: consumer
+      POSTGRES_PASSWORD: consumer
+      POSTGRES_DB: consumer
+    ports:
+      - "6433:5432"
+    volumes:
+      - consumer-postgres-data:/var/lib/postgresql/data
+      - ./config/consumer-init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U consumer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - edc-net
+
+  # ---------- Consumer Identity Hub (Wallet) ----------
+  consumer-ih:
+    image: identityhub:local
+    container_name: consumer-ih
+    depends_on:
+      consumer-postgres:
+        condition: service_healthy
+      consumer-vault:
+        condition: service_healthy
+    environment:
+      JAVA_TOOL_OPTIONS: >-
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    ports:
+      - "8182:8181"     # default / health
+      - "8293:9292"     # STS
+      - "8132:13131"    # credentials
+      - "8100:80"       # DID (did:web resolution)
+      - "8152:15151"    # identity (management)
+      - "5008:5005"     # JVM debug
+    volumes:
+      - ./config/consumer-ih.properties:/app/configuration.properties:ro
+      - ./config/ih-logging.properties:/app/logging.properties:ro
+    networks:
+      - edc-net
+
+  # ---------- Consumer Control Plane ----------
+  consumer-cp:
+    image: edc-controlplane:local
+    container_name: consumer-cp
+    depends_on:
+      consumer-postgres:
+        condition: service_healthy
+      consumer-vault:
+        condition: service_healthy
+    ports:
+      - "29191:8080"    # default / health
+      - "29193:8081"    # management API
+      - "29192:8083"    # control
+      - "29194:8084"    # DSP protocol
+      - "29195:8085"    # catalog
+    volumes:
+      - ./config/consumer-cp.properties:/app/configuration.properties:ro
+    networks:
+      - edc-net
+
+  # ---------- Consumer Data Plane ----------
+  consumer-dp:
+    image: edc-dataplane:local
+    container_name: consumer-dp
+    depends_on:
+      consumer-postgres:
+        condition: service_healthy
+      consumer-vault:
+        condition: service_healthy
+    ports:
+      - "29196:8080"    # default / health
+      - "29197:8081"    # public API
+      - "29198:8084"    # control / signaling
+    volumes:
+      - ./config/consumer-dp.properties:/app/configuration.properties:ro
+    networks:
+      - edc-net
+
+  # ============================================================================
+  #  CENTRAL DATASPACE SERVICES
+  # ============================================================================
+
+  # ---------- BDRS Server (BPN ↔ DID directory) — PostgreSQL-backed ----------
+  bdrs-server:
+    image: tractusx/bdrs-server:latest
+    container_name: bdrs-server
+    restart: on-failure
+    # Note: issuer-postgres and issuer-vault must be running (from IH stack)
+    environment:
+      JAVA_TOOL_OPTIONS: >-
+        -Dedc.iam.trusted-issuer.issuer.id=did:web:issuerservice:issuer
+      EDC_IAM_ISSUER_ID: "bdrs-issuer"
+      EDC_IAM_DID_WEB_USE_HTTPS: "false"
+      # Tell status-list downloader to request JSON (IssuerService defaults to JWT)
+      EDC_IAM_CREDENTIAL_REVOCATION_MIMETYPE: "application/json"
+      # Web server ports
+      WEB_HTTP_DIRECTORY_PORT: "8580"
+      WEB_HTTP_DIRECTORY_PATH: "/api/directory"
+      WEB_HTTP_MANAGEMENT_PORT: "8581"
+      WEB_HTTP_MANAGEMENT_PATH: "/api/management"
+      # Vault (reuse issuer-vault)
+      EDC_VAULT_HASHICORP_URL: "http://issuer-vault:8200"
+      EDC_VAULT_HASHICORP_TOKEN: "root"
+      EDC_VAULT_HASHICORP_PATHS_SECRET: "/v1/secret/data"
+      # PostgreSQL datasource (reuse issuer-postgres, separate DB)
+      EDC_DATASOURCE_DIDENTRY_NAME: "didentry"
+      EDC_DATASOURCE_DIDENTRY_URL: "jdbc:postgresql://issuer-postgres:5432/bdrs"
+      EDC_DATASOURCE_DIDENTRY_USER: "bdrs"
+      EDC_DATASOURCE_DIDENTRY_PASSWORD: "bdrs"
+      # Management API key — store in vault before starting
+      WEB_HTTP_MANAGEMENT_AUTH_KEY_ALIAS: "bdrs-mgmt-api-key"
+    ports:
+      - "8580:8580"
+      - "8581:8581"
+    networks:
+      - edc-net
+
+volumes:
+  provider-postgres-data:
+  consumer-postgres-data:
+
+networks:
+  edc-net:
+    external: true
