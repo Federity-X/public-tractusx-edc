@@ -1410,6 +1410,19 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure transferId is set",
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) {",
+                  "    throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1447,6 +1460,19 @@
             "description": "**POST** `/v3/transferprocesses/{id}/terminate`\n\nPermanently terminate an active transfer.\n\n- `reason` — human-readable termination reason\n\nAfter termination, the EDR is invalidated and data can no longer be pulled."
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure transferId is set",
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) {",
+                  "    throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
+                  "}"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
