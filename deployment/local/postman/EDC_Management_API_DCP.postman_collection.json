@@ -790,6 +790,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "// Guard: ensure negotiationId is set",
+                  "const negId = pm.collectionVariables.get('negotiationId');",
+                  "if (!negId) {",
+                  "    throw new Error('negotiationId not set. Run \"6. Initiate Negotiation\" first.');",
+                  "}",
                   "// Initialize retry counter",
                   "let retries = pm.collectionVariables.get('_negPollRetries');",
                   "if (!retries) retries = 0;",
@@ -859,6 +864,19 @@
             "description": "**GET** `/v3/contractagreements/{id}`\n\nRetrieve a specific contract agreement by its ID.\n\n> The `agreementId` is auto-populated from the negotiation step."
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure agreementId is set",
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "if (!agrId) {",
+                  "    throw new Error('agreementId not set. Run negotiation flow (folder 6) until FINALIZED first.');",
+                  "}"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -993,6 +1011,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "// Guard: ensure transferId is set",
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) {",
+                  "    throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
+                  "}",
                   "let retries = pm.collectionVariables.get('_tpPollRetries');",
                   "if (!retries) retries = 0;",
                   "pm.collectionVariables.set('_tpPollRetries', Number(retries));"
@@ -1259,6 +1282,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "// Guard: ensure pushTransferId is set",
+                  "const ptId = pm.collectionVariables.get('pushTransferId');",
+                  "if (!ptId) {",
+                  "    throw new Error('pushTransferId not set. Run \"10. Initiate PUSH Transfer\" first.');",
+                  "}",
                   "let retries = pm.collectionVariables.get('_pushPollRetries');",
                   "if (!retries) retries = 0;",
                   "pm.collectionVariables.set('_pushPollRetries', Number(retries));"
@@ -1331,6 +1359,19 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure catalogAssetId is set",
+                  "const catAsset = pm.collectionVariables.get('catalogAssetId');",
+                  "if (!catAsset) {",
+                  "    throw new Error('catalogAssetId not set. Run \"5. Request Filtered Catalog\" first.');",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1367,6 +1408,19 @@
             "description": "**POST** `/v3/edrs/request`\n\nQuery cached EDRs filtered by agreement ID.\n\nUseful when one agreement has multiple transfers — this returns all EDRs created under that agreement.\n\nFilter field: `agreementId` (the contract agreement ID from folder 7).\n\n**Response**: Array of EDR entries, each with `transferProcessId`, `assetId`, `agreementId`, and `providerId`."
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure agreementId is set",
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "if (!agrId) {",
+                  "    throw new Error('agreementId not set. Run negotiation flow (folder 6) until FINALIZED first.');",
+                  "}"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
