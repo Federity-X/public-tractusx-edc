@@ -417,6 +417,14 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/d
     -d "{\"id\": \"credential-service\", \"type\": \"CredentialService\", \"serviceEndpoint\": \"http://provider-ih:13131/api/credentials/v1/participants/${PROVIDER_B64}\"}" \
     > /dev/null 2>&1 && echo "  Provider CredentialService added." || echo "  WARNING: Provider CredentialService failed."
 
+# Provider DID: add DataService endpoint (DSP protocol — needed for connector discovery)
+echo "  Adding DataService to provider DID..."
+curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/dids/${PROVIDER_DID_B64}/endpoints?autoPublish=true" \
+    -H "x-api-key: ${SUPERUSER_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "{\"id\": \"dsp-endpoint\", \"type\": \"DataService\", \"serviceEndpoint\": \"http://provider-cp:8084/api/v1/dsp\"}" \
+    > /dev/null 2>&1 && echo "  Provider DataService added." || echo "  WARNING: Provider DataService failed."
+
 # Consumer DID: add CredentialService endpoint
 CONSUMER_DID_B64=$(printf "${CONSUMER_DID}" | base64)
 echo "  Adding CredentialService to consumer DID..."
@@ -425,6 +433,14 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/d
     -H "Content-Type: application/json" \
     -d "{\"id\": \"credential-service\", \"type\": \"CredentialService\", \"serviceEndpoint\": \"http://consumer-ih:13131/api/credentials/v1/participants/${CONSUMER_B64}\"}" \
     > /dev/null 2>&1 && echo "  Consumer CredentialService added." || echo "  WARNING: Consumer CredentialService failed."
+
+# Consumer DID: add DataService endpoint (DSP protocol — needed for connector discovery)
+echo "  Adding DataService to consumer DID..."
+curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/dids/${CONSUMER_DID_B64}/endpoints?autoPublish=true" \
+    -H "x-api-key: ${SUPERUSER_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "{\"id\": \"dsp-endpoint\", \"type\": \"DataService\", \"serviceEndpoint\": \"http://consumer-cp:8084/api/v1/dsp\"}" \
+    > /dev/null 2>&1 && echo "  Consumer DataService added." || echo "  WARNING: Consumer DataService failed."
 
 # Issuer DID: add IssuerService endpoint (via DB since IS identity API isn't exposed to host)
 echo "  Adding IssuerService endpoint to issuer DID..."
