@@ -65,6 +65,13 @@ iatp:
       enabled: false
       # -- Unique id of connector to be used for register / unregister service inside did document (must be valid URI)
       id: "did:web:changeme"
+    identityHub:
+      # -- IdentityHub Identity API base URL. Required when using IdentityHub wallets (not DIM) for DID self-registration.
+      apiUrl:
+      # -- API key for IdentityHub Identity API authentication
+      apiKey:
+      # -- IdentityHub participant context ID (short name, e.g. 'provider')
+      participantContextId:
 
   # - Configures the Verifiable Presentation Ccache
   cache:
