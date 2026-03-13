@@ -482,7 +482,7 @@ postman/EDC_Management_API_DCP.postman_collection.json
 
 **Features:**
 - **16 folders**, **65 requests** covering the complete EDC Management API v3 + TX extensions
-- **65 assertions, 0 failures** — all endpoints return actual success responses (only 3 use tolerant assertions for infrastructure-dependent edge cases)
+- **65 assertions, 0 failures** — all endpoints return actual success responses (only 2 use tolerant assertions for infrastructure-dependent edge cases)
 - Auto-generated unique resource IDs (no conflicts between runs)
 - Variable chaining — offer IDs, agreement IDs, transfer IDs, EDR tokens auto-extracted
 - Pre-request guards on all requests with dynamic URL variables
