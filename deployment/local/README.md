@@ -29,6 +29,7 @@ Verifiable Credentials, and sovereign data exchange.
 - [API Keys](#api-keys)
 - [Available Scripts](#available-scripts)
 - [Postman Collection](#postman-collection)
+- [API Taxonomy: Upstream EDC vs Tractus-X](#api-taxonomy-upstream-edc-vs-tractus-x)
 - [Troubleshooting](#troubleshooting)
 - [Known Issues & Fixes](#known-issues--fixes)
 - [Related Repositories](#related-repositories)
@@ -480,12 +481,13 @@ postman/EDC_Management_API_DCP.postman_collection.json
 ```
 
 **Features:**
-- **13 folders**, **33 requests** covering the complete E2E flow
+- **16 folders**, **65 requests** covering the complete EDC Management API v3 + TX extensions
 - Auto-generated unique resource IDs (no conflicts between runs)
 - Variable chaining — offer IDs, agreement IDs, transfer IDs, EDR tokens auto-extracted
+- Pre-request guards on all requests with dynamic URL variables
 - Retry loops for polling (negotiation + transfer status)
 - Both **PULL** and **PUSH** transfer patterns
-- Rich documentation on every request
+- Rich documentation on every request and folder
 - Can be run via [newman](https://www.npmjs.com/package/newman):
 
 ```bash
@@ -493,6 +495,100 @@ npm install -g newman
 newman run postman/EDC_Management_API_DCP.postman_collection.json \
   --delay-request 3000 --timeout-request 30000
 ```
+
+---
+
+## API Taxonomy: Upstream EDC vs Tractus-X
+
+Tractus-X EDC is built on top of the [Eclipse EDC Connector](https://github.com/eclipse-edc/Connector).
+Understanding which endpoints come from upstream vs Tractus-X is critical for troubleshooting,
+upgrades, and understanding the Catena-X architecture.
+
+### Pure Upstream EDC Endpoints (Used As-Is)
+
+These endpoints come directly from Eclipse EDC with **zero modification**. The CRUD operations,
+request formats, and behavior are identical to vanilla EDC:
+
+| API Path | Endpoints | Purpose |
+|----------|-----------|----------|
+| `/v3/assets` | 5 (CRUD + query) | Register data offerings with metadata and data addresses |
+| `/v3/policydefinitions` | 7 (CRUD + query + validate + eval plan) | Define ODRL access & contract policies |
+| `/v3/contractdefinitions` | 4 (CRUD + query) | Link assets to policies — makes them negotiable |
+| `/v3/catalog/request` | 3 (full + filtered + dataset) | Browse provider offerings via DSP |
+| `/v3/contractnegotiations` | 6 (initiate + poll + query + state + agreement + terminate) | Consumer-initiated contract negotiation |
+| `/v3/contractagreements` | 3 (get + query + negotiation) | Inspect finalized agreements |
+| `/v3/transferprocesses` | 8 (initiate + poll + query + state + suspend + resume + terminate + deprovision) | Manage data transfers |
+
+> **Why unmodified?** These are the standard Dataspace Protocol (DSP) building blocks.
+> Tractus-X adds value through *policy functions* and *extensions*, not by changing core CRUD.
+
+### TX-Customized Endpoints (Extended Upstream Behavior)
+
+These use upstream EDC API paths but Tractus-X **replaces or extends** the implementation:
+
+| API Path | What TX Changes | Why |
+|----------|-----------------|-----|
+| `GET /v3/edrs/{id}/dataaddress` | **Auto-refresh** (`?auto_refresh=true`) — TX's `edr-api-v2` replaces upstream `edr-cache-api`. Checks token expiry and auto-renews. | Long-running data exchanges need token refresh without re-negotiation. |
+| `POST /v3/edrs/{id}/refresh` | **Force refresh** — explicitly request a new EDR token. Not in upstream. | On-demand token renewal for time-sensitive operations. |
+| `DELETE /v3/edrs/{id}` | **EDR deletion** — remove cached EDR entries. | Cache hygiene for completed transfers. |
+| `POST /v3/edrs` | **EDR Negotiation Initiation** — single call triggers contract negotiation + automatic EDR retrieval. | Simplifies the 3-step flow (negotiate → transfer → get EDR) into one call. |
+| `POST /v3/edrs/request` | **EDR query with filters** — query cached EDRs by asset ID, agreement ID, etc. | Cache inspection across multiple active data exchanges. |
+
+**CX Policy Engine Extensions** (invisible at the API level, but critical):
+
+Tractus-X registers **25+ custom ODRL constraint functions** via `edc-extensions/cx-policy/` that
+execute during catalog requests, negotiations, and transfers:
+
+| Left Operand | Purpose |
+|--------------|----------|
+| `cx-policy:FrameworkAgreement` | Require specific CX framework agreement (e.g., `DataExchangeGovernance:1.0`) |
+| `cx-policy:UsagePurpose` | Restrict data usage to specific purposes (e.g., `cx.core.industrycore:1`) |
+| `cx-policy:BusinessPartnerNumber` | Restrict access to specific BPNLs |
+| `cx-policy:BusinessPartnerGroup` | Restrict access by BPN group membership (uses BPN Groups API below) |
+| `cx-policy:Membership` | Require valid CX membership credential |
+| `cx-policy:Dismantler` | Require dismantler credential |
+| ... | 15+ more: warranty, liability, jurisdiction, data usage end date, etc. |
+
+> **Why custom policies?** Upstream EDC has a generic policy engine that understands ODRL syntax
+> but has no domain knowledge. Catena-X needs automotive-specific constraints (framework
+> agreements, dismantler credentials, usage purposes) that map to Verifiable Credentials in the
+> participant's Identity Hub wallet.
+
+### TX-Added Endpoints (Entirely New)
+
+These endpoints are **entirely new** — created by Tractus-X extensions to solve Catena-X-specific
+problems not addressed by upstream EDC:
+
+| API Path | Endpoints | Extension Module | Why It Exists |
+|----------|-----------|-----------------|---------------|
+| `/v3/business-partner-groups` | 6 (CRUD + query by BPN/group) | `edc-extensions/bpn-validation` | **Group-based access control.** Instead of listing every BPNL in a policy, operators create groups ("gold-partners", "tier-1-suppliers") and use `BusinessPartnerGroup` constraints. |
+| `/v3/contractagreements/retirements` | 3 (retire + query + reactivate) | `edc-extensions/agreements` | **Compliance lifecycle.** Upstream EDC has no concept of "retiring" an agreement. In Catena-X, business relationships change — retirement makes agreements inactive while preserving the audit trail. |
+| `/v4alpha/connectordiscovery` | 2 (DSP versions + discover) | `edc-extensions/connector-discovery` | **Multi-connector resolution.** Resolves which connector endpoints are available for a given participant DID/BPN and what DSP versions they support. |
+| `/v4alpha/dataflows/{id}/trigger` | 1 | `edc-extensions/dataplane/dataflow` | **On-demand data push.** Manually trigger a data flow for event-driven or scheduled push scenarios. |
+
+### TX Data Plane Extensions (Not Management API)
+
+These TX extensions add endpoints on the **Data Plane** (not in this Postman collection):
+
+| API Path | Extension Module | Purpose |
+|----------|-----------------|----------|
+| `/token` | `dataplane-token-refresh` | OAuth2-compatible token refresh for active EDRs |
+| `/aas/request` | `dataplane-proxy-consumer-api` | Direct asset fetch bypassing Management API |
+
+### Supporting TX Extensions (No New Endpoints)
+
+These don't expose API endpoints but modify runtime behavior:
+
+| Module | Purpose |
+|--------|---------|
+| `bdrs-client` | Resolves DID ↔ BPN mappings via BDRS server |
+| `tokenrefresh-handler` | Background EDR token refresh service |
+| `provision-additional-headers` | Injects BPNL headers into outgoing HTTP requests |
+| `data-flow-properties-provider` | Enriches data flows with participant context |
+| `token-interceptor` | Token injection at HTTP client level |
+| `validators` | Blocks empty asset selectors in contract definitions |
+| `agreements-bpns` | Stores BPNL associations on negotiation events |
+| `dcp/` | W3C VC caching + DIM integration |
 
 ---
 
@@ -600,5 +696,5 @@ deployment/local/
 │   ├── test-push-transfer.sh      ← E2E PUSH transfer test
 │   └── demo-management-api.sh     ← Comprehensive 20-operation API demo
 └── postman/
-    └── EDC_Management_API_DCP.postman_collection.json  ← 33-request dynamic collection
+    └── EDC_Management_API_DCP.postman_collection.json  ← 65-request dynamic collection (16 folders)
 ```
