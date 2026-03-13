@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "tx-edc-mgmt-api-dcp-local",
     "name": "Tractus-X EDC \u2014 Management API (Local DCP)",
-    "description": "# Tractus-X EDC Management API \u2014 Local DCP Deployment\n\nComprehensive collection covering the **full EDC Management API v3** for a local DCP (Decentralized Claims Protocol) deployment with per-company IdentityHub wallets.\n\n## Architecture\n\n| Component | Host Port | Docker Name |\n|-----------|-----------|-------------|\n| Provider Control Plane | 19191-19195 | provider-cp |\n| Provider Data Plane | 19196-19198 | provider-dp |\n| Consumer Control Plane | 29191-29195 | consumer-cp |\n| Consumer Data Plane | 29196-29198 | consumer-dp |\n| Provider IdentityHub | 7181/7292 | provider-ih |\n| Consumer IdentityHub | 8182/8293 | consumer-ih |\n| BDRS Server | 8580/8581 | bdrs-server |\n| Issuer Service | 18181/18292 | issuerservice |\n\n## How to Use\n\n### Quick Start (Run All)\n1. Right-click the collection \u2192 **Run collection**\n2. All requests execute in order \u2014 test scripts chain variables automatically.\n3. The flow: Create assets \u2192 policies \u2192 contract defs \u2192 browse catalog \u2192 negotiate \u2192 transfer \u2192 pull data \u2192 cleanup.\n\n### Step-by-Step\n1. Run **1. Health Checks** to verify deployment.\n2. Run **2. Asset Management** \u2192 CRUD operations on assets.\n3. Run **3. Policy Definitions** \u2192 CRUD + validate + evaluation plan.\n4. Run **4. Contract Definitions** \u2192 CRUD operations.\n5. Run **5. Catalog Browsing** \u2192 full catalog, filtered catalog, dataset request.\n6. Run **6. Contract Negotiation** \u2192 initiate, poll, query, terminate.\n7. Run **7. Contract Agreements** \u2192 inspect agreements + trace back to negotiations.\n8. Run **8. Transfer Process** \u2192 initiate HttpData-PULL, poll, query, get state.\n9. Run **9. EDR & Data Pull** \u2192 get EDR, pull data, refresh token, delete EDR.\n10. Run **10. PUSH Transfer** \u2192 push-based data delivery.\n11. Run **11. EDR Cache** \u2192 initiate EDR negotiation, query by asset/agreement.\n12. Run **12. Transfer Lifecycle** \u2192 suspend/resume/terminate/deprovision.\n13. Run **14. BPN Groups** (optional) \u2192 Tractus-X BPN-to-group mappings.\n14. Run **15. Agreement Retirements** (optional) \u2192 retire/reactivate agreements.\n15. Run **16. Connector Discovery** (optional) \u2192 v4alpha endpoint discovery.\n16. Run **17. Cleanup** \u2192 remove demo resources.\n\n## Endpoint Coverage & API Taxonomy\n\nThis collection covers **65 requests** across the full EDC Management API v3 + Tractus-X extensions.\nUnderstanding which endpoints come from upstream EDC vs Tractus-X is critical for troubleshooting,\nupgrades, and understanding the Catena-X architecture.\n\n### Pure Upstream EDC Endpoints (Used As-Is)\n\nThese endpoints come directly from the [Eclipse EDC](https://github.com/eclipse-edc/Connector)\nproject with **zero modification** by Tractus-X. The CRUD operations, request/response formats,\nand behavior are identical to vanilla EDC:\n\n| Folder | API Path | Endpoints | Purpose |\n|--------|----------|-----------|---------|\n| 2. Assets | `/v3/assets` | 5 (CRUD + query) | Register data offerings with metadata and data addresses |\n| 3. Policies | `/v3/policydefinitions` | 7 (CRUD + query + validate + eval plan) | Define ODRL access & contract policies |\n| 4. Contract Defs | `/v3/contractdefinitions` | 4 (CRUD + query) | Link assets to policies \u2014 makes them negotiable |\n| 5. Catalog | `/v3/catalog/request`, `/v3/catalog/dataset/request` | 3 | Browse provider offerings via DSP protocol |\n| 6. Negotiations | `/v3/contractnegotiations` | 6 (initiate + poll + query + state + agreement + terminate) | Consumer-initiated contract negotiation |\n| 7. Agreements | `/v3/contractagreements` | 3 (get + query + negotiation) | Inspect finalized agreements |\n| 8. Transfers | `/v3/transferprocesses` | 4 (initiate + poll + query + state) | Initiate and track data transfers |\n| 12. Lifecycle | `/v3/transferprocesses/{id}/suspend\\|resume\\|terminate\\|deprovision` | 4 | Transfer state management |\n\n> **Why unmodified?** These are the standard Dataspace Protocol (DSP) building blocks.\n> Tractus-X adds value through *policy functions* and *extensions*, not by changing core CRUD.\n\n### TX-Customized Endpoints (Extended Upstream Behavior)\n\nThese use upstream EDC API paths but Tractus-X **replaces or extends** the underlying implementation:\n\n| Folder | API Path | What TX Changes | Why |\n|--------|----------|-----------------|-----|\n| 9. EDR & Data Pull | `/v3/edrs/{id}/dataaddress` | **Auto-refresh** (`?auto_refresh=true`) \u2014 TX's `edr-api-v2` replaces upstream `edr-cache-api`. Checks token expiry and renews automatically. | Long-running data exchanges need token refresh without re-negotiation. Upstream EDC returns stale tokens. |\n| 9. EDR & Data Pull | `/v3/edrs/{id}/refresh` | **Force refresh** \u2014 explicitly request a new EDR token. Not in upstream EDC. | Consumers need on-demand token renewal for time-sensitive operations. |\n| 9. EDR & Data Pull | `DELETE /v3/edrs/{id}` | **EDR deletion** \u2014 remove cached EDR entries. | Cache hygiene for completed transfers. |\n| 11. EDR Cache | `POST /v3/edrs` | **EDR Negotiation Initiation** \u2014 single call that triggers contract negotiation + automatic EDR retrieval. Not in upstream. | Simplifies the 3-step flow (negotiate \u2192 transfer \u2192 get EDR) into one call for common use cases. |\n| 11. EDR Cache | `POST /v3/edrs/request` | **EDR query with filters** \u2014 query cached EDRs by asset ID, agreement ID, etc. | Enables cache inspection and management across multiple active data exchanges. |\n\n> **Why customize EDRs?** Upstream EDC's EDR cache API is minimal \u2014 it stores tokens but doesn't\n> handle refresh, auto-renewal, or single-call negotiation. In production Catena-X deployments,\n> data exchanges run for hours/days, making token refresh essential.\n\n**CX Policy Engine Extensions** (invisible at the API level, but critical):\n\nTractus-X registers **25+ custom ODRL constraint functions** via `edc-extensions/cx-policy/` that\nexecute during catalog requests, negotiations, and transfers. These don't add new endpoints but\nfundamentally change how policies are evaluated:\n\n| Left Operand | Constraint Function | Purpose |\n|--------------|-------------------|---------|\n| `cx-policy:FrameworkAgreement` | `FrameworkAgreementConstraintFunction` | Require specific CX framework agreement (e.g., `DataExchangeGovernance:1.0`) |\n| `cx-policy:UsagePurpose` | `UsagePurposeConstraintFunction` | Restrict data usage to specific purposes (e.g., `cx.core.industrycore:1`) |\n| `cx-policy:BusinessPartnerNumber` | `BusinessPartnerNumberConstraintFunction` | Restrict access to specific BPNLs |\n| `cx-policy:BusinessPartnerGroup` | `BusinessPartnerGroupConstraintFunction` | Restrict access by BPN group membership (uses folder 14's API) |\n| `cx-policy:Membership` | `MembershipCredentialConstraintFunction` | Require valid CX membership credential |\n| `cx-policy:Dismantler` | `DismantlerCredentialConstraintFunction` | Require dismantler credential |\n| `cx-policy:UsageRestriction` | `UsageRestrictionConstraintFunction` | General usage restrictions |\n| `cx-policy:DataUsageEndDate` | `DataUsageEndDateConstraintFunction` | Time-bound data access |\n| ... | *(15+ more)* | Warranty, liability, jurisdiction, confidentiality, etc. |\n\n> **Why custom policies?** Upstream EDC ships with a generic policy engine that understands ODRL\n> syntax but has no domain knowledge. Catena-X needs automotive-specific constraints\n> (framework agreements, dismantler credentials, usage purposes) that map to Verifiable\n> Credentials in the participant's Identity Hub wallet.\n\n### TX-Added Endpoints (Entirely New \u2014 Not in Upstream EDC)\n\nThese endpoints are **entirely new** \u2014 created by Tractus-X extensions to solve Catena-X-specific\nproblems that the upstream EDC doesn't address:\n\n| Folder | API Path | Endpoints | Extension Module | Why It Exists |\n|--------|----------|-----------|-----------------|---------------|\n| 14. BPN Groups | `/v3/business-partner-groups` | 6 (CRUD + query by BPN/group) | `edc-extensions/bpn-validation` | **Group-based access control.** Catena-X has thousands of participants. Instead of listing every BPNL in a policy, operators create groups (e.g., \"gold-partners\", \"tier-1-suppliers\") and use `BusinessPartnerGroup` constraints. This API manages the BPN\u2194group mappings that the policy engine evaluates. |\n| 15. Agreement Retirements | `/v3/contractagreements/retirements` | 3 (retire + query + reactivate) | `edc-extensions/agreements` | **Compliance lifecycle.** Upstream EDC has no concept of \"retiring\" an agreement \u2014 once finalized, it's permanent. In Catena-X, business relationships change: a supplier may lose certification, or a framework agreement may expire. Retirement makes agreements inactive for new transfers while preserving them in the audit trail. |\n| 16. Connector Discovery | `/v4alpha/connectordiscovery` | 2 (DSP versions + discover by BPN) | `edc-extensions/connector-discovery` | **Multi-connector resolution.** In Catena-X, one organization may operate multiple connectors. Given a participant's DID or BPN, this API resolves which connector endpoints are available and what DSP protocol versions they support. Uses BDRS (BPN Directory Resolution Service) for DID\u2194BPN mapping. |\n| *(not in collection)* | `/v4alpha/dataflows/{id}/trigger` | 1 | `edc-extensions/dataplane/dataflow` | **On-demand data push.** Manually trigger a data flow execution \u2014 used for event-driven or scheduled push scenarios where the standard transfer lifecycle is too automated. |\n\n> **Why new endpoints?** Upstream EDC is a generic dataspace connector. Catena-X is an automotive\n> industry dataspace with specific governance: BPN-based identity, framework agreements,\n> credential-based trust, and compliance requirements that need purpose-built APIs.\n\n### TX Data Plane Extensions (Not Management API)\n\nThese TX extensions add endpoints on the **Data Plane** (not the Management API), so they're not\nin this Postman collection but are part of the Tractus-X architecture:\n\n| API Path | Context | Extension Module | Purpose |\n|----------|---------|-----------------|---------|\n| `/token` | Public (Data Plane) | `dataplane-token-refresh` | OAuth2-compatible token refresh for active EDRs |\n| `/aas/request` | Proxy | `dataplane-proxy-consumer-api` | Direct asset fetch bypassing Management API (for consumer apps) |\n| `/{any:.*}` (public API v2) | Public | `dataplane-public-api-v2` | Enhanced public data plane with TX-specific auth |\n\n### Supporting TX Extensions (No New Endpoints)\n\nThese don't expose API endpoints but modify runtime behavior:\n\n| Module | What It Does | Why |\n|--------|-------------|-----|\n| `bdrs-client` | Resolves DID \u2194 BPN mappings via BDRS server | Every DSP interaction needs BPN\u2194DID translation |\n| `tokenrefresh-handler` | Background EDR token refresh service | Keeps long-running transfer tokens alive |\n| `provision-additional-headers` | Injects BPNL headers into outgoing HTTP requests | Data providers need to know who's requesting data |\n| `data-flow-properties-provider` | Enriches data flows with participant context | Downstream systems need org identity metadata |\n| `token-interceptor` | Token injection at HTTP client level | All connector-to-connector calls need auth tokens |\n| `validators` | Blocks empty asset selectors in contract definitions | Prevents accidental exposure of all assets |\n| `agreements-bpns` | Stores BPNL associations on negotiation events | Audit trail: which BPN negotiated which agreement |\n| `dcp/` | W3C VC caching + DIM integration | Performance: cache validated credentials instead of re-verifying every request |\n| `backport/` | Upstream EDC bug fixes applied locally | Fixes that haven't yet been merged upstream |\n\n## Why Some Tests Accept Non-2xx Responses\n\nSeveral requests in this collection accept HTTP 400, 404, or 409 responses as passing tests.\nThis is **intentional** \u2014 here's why:\n\n**Sequential execution creates state dependencies.** When the collection runs end-to-end, earlier\nrequests change the state of resources. For example:\n- A **negotiation reaches FINALIZED** before the Terminate Negotiation request runs \u2192 400 (can't terminate a finalized negotiation)\n- A **transfer is already terminated** before Deprovision runs \u2192 409 (incompatible state)\n- **Delete EDR** runs before EDR Cache queries \u2192 queries return empty arrays\n\n**Extension endpoints depend on prior setup.** TX extension endpoints (BPN Groups, Agreement\nRetirements, Connector Discovery) may return 404 or 400 when:\n- Prior create/setup requests were skipped or failed\n- The BDRS server lacks endpoint registrations (local dev environment)\n- The extension isn't fully configured\n\n**Cleanup is idempotent.** Delete operations accept 404 because resources may already be gone\nfrom a previous run.\n\nEach affected request documents its specific expected non-2xx responses in both:\n1. The **request description** (visible in Postman UI) \u2014 explains the business reason\n2. The **test script comments** (visible in Tests tab) \u2014 explains each status code\n\n## JSON-LD Gotchas\n\n> These were discovered through extensive debugging and are baked into every request:\n\n- **`odrl:action`** must be `{\"@id\": \"odrl:use\"}` \u2014 bare `\"use\"` fails validation.\n- **`odrl:assigner`** in negotiations must be the **BPN** (e.g., `BPNL000000000001`), not the DID.\n- **`odrl:leftOperand`** for CX policies must use full IRIs: `{\"@id\": \"https://w3id.org/catenax/2025/9/policy/FrameworkAgreement\"}`.\n- **`odrl:target`** must match the asset `@id` from the catalog exactly.\n- **`@id` (Offer ID)** in negotiation must match the catalog's `odrl:hasPolicy.@id` exactly.\n\n## Variables\n\nAll configuration is in **Collection Variables** \u2014 edit them to match your deployment.\n\n## Running with Newman\n\n```bash\nnewman run EDC_Management_API_DCP.postman_collection.json --delay-request 2000\n```\n\nThe `--delay-request 2000` flag adds a 2-second delay between requests, which is important for polling loops (negotiation status, transfer status) that use `postman.setNextRequest()` retries.\n\n## Pre-request Guards\n\nDependent requests (negotiation, transfer, EDR) include **pre-request guard scripts** that check if required variables are set. If you run a request out of order, you'll get a clear error message telling you which step to run first.",
+    "description": "# Tractus-X EDC Management API \u2014 Local DCP Deployment\n\nComprehensive collection covering the **full EDC Management API v3** for a local DCP (Decentralized Claims Protocol) deployment with per-company IdentityHub wallets.\n\n## Architecture\n\n| Component | Host Port | Docker Name |\n|-----------|-----------|-------------|\n| Provider Control Plane | 19191-19195 | provider-cp |\n| Provider Data Plane | 19196-19198 | provider-dp |\n| Consumer Control Plane | 29191-29195 | consumer-cp |\n| Consumer Data Plane | 29196-29198 | consumer-dp |\n| Provider IdentityHub | 7181/7292 | provider-ih |\n| Consumer IdentityHub | 8182/8293 | consumer-ih |\n| BDRS Server | 8580/8581 | bdrs-server |\n| Issuer Service | 18181/18292 | issuerservice |\n\n## How to Use\n\n### Quick Start (Run All)\n1. Right-click the collection \u2192 **Run collection**\n2. All requests execute in order \u2014 test scripts chain variables automatically.\n3. The flow: Create assets \u2192 policies \u2192 contract defs \u2192 browse catalog \u2192 negotiate \u2192 transfer \u2192 pull data \u2192 cleanup.\n\n### Step-by-Step\n1. Run **1. Health Checks** to verify deployment.\n2. Run **2. Asset Management** \u2192 CRUD operations on assets.\n3. Run **3. Policy Definitions** \u2192 CRUD + validate + evaluation plan.\n4. Run **4. Contract Definitions** \u2192 CRUD operations.\n5. Run **5. Catalog Browsing** \u2192 full catalog, filtered catalog, dataset request.\n6. Run **6. Contract Negotiation** \u2192 initiate, poll, query, terminate.\n7. Run **7. Contract Agreements** \u2192 inspect agreements + trace back to negotiations.\n8. Run **8. Transfer Process** \u2192 initiate HttpData-PULL, poll, query, get state.\n9. Run **9. EDR & Data Pull** \u2192 get EDR, pull data, refresh token, delete EDR.\n10. Run **10. PUSH Transfer** \u2192 push-based data delivery.\n11. Run **11. EDR Cache** \u2192 initiate EDR negotiation, query by asset/agreement.\n12. Run **12. Transfer Lifecycle** \u2192 suspend/resume/terminate/deprovision.\n13. Run **14. BPN Groups** (optional) \u2192 Tractus-X BPN-to-group mappings.\n14. Run **15. Agreement Retirements** (optional) \u2192 retire/reactivate agreements.\n15. Run **16. Connector Discovery** (optional) \u2192 v4alpha endpoint discovery.\n16. Run **17. Cleanup** \u2192 remove demo resources.\n\n## Endpoint Coverage & API Taxonomy\n\nThis collection covers **65 requests** across the full EDC Management API v3 + Tractus-X extensions.\nUnderstanding which endpoints come from upstream EDC vs Tractus-X is critical for troubleshooting,\nupgrades, and understanding the Catena-X architecture.\n\n### Pure Upstream EDC Endpoints (Used As-Is)\n\nThese endpoints come directly from the [Eclipse EDC](https://github.com/eclipse-edc/Connector)\nproject with **zero modification** by Tractus-X. The CRUD operations, request/response formats,\nand behavior are identical to vanilla EDC:\n\n| Folder | API Path | Endpoints | Purpose |\n|--------|----------|-----------|---------|\n| 2. Assets | `/v3/assets` | 5 (CRUD + query) | Register data offerings with metadata and data addresses |\n| 3. Policies | `/v3/policydefinitions` | 7 (CRUD + query + validate + eval plan) | Define ODRL access & contract policies |\n| 4. Contract Defs | `/v3/contractdefinitions` | 4 (CRUD + query) | Link assets to policies \u2014 makes them negotiable |\n| 5. Catalog | `/v3/catalog/request`, `/v3/catalog/dataset/request` | 3 | Browse provider offerings via DSP protocol |\n| 6. Negotiations | `/v3/contractnegotiations` | 6 (initiate + poll + query + state + agreement + terminate) | Consumer-initiated contract negotiation |\n| 7. Agreements | `/v3/contractagreements` | 3 (get + query + negotiation) | Inspect finalized agreements |\n| 8. Transfers | `/v3/transferprocesses` | 4 (initiate + poll + query + state) | Initiate and track data transfers |\n| 12. Lifecycle | `/v3/transferprocesses/{id}/suspend\\|resume\\|terminate\\|deprovision` | 4 | Transfer state management |\n\n> **Why unmodified?** These are the standard Dataspace Protocol (DSP) building blocks.\n> Tractus-X adds value through *policy functions* and *extensions*, not by changing core CRUD.\n\n### TX-Customized Endpoints (Extended Upstream Behavior)\n\nThese use upstream EDC API paths but Tractus-X **replaces or extends** the underlying implementation:\n\n| Folder | API Path | What TX Changes | Why |\n|--------|----------|-----------------|-----|\n| 9. EDR & Data Pull | `/v3/edrs/{id}/dataaddress` | **Auto-refresh** (`?auto_refresh=true`) \u2014 TX's `edr-api-v2` replaces upstream `edr-cache-api`. Checks token expiry and renews automatically. | Long-running data exchanges need token refresh without re-negotiation. Upstream EDC returns stale tokens. |\n| 9. EDR & Data Pull | `/v3/edrs/{id}/refresh` | **Force refresh** \u2014 explicitly request a new EDR token. Not in upstream EDC. | Consumers need on-demand token renewal for time-sensitive operations. |\n| 9. EDR & Data Pull | `DELETE /v3/edrs/{id}` | **EDR deletion** \u2014 remove cached EDR entries. | Cache hygiene for completed transfers. |\n| 11. EDR Cache | `POST /v3/edrs` | **EDR Negotiation Initiation** \u2014 single call that triggers contract negotiation + automatic EDR retrieval. Not in upstream. | Simplifies the 3-step flow (negotiate \u2192 transfer \u2192 get EDR) into one call for common use cases. |\n| 11. EDR Cache | `POST /v3/edrs/request` | **EDR query with filters** \u2014 query cached EDRs by asset ID, agreement ID, etc. | Enables cache inspection and management across multiple active data exchanges. |\n\n> **Why customize EDRs?** Upstream EDC's EDR cache API is minimal \u2014 it stores tokens but doesn't\n> handle refresh, auto-renewal, or single-call negotiation. In production Catena-X deployments,\n> data exchanges run for hours/days, making token refresh essential.\n\n**CX Policy Engine Extensions** (invisible at the API level, but critical):\n\nTractus-X registers **25+ custom ODRL constraint functions** via `edc-extensions/cx-policy/` that\nexecute during catalog requests, negotiations, and transfers. These don't add new endpoints but\nfundamentally change how policies are evaluated:\n\n| Left Operand | Constraint Function | Purpose |\n|--------------|-------------------|---------|\n| `cx-policy:FrameworkAgreement` | `FrameworkAgreementConstraintFunction` | Require specific CX framework agreement (e.g., `DataExchangeGovernance:1.0`) |\n| `cx-policy:UsagePurpose` | `UsagePurposeConstraintFunction` | Restrict data usage to specific purposes (e.g., `cx.core.industrycore:1`) |\n| `cx-policy:BusinessPartnerNumber` | `BusinessPartnerNumberConstraintFunction` | Restrict access to specific BPNLs |\n| `cx-policy:BusinessPartnerGroup` | `BusinessPartnerGroupConstraintFunction` | Restrict access by BPN group membership (uses folder 14's API) |\n| `cx-policy:Membership` | `MembershipCredentialConstraintFunction` | Require valid CX membership credential |\n| `cx-policy:Dismantler` | `DismantlerCredentialConstraintFunction` | Require dismantler credential |\n| `cx-policy:UsageRestriction` | `UsageRestrictionConstraintFunction` | General usage restrictions |\n| `cx-policy:DataUsageEndDate` | `DataUsageEndDateConstraintFunction` | Time-bound data access |\n| ... | *(15+ more)* | Warranty, liability, jurisdiction, confidentiality, etc. |\n\n> **Why custom policies?** Upstream EDC ships with a generic policy engine that understands ODRL\n> syntax but has no domain knowledge. Catena-X needs automotive-specific constraints\n> (framework agreements, dismantler credentials, usage purposes) that map to Verifiable\n> Credentials in the participant's Identity Hub wallet.\n\n### TX-Added Endpoints (Entirely New \u2014 Not in Upstream EDC)\n\nThese endpoints are **entirely new** \u2014 created by Tractus-X extensions to solve Catena-X-specific\nproblems that the upstream EDC doesn't address:\n\n| Folder | API Path | Endpoints | Extension Module | Why It Exists |\n|--------|----------|-----------|-----------------|---------------|\n| 14. BPN Groups | `/v3/business-partner-groups` | 6 (CRUD + query by BPN/group) | `edc-extensions/bpn-validation` | **Group-based access control.** Catena-X has thousands of participants. Instead of listing every BPNL in a policy, operators create groups (e.g., \"gold-partners\", \"tier-1-suppliers\") and use `BusinessPartnerGroup` constraints. This API manages the BPN\u2194group mappings that the policy engine evaluates. |\n| 15. Agreement Retirements | `/v3/contractagreements/retirements` | 3 (retire + query + reactivate) | `edc-extensions/agreements` | **Compliance lifecycle.** Upstream EDC has no concept of \"retiring\" an agreement \u2014 once finalized, it's permanent. In Catena-X, business relationships change: a supplier may lose certification, or a framework agreement may expire. Retirement makes agreements inactive for new transfers while preserving them in the audit trail. |\n| 16. Connector Discovery | `/v4alpha/connectordiscovery` | 2 (DSP versions + discover by BPN) | `edc-extensions/connector-discovery` | **Multi-connector resolution.** In Catena-X, one organization may operate multiple connectors. Given a participant's DID or BPN, this API resolves which connector endpoints are available and what DSP protocol versions they support. Uses BDRS (BPN Directory Resolution Service) for DID\u2194BPN mapping. |\n| *(not in collection)* | `/v4alpha/dataflows/{id}/trigger` | 1 | `edc-extensions/dataplane/dataflow` | **On-demand data push.** Manually trigger a data flow execution \u2014 used for event-driven or scheduled push scenarios where the standard transfer lifecycle is too automated. |\n\n> **Why new endpoints?** Upstream EDC is a generic dataspace connector. Catena-X is an automotive\n> industry dataspace with specific governance: BPN-based identity, framework agreements,\n> credential-based trust, and compliance requirements that need purpose-built APIs.\n\n### TX Data Plane Extensions (Not Management API)\n\nThese TX extensions add endpoints on the **Data Plane** (not the Management API), so they're not\nin this Postman collection but are part of the Tractus-X architecture:\n\n| API Path | Context | Extension Module | Purpose |\n|----------|---------|-----------------|---------|\n| `/token` | Public (Data Plane) | `dataplane-token-refresh` | OAuth2-compatible token refresh for active EDRs |\n| `/aas/request` | Proxy | `dataplane-proxy-consumer-api` | Direct asset fetch bypassing Management API (for consumer apps) |\n| `/{any:.*}` (public API v2) | Public | `dataplane-public-api-v2` | Enhanced public data plane with TX-specific auth |\n\n### Supporting TX Extensions (No New Endpoints)\n\nThese don't expose API endpoints but modify runtime behavior:\n\n| Module | What It Does | Why |\n|--------|-------------|-----|\n| `bdrs-client` | Resolves DID \u2194 BPN mappings via BDRS server | Every DSP interaction needs BPN\u2194DID translation |\n| `tokenrefresh-handler` | Background EDR token refresh service | Keeps long-running transfer tokens alive |\n| `provision-additional-headers` | Injects BPNL headers into outgoing HTTP requests | Data providers need to know who's requesting data |\n| `data-flow-properties-provider` | Enriches data flows with participant context | Downstream systems need org identity metadata |\n| `token-interceptor` | Token injection at HTTP client level | All connector-to-connector calls need auth tokens |\n| `validators` | Blocks empty asset selectors in contract definitions | Prevents accidental exposure of all assets |\n| `agreements-bpns` | Stores BPNL associations on negotiation events | Audit trail: which BPN negotiated which agreement |\n| `dcp/` | W3C VC caching + DIM integration | Performance: cache validated credentials instead of re-verifying every request |\n| `backport/` | Upstream EDC bug fixes applied locally | Fixes that haven't yet been merged upstream |\n\n## Why Some Tests Accept Non-2xx Responses\n\nOut of 65+ requests, only **3** accept non-2xx responses as passing tests:\n\n| Request | Accepted Codes | Reason |\n|---------|---------------|--------|\n| **Delete EDR** (9. EDR & Data Pull) | 200, 204, 404 | EDR may have expired or been previously deleted. Idempotent cleanup pattern. |\n| **Connector Discovery** (16. Connector Discovery) | 200, 400 | Local DID documents lack DSP service endpoints. BDRS resolves BPN\u2192DID but the DID has no `service` section. Production environments with properly registered DID service endpoints would return 200. |\n| **Delete Asset** (17. Cleanup) | 204, 409 | EDC referential integrity prevents deletion when active agreements reference the asset. Agreements are immutable audit records \u2014 this is correct behavior. |\n\nAll other requests expect **strict 2xx responses**. Earlier versions of this collection had tolerant assertions for more endpoints, but these were systematically fixed by:\n- Adding `policyScope` to Evaluation Plan requests\n- Using a \\\"sacrificial negotiation\\\" pattern for Terminate Negotiation (pre-request initiates a fresh negotiation, then terminates it before finalization)\n- Switching suspend/resume to PUSH transfers (PULL transfers don't support suspend)\n- Targeting TERMINATED negotiations for deletion instead of FINALIZED ones\n\n## JSON-LD Gotchas\n\n> These were discovered through extensive debugging and are baked into every request:\n\n- **`odrl:action`** must be `{\"@id\": \"odrl:use\"}` \u2014 bare `\"use\"` fails validation.\n- **`odrl:assigner`** in negotiations must be the **BPN** (e.g., `BPNL000000000001`), not the DID.\n- **`odrl:leftOperand`** for CX policies must use full IRIs: `{\"@id\": \"https://w3id.org/catenax/2025/9/policy/FrameworkAgreement\"}`.\n- **`odrl:target`** must match the asset `@id` from the catalog exactly.\n- **`@id` (Offer ID)** in negotiation must match the catalog's `odrl:hasPolicy.@id` exactly.\n\n## Variables\n\nAll configuration is in **Collection Variables** \u2014 edit them to match your deployment.\n\n## Running with Newman\n\n```bash\nnewman run EDC_Management_API_DCP.postman_collection.json --delay-request 2000\n```\n\nThe `--delay-request 2000` flag adds a 2-second delay between requests, which is important for polling loops (negotiation status, transfer status) that use `postman.setNextRequest()` retries.\n\n## Pre-request Guards\n\nDependent requests (negotiation, transfer, EDR) include **pre-request guard scripts** that check if required variables are set. If you run a request out of order, you'll get a clear error message telling you which step to run first.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -871,10 +871,10 @@
                 "evaluationplan"
               ]
             },
-            "description": "**POST** `/v3/policydefinitions/{id}/evaluationplan`\n\nGet the evaluation plan for a policy. Shows which policy functions handle which operands.\n\nUseful for debugging why negotiations fail.\n\n**Response**: Evaluation plan object.",
+            "description": "**POST** `/v3/policydefinitions/{id}/evaluationplan`\n\nGet the evaluation plan for a policy. Shows which policy functions handle which operands.\n\nUseful for debugging why negotiations fail.\n\nThe `policyScope` parameter tells the engine which evaluation context to use:\n- `contract.negotiation` — functions registered for contract negotiation\n- `catalog` — functions registered for catalog filtering\n- `transfer.process` — functions registered for transfer validation\n\n**Response**: Evaluation plan object showing constraint functions, pre/post validators.",
             "body": {
               "mode": "raw",
-              "raw": "{}"
+              "raw": "{\n  \"@context\": {\n    \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"\n  },\n  \"policyScope\": \"contract.negotiation\"\n}"
             }
           },
           "event": [
@@ -884,14 +884,11 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Evaluation plan returned', function () {",
-                  "    // 200 = plan returned; 400 = policyScope missing (expected in some versions)",
-                  "    pm.expect([200, 400]).to.include(pm.response.code);",
-                  "    if (pm.response.code === 200) {",
-                  "        const body = pm.response.json();",
-                  "        console.log('Plan: ' + JSON.stringify(body).substring(0, 300));",
-                  "    } else {",
-                  "        console.log('Evaluation plan requires policyScope (expected for this version).');",
-                  "    }",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body['@type']).to.equal('PolicyEvaluationPlan');",
+                  "    console.log('Plan type: ' + body['@type']);",
+                  "    console.log('Permission steps: ' + JSON.stringify(body.permissionSteps).substring(0, 300));",
                   "});"
                 ]
               }
@@ -1581,21 +1578,21 @@
               }
             ],
             "url": {
-              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}/terminate",
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{sacrificialNegotiationId}}/terminate",
               "host": [
                 "{{consumerMgmt}}"
               ],
               "path": [
                 "v3",
                 "contractnegotiations",
-                "{{negotiationId}}",
+                "{{sacrificialNegotiationId}}",
                 "terminate"
               ]
             },
-            "description": "**POST** `/v3/contractnegotiations/{id}/terminate`\n\nTerminate an in-progress negotiation. Only callable before `FINALIZED`.\n\n**Response**: 204 No Content.\n\n**Expected Non-2xx Responses:**\n- **400** \u2014 The negotiation is already `FINALIZED`. EDC only allows termination of in-progress negotiations. In this collection, the negotiation completes before this request runs, so 400 is the expected outcome.\n- **409** \u2014 Conflict (concurrent state change). Equivalent meaning to 400 in practice.",
+            "description": "**POST** `/v3/contractnegotiations/{id}/terminate`\n\nTerminate an in-progress negotiation with a reason.\n\n### How this works\nThe pre-request script initiates a **new** negotiation (using the same offer from the catalog) and immediately terminates it before it reaches FINALIZED. This demonstrates the terminate API on a genuinely in-progress negotiation.\n\n> The main flow's negotiation (used for agreements and transfers) is preserved.\n\n**Response**: 204 No Content.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"reason\": \"Terminating demo negotiation\"\n}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{sacrificialNegotiationId}}\",\n  \"reason\": \"Demonstrating negotiation termination\"\n}"
             }
           },
           "event": [
@@ -1604,8 +1601,57 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const negId = pm.collectionVariables.get('negotiationId');",
-                  "if (!negId) throw new Error('negotiationId not set. Run \"6. Initiate Negotiation\" first.');"
+                  "// Initiate a NEW negotiation so we can terminate it before it finalizes.",
+                  "// The main negotiation (negotiationId) is already FINALIZED and cannot be terminated.",
+                  "const offerId = pm.collectionVariables.get('offerId');",
+                  "const catAsset = pm.collectionVariables.get('catalogAssetId');",
+                  "if (!offerId || !catAsset) {",
+                  "    throw new Error('offerId or catalogAssetId not set. Run catalog browse first.');",
+                  "}",
+                  "",
+                  "const negBody = {",
+                  "    '@context': {",
+                  "        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',",
+                  "        'odrl': 'http://www.w3.org/ns/odrl/2/'",
+                  "    },",
+                  "    counterPartyAddress: pm.collectionVariables.get('providerDsp'),",
+                  "    counterPartyId: pm.collectionVariables.get('providerDid'),",
+                  "    protocol: 'dataspace-protocol-http',",
+                  "    policy: {",
+                  "        '@type': 'odrl:Offer',",
+                  "        '@id': offerId,",
+                  "        'odrl:assigner': {'@id': pm.collectionVariables.get('providerBpn')},",
+                  "        'odrl:target': {'@id': catAsset},",
+                  "        'odrl:permission': [{",
+                  "            'odrl:action': {'@id': 'odrl:use'},",
+                  "            'odrl:constraint': {",
+                  "                'odrl:and': [",
+                  "                    {'odrl:leftOperand': {'@id': pm.collectionVariables.get('cxPolicyNs') + 'FrameworkAgreement'}, 'odrl:operator': {'@id': 'odrl:eq'}, 'odrl:rightOperand': 'DataExchangeGovernance:1.0'},",
+                  "                    {'odrl:leftOperand': {'@id': pm.collectionVariables.get('cxPolicyNs') + 'UsagePurpose'}, 'odrl:operator': {'@id': 'odrl:isAnyOf'}, 'odrl:rightOperand': 'cx.core.industrycore:1'}",
+                  "                ]",
+                  "            }",
+                  "        }],",
+                  "        'odrl:prohibition': [],",
+                  "        'odrl:obligation': []",
+                  "    }",
+                  "};",
+                  "",
+                  "pm.sendRequest({",
+                  "    url: pm.collectionVariables.get('consumerMgmt') + '/v3/contractnegotiations',",
+                  "    method: 'POST',",
+                  "    header: {",
+                  "        'Content-Type': 'application/json',",
+                  "        'x-api-key': pm.collectionVariables.get('apiKey')",
+                  "    },",
+                  "    body: { mode: 'raw', raw: JSON.stringify(negBody) }",
+                  "}, function (err, res) {",
+                  "    if (err) throw new Error('Failed to initiate sacrificial negotiation: ' + err);",
+                  "    const body = res.json();",
+                  "    const newId = body['@id'];",
+                  "    if (!newId) throw new Error('No @id in negotiation response: ' + JSON.stringify(body));",
+                  "    pm.collectionVariables.set('sacrificialNegotiationId', newId);",
+                  "    console.log('Sacrificial negotiation initiated: ' + newId);",
+                  "});"
                 ]
               }
             },
@@ -1614,16 +1660,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Negotiation terminated or already finalized', function () {",
-                  "    // In this collection, the negotiation reaches FINALIZED before this request runs.",
-                  "    // A finalized negotiation cannot be terminated \u2014 EDC returns 400 (invalid state).",
-                  "    // 204 = terminated successfully (only if caught mid-negotiation)",
-                  "    // 400 = invalid state transition (negotiation already finalized \u2014 expected)",
-                  "    // 409 = conflict (concurrent state change)",
-                  "    pm.expect([200, 204, 400, 409]).to.include(pm.response.code);",
-                  "    console.log('Terminate negotiation: ' + pm.response.code);",
-                  "    if (pm.response.code === 400) console.log('Negotiation already finalized \u2014 cannot terminate (expected in this collection flow).');",
-                  "    if (pm.response.code === 409) console.log('Conflict \u2014 already finalized (expected).');",
+                  "pm.test('Negotiation terminated', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('Sacrificial negotiation terminated successfully');",
                   "});"
                 ]
               }
@@ -2613,7 +2652,7 @@
     },
     {
       "name": "12. Transfer Lifecycle",
-      "description": "**Origin: Upstream EDC** \u2014 standard transfer lifecycle operations, used as-is.\n\nManage the transfer lifecycle \u2014 suspend and terminate active transfers.\n\n- **Suspend** \u2014 temporarily pause data flow (may not be supported for all transfer types)\n- **Terminate** \u2014 permanently end the transfer with a reason",
+      "description": "**Origin: Upstream EDC** \u2014 standard transfer lifecycle operations, used as-is.\n\nManage the transfer lifecycle \u2014 suspend, resume, terminate, and deprovision transfers.\n\n- **Suspend/Resume** \u2014 demonstrated on the PUSH transfer (HttpData-PULL does not support suspend)\n- **Terminate/Deprovision** \u2014 demonstrated on the PULL transfer\n\n> **Why two different transfers?** PULL transfers use long-lived EDR tokens \u2014 suspend/resume is not meaningful.\n> PUSH transfers actively stream data, so suspend/resume controls the data flow.",
       "item": [
         {
           "name": "Suspend Transfer",
@@ -2631,21 +2670,21 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{pushTransferId}}\",\n  \"reason\": \"Demonstrating transfer suspend\"\n}"
             },
             "url": {
-              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/suspend",
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{pushTransferId}}/suspend",
               "host": [
                 "{{consumerMgmt}}"
               ],
               "path": [
                 "v3",
                 "transferprocesses",
-                "{{transferId}}",
+                "{{pushTransferId}}",
                 "suspend"
               ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/suspend`\n\nAttempt to suspend an active transfer.\n\n> **Note**: Not all transfer types support suspend. HttpData-PULL may return an error \u2014 this is expected."
+            "description": "**POST** `/v3/transferprocesses/{id}/suspend`\n\nSuspend an active PUSH transfer. Temporarily pauses data flow.\n\n> Uses the **PUSH transfer** because HttpData-PULL does not support suspend \u2014 PULL transfers use long-lived EDR tokens and have no active data stream to pause.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -2653,10 +2692,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Guard: ensure transferId is set",
-                  "const tId = pm.collectionVariables.get('transferId');",
+                  "// Guard: ensure pushTransferId is set",
+                  "const tId = pm.collectionVariables.get('pushTransferId');",
                   "if (!tId) {",
-                  "    throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
+                  "    throw new Error('pushTransferId not set. Run \"10. PUSH Transfer\" first.');",
                   "}"
                 ]
               }
@@ -2666,14 +2705,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Suspend may not be supported \u2014 both 200 and 4xx are acceptable",
-                  "if (pm.response.code === 200 || pm.response.code === 204) {",
-                  "    pm.test('Transfer suspended', function () { pm.response.to.be.success; });",
-                  "} else {",
-                  "    pm.test('Suspend not supported (expected for PULL)', function () {",
-                  "        console.log('Status ' + pm.response.code + ' \u2014 suspend may not be supported for this transfer type');",
-                  "    });",
-                  "}"
+                  "pm.test('Transfer suspended', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('PUSH transfer suspended successfully');",
+                  "});"
                 ]
               }
             }
@@ -2694,21 +2729,21 @@
               }
             ],
             "url": {
-              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/resume",
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{pushTransferId}}/resume",
               "host": [
                 "{{consumerMgmt}}"
               ],
               "path": [
                 "v3",
                 "transferprocesses",
-                "{{transferId}}",
+                "{{pushTransferId}}",
                 "resume"
               ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/resume`\n\nResume a previously suspended transfer. Must be in `SUSPENDED` state.\n\n**Response**: 204 No Content, or 409 if not suspended.",
+            "description": "**POST** `/v3/transferprocesses/{id}/resume`\n\nResume a previously suspended PUSH transfer. The transfer must be in `SUSPENDED` state.\n\n> Uses the **PUSH transfer** \u2014 same transfer that was suspended in the previous step.\n\n**Response**: 204 No Content.",
             "body": {
               "mode": "raw",
-              "raw": "{}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{pushTransferId}}\"\n}"
             }
           },
           "event": [
@@ -2717,8 +2752,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const tId = pm.collectionVariables.get('transferId');",
-                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');"
+                  "const tId = pm.collectionVariables.get('pushTransferId');",
+                  "if (!tId) throw new Error('pushTransferId not set. Run \"10. PUSH Transfer\" first.');"
                 ]
               }
             },
@@ -2727,10 +2762,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Transfer resumed or not applicable', function () {",
-                  "    pm.expect([200, 204, 409]).to.include(pm.response.code);",
-                  "    console.log('Resume: ' + pm.response.code);",
-                  "    if (pm.response.code === 409) console.log('Not suspended \u2014 resume not applicable.');",
+                  "pm.test('Transfer resumed', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('PUSH transfer resumed successfully');",
                   "});"
                 ]
               }
@@ -2767,7 +2801,7 @@
                 "terminate"
               ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/terminate`\n\nPermanently terminate an active transfer.\n\n- `reason` \u2014 human-readable termination reason\n\nAfter termination, the EDR is invalidated and data can no longer be pulled.\n\n**Expected Non-2xx Responses:**\n- **409** \u2014 The transfer is already in a terminal state (`TERMINATED`, `COMPLETED`, or `DEPROVISIONED`). EDC does not allow terminating an already-finished transfer. In this collection, earlier lifecycle operations may have already terminated the transfer."
+            "description": "**POST** `/v3/transferprocesses/{id}/terminate`\n\nPermanently terminate an active PULL transfer.\n\n- `reason` \u2014 human-readable termination reason\n\nAfter termination, the EDR is invalidated and data can no longer be pulled.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -2789,12 +2823,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Transfer terminated', function () {",
-                  "    // 204 = terminated successfully",
-                  "    // 409 = transfer already in a terminal state (TERMINATED/COMPLETED/DEPROVISIONED)",
-                  "    //       This is expected when earlier lifecycle steps already terminated it.",
-                  "    pm.expect([200, 204, 409]).to.include(pm.response.code);",
-                  "    console.log('Transfer terminate: ' + pm.response.code);",
-                  "    if (pm.response.code === 409) console.log('Transfer already in terminal state (expected).');",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('PULL transfer terminated successfully');",
                   "});"
                 ]
               }
@@ -2827,7 +2857,7 @@
                 "deprovision"
               ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/deprovision`\n\nDeprovision resources for a transfer.\n\n> **No-op in EDC 0.15.1** \u2014 deprovisioning is no longer managed by the control plane. Exists for backward compatibility.\n\n**Response**: 204 No Content.\n\n**Expected Non-2xx Responses:**\n- **409** \u2014 The transfer is in a state where deprovisioning is not applicable (already completed or terminated). In EDC 0.15.1, deprovisioning is largely a no-op since resource management was moved out of the control plane.",
+            "description": "**POST** `/v3/transferprocesses/{id}/deprovision`\n\nDeprovision resources for a transfer.\n\n> **No-op in EDC 0.15.1** \u2014 deprovisioning is no longer managed by the control plane. Exists for backward compatibility.\n\n**Response**: 204 No Content.",
             "body": {
               "mode": "raw",
               "raw": "{}"
@@ -2850,13 +2880,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Deprovision accepted', function () {",
-                  "    // 204 = deprovisioned",
-                  "    // 409 = transfer in incompatible state (already terminated/completed)",
-                  "    //       In EDC 0.15.1, deprovisioning is largely a no-op \u2014 this endpoint",
-                  "    //       exists for backward compatibility.",
-                  "    pm.expect([200, 204, 409]).to.include(pm.response.code);",
-                  "    console.log('Deprovision: ' + pm.response.code);",
-                  "    if (pm.response.code === 409) console.log('Transfer state incompatible with deprovisioning (expected).');",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('Transfer deprovisioned successfully');",
                   "});"
                 ]
               }
@@ -2911,9 +2936,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('BPN group created', function () {",
-                  "    // 204 = created/updated; 200 = also acceptable",
-                  "    pm.expect([200, 204]).to.include(pm.response.code);",
-                  "    console.log('Create BPN group mapping: ' + pm.response.code);",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -2941,7 +2964,7 @@
                 "{{consumerBpn}}"
               ]
             },
-            "description": "**GET** `/v3/business-partner-groups/{bpn}`\n\nRetrieve group memberships for a BPN.\n\n**Response**: Object with `bpn` and `groups` array.\n\n**Expected Non-2xx Responses:**\n- **404** \u2014 The BPN has no group mappings registered. This happens when \"Create BPN Group Mapping\" was skipped or failed. Each request in this folder can be run independently."
+            "description": "**GET** `/v3/business-partner-groups/{bpn}`\n\nRetrieve group memberships for a BPN.\n\n**Response**: 200 with object containing `bpn` and `groups` array."
           },
           "event": [
             {
@@ -2950,13 +2973,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('BPN groups retrieved', function () {",
-                  "    // 200 = found; 404 = BPN not registered (if create didn't run)",
-                  "    pm.expect([200, 404]).to.include(pm.response.code);",
-                  "    if (pm.response.code === 200) {",
-                  "        console.log('Groups: ' + JSON.stringify(pm.response.json()));",
-                  "    } else {",
-                  "        console.log('BPN not found in group mappings \u2014 create may not have run.');",
-                  "    }",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    console.log('Groups: ' + JSON.stringify(pm.response.json()));",
                   "});"
                 ]
               }
@@ -2985,7 +3003,7 @@
                 "gold-partners"
               ]
             },
-            "description": "**GET** `/v3/business-partner-groups/group/{group}`\n\nRetrieve all BPNs in a specific group.\n\n**Response**: Array of BPN entries.\n\n**Expected Non-2xx Responses:**\n- **404** \u2014 The group name doesn't exist. This happens when \"Create BPN Group Mapping\" was skipped or failed. The group names used here (`gold-partners`) are created by the Create request earlier in this folder."
+            "description": "**GET** `/v3/business-partner-groups/group/{group}`\n\nRetrieve all BPNs in a specific group.\n\n**Response**: 200 with array of BPN entries."
           },
           "event": [
             {
@@ -2994,13 +3012,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('BPNs for group retrieved', function () {",
-                  "    // 200 = found; 404 = group not found",
-                  "    pm.expect([200, 404]).to.include(pm.response.code);",
-                  "    if (pm.response.code === 200) {",
-                  "        console.log('BPNs: ' + JSON.stringify(pm.response.json()));",
-                  "    } else {",
-                  "        console.log('Group not found \u2014 may not exist yet.');",
-                  "    }",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    console.log('BPNs: ' + JSON.stringify(pm.response.json()));",
                   "});"
                 ]
               }
@@ -3087,8 +3100,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('BPN group updated', function () {",
-                  "    pm.expect([200, 204]).to.include(pm.response.code);",
-                  "    console.log('Update BPN group mapping: ' + pm.response.code);",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -3116,7 +3128,7 @@
                 "{{consumerBpn}}"
               ]
             },
-            "description": "**DELETE** `/v3/business-partner-groups/{bpn}`\n\nRemove a BPN's group mappings.\n\n**Response**: 204 No Content.\n\n**Expected Non-2xx Responses:**\n- **404** \u2014 The BPN mapping doesn't exist (never created, or already deleted). Acceptable in idempotent cleanup flows."
+            "description": "**DELETE** `/v3/business-partner-groups/{bpn}`\n\nRemove a BPN's group mappings.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -3124,10 +3136,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('BPN group deleted or not found', function () {",
-                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
-                  "    console.log('Delete BPN group: ' + pm.response.code);",
-                  "    if (pm.response.code === 404) console.log('Not found \u2014 already deleted or never created.');",
+                  "pm.test('BPN group deleted', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -3165,7 +3175,7 @@
                 "retirements"
               ]
             },
-            "description": "**POST** `/v3/contractagreements/retirements`\n\nRetire a contract agreement. Cannot be used for new transfers after retirement.\n\n**Response**: 204 No Content.\n\n**Expected Non-2xx Responses:**\n- **400** \u2014 The agreement is already retired or the body is malformed.\n- **404** \u2014 The agreement ID doesn't exist on this connector (retirement runs on the consumer, which must have the agreement).\n\n> This is a Tractus-X extension \u2014 upstream EDC has no retirement concept.",
+            "description": "**POST** `/v3/contractagreements/retirements`\n\nRetire a contract agreement. Cannot be used for new transfers after retirement.\n\n**Response**: 204 No Content.\n\n> This is a Tractus-X extension \u2014 upstream EDC has no retirement concept.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"@context\": {\n    \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\"\n  },\n  \"edc:agreementId\": \"{{agreementId}}\",\n  \"tx:reason\": \"Demo agreement retirement \\u2014 testing retirement functionality\"\n}",
@@ -3193,18 +3203,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Agreement retired', function () {",
-                  "    // 204 = retired successfully",
-                  "    // 400 = already retired or invalid request body",
-                  "    // 404 = agreement not found on this connector",
-                  "    // This TX extension may return different codes depending on the agreement state",
-                  "    // and whether the extension is fully configured.",
-                  "    pm.expect([200, 204, 400, 404]).to.include(pm.response.code);",
-                  "    console.log('Retire agreement: ' + pm.response.code);",
-                  "    if (pm.response.code === 400) console.log('Agreement already retired or invalid body.');",
-                  "    if (pm.response.code === 404) console.log('Agreement not found on this connector.');",
-                  "    if (pm.response.code >= 400) {",
-                  "        console.log('Response: ' + pm.response.text().substring(0, 200));",
-                  "    }",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('Agreement retired successfully');",
                   "});"
                 ]
               }
@@ -3284,7 +3284,7 @@
                 "{{agreementId}}"
               ]
             },
-            "description": "**DELETE** `/v3/contractagreements/retirements/{agreementId}`\n\nReactivate a retired agreement. After reactivation it can be used for transfers again.\n\n**Response**: 204 No Content.\n\n**Expected Non-2xx Responses:**\n- **404** \u2014 The agreement was never retired (retirement may have failed earlier), so there is nothing to reactivate. This is the expected response when running the folder for the first time and retirement didn't succeed."
+            "description": "**DELETE** `/v3/contractagreements/retirements/{agreementId}`\n\nReactivate a retired agreement. After reactivation it can be used for transfers again.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -3302,11 +3302,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Agreement reactivated or not retired', function () {",
-                  "    // 204 = reactivated; 404 = not retired",
-                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
-                  "    console.log('Reactivate: ' + pm.response.code);",
-                  "    if (pm.response.code === 404) console.log('Agreement not retired \u2014 nothing to reactivate (expected if retire failed).');",
+                  "pm.test('Agreement reactivated', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('Agreement reactivated successfully');",
                   "});"
                 ]
               }
@@ -3438,17 +3436,17 @@
               }
             ],
             "url": {
-              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}",
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{sacrificialNegotiationId}}",
               "host": [
                 "{{consumerMgmt}}"
               ],
               "path": [
                 "v3",
                 "contractnegotiations",
-                "{{negotiationId}}"
+                "{{sacrificialNegotiationId}}"
               ]
             },
-            "description": "**DELETE** `/v3/contractnegotiations/{id}`\n\nDelete a negotiation record. Only terminated negotiations can be deleted.\n\n**Response**: 204 No Content (or 404/409)."
+            "description": "**DELETE** `/v3/contractnegotiations/{id}`\n\nDelete a negotiation record. Only **terminated** negotiations can be deleted \u2014 finalized negotiations are permanent audit records.\n\nDeletes the sacrificial negotiation that was terminated in step 6.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -3456,8 +3454,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const negId = pm.collectionVariables.get('negotiationId');",
-                  "if (!negId) throw new Error('negotiationId not set.');"
+                  "const negId = pm.collectionVariables.get('sacrificialNegotiationId');",
+                  "if (!negId) throw new Error('sacrificialNegotiationId not set. Run \"6. Terminate Negotiation\" first.');"
                 ]
               }
             },
@@ -3466,11 +3464,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Negotiation deleted or conflict', function () {",
-                  "    pm.expect([200, 204, 404, 409]).to.include(pm.response.code);",
-                  "    console.log('Delete negotiation: ' + pm.response.code);",
-                  "    if (pm.response.code === 409) console.log('Cannot delete \u2014 finalized (expected).');",
-                  "});"
+                  "pm.test('Negotiation deleted', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "    console.log('Terminated negotiation deleted successfully');",
+                  "});",
+                  "pm.collectionVariables.unset('sacrificialNegotiationId');"
                 ]
               }
             }
@@ -3497,7 +3495,7 @@
                 "{{contractDefId}}"
               ]
             },
-            "description": "**DELETE** `/v3/contractdefinitions/{id}`\n\nRemove the contract definition. The asset will no longer appear in the catalog for new negotiations.\n\n**Expected Non-2xx Responses:**\n- **404** \u2014 The contract definition was already deleted or never created. Acceptable in cleanup flows."
+            "description": "**DELETE** `/v3/contractdefinitions/{id}`\n\nRemove the contract definition. The asset will no longer appear in the catalog for new negotiations.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -3506,10 +3504,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Contract definition deleted', function () {",
-                  "    // 204 = deleted; 404 = already deleted or never created",
-                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
-                  "    console.log('Delete contract def: ' + pm.response.code);",
-                  "    if (pm.response.code === 404) console.log('Already deleted or never created.');",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -3546,7 +3541,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Access policy deleted', function () {",
-                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -3583,7 +3578,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Contract policy deleted', function () {",
-                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -3611,7 +3606,7 @@
                 "{{assetId}}"
               ]
             },
-            "description": "**DELETE** `/v3/assets/{id}`\n\nRemove the demo asset.\n\n> **Note**: If the asset has active agreements, this may fail with a conflict error. That's expected \u2014 assets with agreements are protected."
+            "description": "**DELETE** `/v3/assets/{id}`\n\nAttempt to delete the demo asset.\n\n**Expected: 409 Conflict** \u2014 In a full E2E flow, the asset has active contract agreements that reference it. EDC enforces referential integrity: assets with agreements cannot be deleted. This is by-design \u2014 agreements are immutable audit records, and their referenced assets must be preserved.\n\n> To fully remove an asset, all referencing agreements would need to be removed first \u2014 which EDC does not support (by design)."
           },
           "event": [
             {

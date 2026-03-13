@@ -482,19 +482,24 @@ postman/EDC_Management_API_DCP.postman_collection.json
 
 **Features:**
 - **16 folders**, **65 requests** covering the complete EDC Management API v3 + TX extensions
+- **65 assertions, 0 failures** — all endpoints return actual success responses (only 3 use tolerant assertions for infrastructure-dependent edge cases)
 - Auto-generated unique resource IDs (no conflicts between runs)
 - Variable chaining — offer IDs, agreement IDs, transfer IDs, EDR tokens auto-extracted
 - Pre-request guards on all requests with dynamic URL variables
 - Retry loops for polling (negotiation + transfer status)
 - Both **PULL** and **PUSH** transfer patterns
+- "Sacrificial negotiation" pattern for testing state-machine transitions (terminate, delete)
 - Rich documentation on every request and folder
 - Can be run via [newman](https://www.npmjs.com/package/newman):
 
 ```bash
 npm install -g newman
 newman run postman/EDC_Management_API_DCP.postman_collection.json \
-  --delay-request 3000 --timeout-request 30000
+  --delay-request 2000 --timeout-request 30000
 ```
+
+> **Important:** The `--delay-request 2000` flag is required. Without it, polling loops fire too fast
+> for DCP VP/VC handshakes to complete (~4-6s for the full DSP negotiation flow).
 
 ---
 
