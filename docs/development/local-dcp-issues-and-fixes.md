@@ -554,3 +554,32 @@ already-bootstrapped deployment.
 | `odrl:assigner` (negotiation) | Provider BPN, not DID | DSP v0.8 BPN extraction |
 | `odrl:action` (negotiation) | `{"@id": "odrl:use"}` | Policy comparison requires full IRI |
 | `odrl:leftOperand` (negotiation) | Full IRI with `{"@id": "..."}` | Avoids `IRI_CONFUSED_WITH_PREFIX` |
+| `tx.edc.ih.api.url` (CP) | IdentityHub Identity API URL (e.g., `http://provider-ih:15151/api/identity`) | DID self-registration via IdentityHub |
+| `tx.edc.ih.api.key` (CP) | IdentityHub API key | Authentication for DID self-registration |
+| `tx.edc.ih.participant.context.id` (CP) | Short participant name (e.g., `provider`) | IdentityHub participant context lookup |
+| `tx.edc.did.service.self.registration.enabled` (CP) | `true` | Enables automatic DSP endpoint registration in DID Document |
+
+---
+
+## Update: DID Service Self-Registration via IdentityHub
+
+Bootstrap Step 8 ("Add service endpoints to DID documents") was originally a manual `curl` call to the IdentityHub
+Identity API. With the addition of the `did-document-service-identityhub` module (branch `feature/did-document-service-ih`),
+this step is now **automated at connector startup**.
+
+When self-registration is enabled, each control plane registers its DSP endpoint as a `DataService` entry in its
+DID Document via the IdentityHub Identity API on startup, and deregisters on shutdown.
+
+**Configuration required on each CP:**
+
+```properties
+tx.edc.did.service.self.registration.enabled=true
+tx.edc.did.service.self.registration.id=dsp-endpoint
+tx.edc.did.service.self.deregistration.enabled=true
+tx.edc.ih.api.url=http://provider-ih:15151/api/identity
+tx.edc.ih.api.key=c3VwZXItdXNlcg==.superuserkey
+tx.edc.ih.participant.context.id=provider
+```
+
+See the [IdentityHub Client README](../../edc-extensions/did-document/did-document-service-identityhub/README.md)
+for full details.

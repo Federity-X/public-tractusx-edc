@@ -449,6 +449,27 @@ Each participant (provider, consumer) receives 3 VCs from the issuer:
 | `BpnCredential` | Binds BPN to DID identity |
 | `DataExchangeGovernanceCredential` | Authorizes data exchange under framework agreements |
 
+### DID Service Self-Registration
+
+Each control plane automatically registers its DSP endpoint as a `DataService` entry in its
+DID Document via the IdentityHub Identity API on startup, and deregisters on shutdown.
+This removes the need for bootstrap Step 8's manual `curl` calls.
+
+**Key configuration (on each CP):**
+
+| Property | Example Value | Description |
+|----------|--------------|-------------|
+| `tx.edc.did.service.self.registration.enabled` | `true` | Enables automatic DSP endpoint registration |
+| `tx.edc.did.service.self.registration.id` | `dsp-endpoint` | Service entry ID in the DID Document |
+| `tx.edc.did.service.self.deregistration.enabled` | `true` | Clean up on shutdown |
+| `tx.edc.ih.api.url` | `http://provider-ih:15151/api/identity` | IdentityHub Identity API URL |
+| `tx.edc.ih.api.key` | `c3VwZXItdXNlcg==.superuserkey` | IdentityHub API key |
+| `tx.edc.ih.participant.context.id` | `provider` | Participant context ID (short name) |
+
+See the [IdentityHub Client README](../../edc-extensions/did-document/did-document-service-identityhub/README.md)
+and the [Self-Registration README](../../edc-extensions/did-document/did-document-service-self-registration/README.md)
+for full details.
+
 ---
 
 ## API Keys
@@ -594,6 +615,7 @@ These don't expose API endpoints but modify runtime behavior:
 | `validators` | Blocks empty asset selectors in contract definitions |
 | `agreements-bpns` | Stores BPNL associations on negotiation events |
 | `dcp/` | W3C VC caching + DIM integration |
+| `did-document/` | DID Document self-registration + wallet clients (IdentityHub, DIM) |
 
 ---
 
@@ -645,6 +667,7 @@ curl -s http://localhost:8581/api/management/bpn-directory \
 | Transfer stuck at REQUESTED | Data plane not reachable | Check `edc.hostname` on DP config |
 | EDR token invalid | Transfer proxy key format | Must be EC P-256 JWK in Vault |
 | `IRI_CONFUSED_WITH_PREFIX` | Compact IRI in leftOperand | Use full IRI: `https://w3id.org/catenax/2025/9/policy/...` |
+| DID Document missing DataService | Self-registration not configured | Verify `tx.edc.ih.api.url`, `tx.edc.ih.api.key`, and `tx.edc.ih.participant.context.id` on CP |
 
 ### Clean up
 
@@ -684,7 +707,7 @@ deployment/local/
 ├── README.md                      ← This file
 ├── PRODUCTION_DEPLOYMENT_GUIDE.md ← What to change for production (infra team reference)
 ├── Dockerfile                     ← Multi-stage Docker build for CP and DP
-├── docker-compose.yaml            ← 11 containers (provider, consumer, BDRS)
+├── docker-compose.yaml            ← 14 containers (provider, consumer, BDRS)
 ├── config/
 │   ├── provider-cp.properties     ← Provider Control Plane config
 │   ├── provider-dp.properties     ← Provider Data Plane config

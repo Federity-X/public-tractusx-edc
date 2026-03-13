@@ -35,6 +35,17 @@ The extension is controlled by the following configuration properties:
 - **On Shutdown:**
   - The extension automatically deletes the registered service entry from the DID Document.
 
+## Available Implementations
+
+This extension requires a `DidDocumentServiceClient` implementation to interact with the wallet. The following implementations are available:
+
+| Module | Wallet | Description |
+|--------|--------|-------------|
+| [`did-document-service-identityhub`](../did-document-service-identityhub) | Eclipse Tractus-X IdentityHub | REST-based client using the IdentityHub Identity API (POST/DELETE endpoints). Suitable for local, dev, and open-source wallet deployments. |
+| [`did-document-service-dim`](../did-document-service-dim) | SAP DIM | PATCH-based client for SAP Decentralized Identity Management wallets. Suitable for SAP-managed production environments. |
+
+Include exactly one implementation module in your control plane build alongside this extension.
+
 ## Disable the Extension
 - Set the property `tx.edc.did.service.self.registration.enabled=false` in your configuration to disable this feature.
 - Do not include any extension which provides the implementation of SPI `DidDocumentServiceClient` to update the DID Document.

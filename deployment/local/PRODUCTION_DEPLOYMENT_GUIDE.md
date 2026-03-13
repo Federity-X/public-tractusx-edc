@@ -671,6 +671,12 @@ This table maps every local config shortcut to its production equivalent:
 | `edc.core.monitor.level` | `DEBUG` | `INFO` | CP, DP |
 | `tx.edc.postgresql.migration.enabled` | `true` | `false` (run in CI/CD) | CP |
 | `tx.edc.dataplane.token.refresh.endpoint` | `http://provider-dp:8081/api/public/token` | `https://dataplane.company.com/api/public/token` | DP |
+| `tx.edc.did.service.self.registration.enabled` | `true` | `true` | CP |
+| `tx.edc.did.service.self.registration.id` | `dsp-endpoint` | `dsp-endpoint` (or custom URI) | CP |
+| `tx.edc.did.service.self.deregistration.enabled` | `true` | `false` (see scaling note) | CP |
+| `tx.edc.ih.api.url` | `http://provider-ih:15151/api/identity` | `https://identityhub.company.com/api/identity` (or cluster-internal) | CP |
+| `tx.edc.ih.api.key` | `c3VwZXItdXNlcg==.superuserkey` | Strong random key from Vault | CP |
+| `tx.edc.ih.participant.context.id` | `provider` | Company participant context ID | CP |
 
 ---
 
@@ -706,6 +712,9 @@ Use this checklist before going live:
 - [ ] MembershipCredential, BpnCredential, DataExchangeGovernanceCredential issued
 - [ ] Trusted issuer DID configured correctly
 - [ ] `edc.iam.did.web.use.https=true` confirmed in all configs
+- [ ] DID self-registration enabled (`tx.edc.did.service.self.registration.enabled=true`)
+- [ ] DID self-deregistration disabled in HA (`tx.edc.did.service.self.deregistration.enabled=false`) — see scaling note in decision record
+- [ ] IdentityHub API URL and API key configured for self-registration client
 
 ### Connectivity
 - [ ] DSP endpoint (`/api/v1/dsp/*`) reachable from trading partners
@@ -733,6 +742,7 @@ Use this checklist before going live:
 ### Validation
 - [ ] Health check endpoints responding on all components
 - [ ] DID resolution working end-to-end (curl the DID URL)
+- [ ] DID Document contains `DataService` entry with correct DSP endpoint (auto-registered on startup)
 - [ ] STS token issuance working
 - [ ] Catalog request succeeds with a known trading partner
 - [ ] Contract negotiation succeeds
@@ -748,7 +758,7 @@ The local deployment uses three property files per company stack:
 
 | File | Component | Key Sections |
 |------|-----------|-------------|
-| `provider-cp.properties` | Control Plane | Identity, endpoints, STS, BDRS, datasource, vault, proxy keys, policy |
+| `provider-cp.properties` | Control Plane | Identity, endpoints, STS, BDRS, datasource, vault, proxy keys, policy, DID self-registration (IH client settings) |
 | `provider-dp.properties` | Data Plane | Endpoints, STS, datasource, vault, public API URL, proxy keys, token expiry |
 | `provider-ih.properties` | IdentityHub | Endpoints, STS settings, super-user, vault, datasource (12 named stores) |
 

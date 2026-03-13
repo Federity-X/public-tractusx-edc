@@ -19,29 +19,29 @@
 
 package org.eclipse.tractusx.edc.did.document.service.identityhub;
 
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import org.eclipse.edc.http.spi.EdcHttpClient;
-import org.eclipse.edc.iam.did.spi.document.Service;
-import org.eclipse.edc.spi.monitor.Monitor;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.eclipse.edc.http.spi.EdcHttpClient;
+import org.eclipse.edc.iam.did.spi.document.Service;
 import static org.eclipse.edc.junit.assertions.AbstractResultAssert.assertThat;
+import org.eclipse.edc.spi.monitor.Monitor;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 class DidDocumentServiceIdentityHubClientTest {
 

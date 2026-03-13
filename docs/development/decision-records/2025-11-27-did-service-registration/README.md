@@ -24,6 +24,7 @@ to avoid creating duplicate `service` entries and manage itself.
 2. Create a new SPI including an interface that represents the feature in an abstract manner.
 3. Add an extension that will implement the lifecycle management logic.
 4. Another extension implements the SPI's interface as client for [SAP DIV's write endpoint to the did document](https://api.sap.com/api/DIV/path/CompanyIdentityV2HttpController_updateCompanyIdentity_v2.0.0).
+5. An additional extension implements the SPI's interface as client for the **IdentityHub Identity API** (`/v1alpha/participants/{id}/dids/{did}/endpoints`), enabling self-registration for deployments using Eclipse Tractus-X IdentityHub as their wallet.
 
 The lifecycle management logic is designed to ensure functional correctness while limiting outbound HTTP traffic on 
 startup. It shall behave acoording to the following diagram:
