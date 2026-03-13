@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "tx-edc-mgmt-api-dcp-local",
-    "name": "Tractus-X EDC — Management API (Local DCP)",
-    "description": "# Tractus-X EDC Management API — Local DCP Deployment\n\nComprehensive collection covering the **full EDC Management API v3** for a local DCP (Decentralized Claims Protocol) deployment with per-company IdentityHub wallets.\n\n## Architecture\n\n| Component | Host Port | Docker Name |\n|-----------|-----------|-------------|\n| Provider Control Plane | 19191-19195 | provider-cp |\n| Provider Data Plane | 19196-19198 | provider-dp |\n| Consumer Control Plane | 29191-29195 | consumer-cp |\n| Consumer Data Plane | 29196-29198 | consumer-dp |\n| Provider IdentityHub | 7181/7292 | provider-ih |\n| Consumer IdentityHub | 8182/8293 | consumer-ih |\n| BDRS Server | 8580/8581 | bdrs-server |\n| Issuer Service | 18181/18292 | issuerservice |\n\n## How to Use\n\n### Quick Start (Run All)\n1. Right-click the collection → **Run collection**\n2. All requests execute in order — test scripts chain variables automatically.\n3. The flow: Create assets → policies → contract defs → browse catalog → negotiate → transfer → pull data → cleanup.\n\n### Step-by-Step\n1. Run **1. Health Checks** to verify deployment.\n2. Run **2. Asset Management** → creates a demo asset on the provider.\n3. Run **3. Policy Definitions** → creates access + contract policies.\n4. Run **4. Contract Definitions** → links policies to the asset.\n5. Run **5. Catalog Browsing** → consumer fetches the provider's catalog.\n6. Run **6. Contract Negotiation** → consumer negotiates with provider.\n   - *Poll Negotiation Status* must reach `FINALIZED` before proceeding.\n7. Run **7. Contract Agreements** → inspect the signed agreement.\n8. Run **8. Transfer Process** → initiate HttpData-PULL transfer.\n   - *Poll Transfer Status* must reach `STARTED` before proceeding.\n9. Run **9. EDR & Data Pull** → retrieve the EDR token and pull actual data.\n10. Run **10. EDR Cache** → query cached EDRs by various filters.\n11. Run **11. Transfer Lifecycle** → suspend/terminate the transfer.\n12. Run **12. Cleanup** → remove demo resources.\n\n## JSON-LD Gotchas\n\n> These were discovered through extensive debugging and are baked into every request:\n\n- **`odrl:action`** must be `{\"@id\": \"odrl:use\"}` — bare `\"use\"` fails validation.\n- **`odrl:assigner`** in negotiations must be the **BPN** (e.g., `BPNL000000000001`), not the DID.\n- **`odrl:leftOperand`** for CX policies must use full IRIs: `{\"@id\": \"https://w3id.org/catenax/2025/9/policy/FrameworkAgreement\"}`.\n- **`odrl:target`** must match the asset `@id` from the catalog exactly.\n- **`@id` (Offer ID)** in negotiation must match the catalog's `odrl:hasPolicy.@id` exactly.\n\n## Variables\n\nAll configuration is in **Collection Variables** — edit them to match your deployment.\n\n## Running with Newman\n\n```bash\nnewman run EDC_Management_API_DCP.postman_collection.json --delay-request 2000\n```\n\nThe `--delay-request 2000` flag adds a 2-second delay between requests, which is important for polling loops (negotiation status, transfer status) that use `postman.setNextRequest()` retries.\n\n## Pre-request Guards\n\nDependent requests (negotiation, transfer, EDR) include **pre-request guard scripts** that check if required variables are set. If you run a request out of order, you'll get a clear error message telling you which step to run first.",
+    "name": "Tractus-X EDC \u2014 Management API (Local DCP)",
+    "description": "# Tractus-X EDC Management API \u2014 Local DCP Deployment\n\nComprehensive collection covering the **full EDC Management API v3** for a local DCP (Decentralized Claims Protocol) deployment with per-company IdentityHub wallets.\n\n## Architecture\n\n| Component | Host Port | Docker Name |\n|-----------|-----------|-------------|\n| Provider Control Plane | 19191-19195 | provider-cp |\n| Provider Data Plane | 19196-19198 | provider-dp |\n| Consumer Control Plane | 29191-29195 | consumer-cp |\n| Consumer Data Plane | 29196-29198 | consumer-dp |\n| Provider IdentityHub | 7181/7292 | provider-ih |\n| Consumer IdentityHub | 8182/8293 | consumer-ih |\n| BDRS Server | 8580/8581 | bdrs-server |\n| Issuer Service | 18181/18292 | issuerservice |\n\n## How to Use\n\n### Quick Start (Run All)\n1. Right-click the collection \u2192 **Run collection**\n2. All requests execute in order \u2014 test scripts chain variables automatically.\n3. The flow: Create assets \u2192 policies \u2192 contract defs \u2192 browse catalog \u2192 negotiate \u2192 transfer \u2192 pull data \u2192 cleanup.\n\n### Step-by-Step\n1. Run **1. Health Checks** to verify deployment.\n2. Run **2. Asset Management** \u2192 CRUD operations on assets.\n3. Run **3. Policy Definitions** \u2192 CRUD + validate + evaluation plan.\n4. Run **4. Contract Definitions** \u2192 CRUD operations.\n5. Run **5. Catalog Browsing** \u2192 full catalog, filtered catalog, dataset request.\n6. Run **6. Contract Negotiation** \u2192 initiate, poll, query, terminate.\n7. Run **7. Contract Agreements** \u2192 inspect agreements + trace back to negotiations.\n8. Run **8. Transfer Process** \u2192 initiate HttpData-PULL, poll, query, get state.\n9. Run **9. EDR & Data Pull** \u2192 get EDR, pull data, refresh token, delete EDR.\n10. Run **10. PUSH Transfer** \u2192 push-based data delivery.\n11. Run **11. EDR Cache** \u2192 initiate EDR negotiation, query by asset/agreement.\n12. Run **12. Transfer Lifecycle** \u2192 suspend/resume/terminate/deprovision.\n13. Run **14. BPN Groups** (optional) \u2192 Tractus-X BPN-to-group mappings.\n14. Run **15. Agreement Retirements** (optional) \u2192 retire/reactivate agreements.\n15. Run **16. Connector Discovery** (optional) \u2192 v4alpha endpoint discovery.\n16. Run **17. Cleanup** \u2192 remove demo resources.\n\n## Endpoint Coverage\n\nThis collection covers **57+ endpoints** across the full EDC Management API v3 + Tractus-X extensions:\n- **Core EDC**: Assets (5), Policies (7), Contract Definitions (5), Catalog (3), Negotiations (7), Agreements (4), Transfers (8), EDRs (5)\n- **Tractus-X Extensions**: BPN Groups (6), Agreement Retirements (3), EDR Negotiation (1)\n- **Experimental (v4alpha)**: Connector Discovery (2)\n\n## JSON-LD Gotchas\n\n> These were discovered through extensive debugging and are baked into every request:\n\n- **`odrl:action`** must be `{\"@id\": \"odrl:use\"}` \u2014 bare `\"use\"` fails validation.\n- **`odrl:assigner`** in negotiations must be the **BPN** (e.g., `BPNL000000000001`), not the DID.\n- **`odrl:leftOperand`** for CX policies must use full IRIs: `{\"@id\": \"https://w3id.org/catenax/2025/9/policy/FrameworkAgreement\"}`.\n- **`odrl:target`** must match the asset `@id` from the catalog exactly.\n- **`@id` (Offer ID)** in negotiation must match the catalog's `odrl:hasPolicy.@id` exactly.\n\n## Variables\n\nAll configuration is in **Collection Variables** \u2014 edit them to match your deployment.\n\n## Running with Newman\n\n```bash\nnewman run EDC_Management_API_DCP.postman_collection.json --delay-request 2000\n```\n\nThe `--delay-request 2000` flag adds a 2-second delay between requests, which is important for polling loops (negotiation status, transfer status) that use `postman.setNextRequest()` retries.\n\n## Pre-request Guards\n\nDependent requests (negotiation, transfer, EDR) include **pre-request guard scripts** that check if required variables are set. If you run a request out of order, you'll get a clear error message telling you which step to run first.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -10,49 +10,49 @@
       "key": "providerMgmt",
       "value": "http://localhost:19193/management",
       "type": "string",
-      "description": "Provider Control Plane — Management API base URL"
+      "description": "Provider Control Plane \u2014 Management API base URL"
     },
     {
       "key": "consumerMgmt",
       "value": "http://localhost:29193/management",
       "type": "string",
-      "description": "Consumer Control Plane — Management API base URL"
+      "description": "Consumer Control Plane \u2014 Management API base URL"
     },
     {
       "key": "providerDefault",
       "value": "http://localhost:19191/api",
       "type": "string",
-      "description": "Provider Control Plane — Default API base URL"
+      "description": "Provider Control Plane \u2014 Default API base URL"
     },
     {
       "key": "consumerDefault",
       "value": "http://localhost:29191/api",
       "type": "string",
-      "description": "Consumer Control Plane — Default API base URL"
+      "description": "Consumer Control Plane \u2014 Default API base URL"
     },
     {
       "key": "providerDpHealth",
       "value": "http://localhost:19196/api",
       "type": "string",
-      "description": "Provider Data Plane — Default API base URL"
+      "description": "Provider Data Plane \u2014 Default API base URL"
     },
     {
       "key": "consumerDpHealth",
       "value": "http://localhost:29196/api",
       "type": "string",
-      "description": "Consumer Data Plane — Default API base URL"
+      "description": "Consumer Data Plane \u2014 Default API base URL"
     },
     {
       "key": "providerDpPublic",
       "value": "http://localhost:19197/api/public",
       "type": "string",
-      "description": "Provider Data Plane — Public API (for data pull, maps to provider-dp:8081 inside Docker)"
+      "description": "Provider Data Plane \u2014 Public API (for data pull, maps to provider-dp:8081 inside Docker)"
     },
     {
       "key": "providerDsp",
       "value": "http://provider-cp:8084/api/v1/dsp",
       "type": "string",
-      "description": "Provider DSP endpoint (Docker-internal hostname — used by consumer CP to reach provider)"
+      "description": "Provider DSP endpoint (Docker-internal hostname \u2014 used by consumer CP to reach provider)"
     },
     {
       "key": "providerDid",
@@ -64,7 +64,7 @@
       "key": "providerBpn",
       "value": "BPNL000000000001",
       "type": "string",
-      "description": "Provider Business Partner Number — used as odrl:assigner"
+      "description": "Provider Business Partner Number \u2014 used as odrl:assigner"
     },
     {
       "key": "consumerBpn",
@@ -154,7 +154,7 @@
       "key": "webhookUrl",
       "value": "http://209.38.170.63:8084/83ef68c8-6cef-4f59-910d-627490b713f0",
       "type": "string",
-      "description": "Consumer HTTP endpoint for PUSH transfers. Can be any URL that accepts POST — a REST API, data ingestion service, etc. Use webhook.site for testing."
+      "description": "Consumer HTTP endpoint for PUSH transfers. Can be any URL that accepts POST \u2014 a REST API, data ingestion service, etc. Use webhook.site for testing."
     },
     {
       "key": "pushTransferId",
@@ -202,17 +202,22 @@
   "item": [
     {
       "name": "1. Health Checks",
-      "description": "Verify all EDC services are running and healthy before proceeding.\n\nThis collection targets a **local DCP deployment** with 4 services:\n- **Provider CP** (Control Plane) — `localhost:19191` — orchestrates catalog, negotiation, and transfer\n- **Provider DP** (Data Plane) — `localhost:19196` — handles data transfer (push/pull)\n- **Consumer CP** — `localhost:29191` — the data consumer's control plane\n- **Consumer DP** — `localhost:29196` — the consumer's data plane\n\nAll should return `{\"isSystemHealthy\": true}` with HTTP 200.\n\n> **If any health check fails**, the downstream API calls will also fail. Ensure all Docker containers are running.",
+      "description": "Verify all EDC services are running and healthy before proceeding.\n\nThis collection targets a **local DCP deployment** with 4 services:\n- **Provider CP** (Control Plane) \u2014 `localhost:19191` \u2014 orchestrates catalog, negotiation, and transfer\n- **Provider DP** (Data Plane) \u2014 `localhost:19196` \u2014 handles data transfer (push/pull)\n- **Consumer CP** \u2014 `localhost:29191` \u2014 the data consumer's control plane\n- **Consumer DP** \u2014 `localhost:29196` \u2014 the consumer's data plane\n\nAll should return `{\"isSystemHealthy\": true}` with HTTP 200.\n\n> **If any health check fails**, the downstream API calls will also fail. Ensure all Docker containers are running.",
       "item": [
         {
-          "name": "Provider CP — Health",
+          "name": "Provider CP \u2014 Health",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{providerDefault}}/check/health",
-              "host": ["{{providerDefault}}"],
-              "path": ["check", "health"]
+              "host": [
+                "{{providerDefault}}"
+              ],
+              "path": [
+                "check",
+                "health"
+              ]
             },
             "description": "Check Provider Control Plane health.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
           },
@@ -231,16 +236,21 @@
           ]
         },
         {
-          "name": "Provider DP — Health",
+          "name": "Provider DP \u2014 Health",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{providerDpHealth}}/check/health",
-              "host": ["{{providerDpHealth}}"],
-              "path": ["check", "health"]
+              "host": [
+                "{{providerDpHealth}}"
+              ],
+              "path": [
+                "check",
+                "health"
+              ]
             },
-            "description": "**GET** `/check/health`\n\nCheck Provider Data Plane health.\n\nThe Data Plane is responsible for the actual data transfer — both PULL (serving data via EDR) and PUSH (posting data to consumer-provided endpoints).\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
+            "description": "**GET** `/check/health`\n\nCheck Provider Data Plane health.\n\nThe Data Plane is responsible for the actual data transfer \u2014 both PULL (serving data via EDR) and PUSH (posting data to consumer-provided endpoints).\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
           },
           "event": [
             {
@@ -257,16 +267,21 @@
           ]
         },
         {
-          "name": "Consumer CP — Health",
+          "name": "Consumer CP \u2014 Health",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{consumerDefault}}/check/health",
-              "host": ["{{consumerDefault}}"],
-              "path": ["check", "health"]
+              "host": [
+                "{{consumerDefault}}"
+              ],
+              "path": [
+                "check",
+                "health"
+              ]
             },
-            "description": "**GET** `/check/health`\n\nCheck Consumer Control Plane health.\n\nThe Consumer CP orchestrates catalog browsing, contract negotiation, and transfer initiation — all on behalf of the data consumer.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
+            "description": "**GET** `/check/health`\n\nCheck Consumer Control Plane health.\n\nThe Consumer CP orchestrates catalog browsing, contract negotiation, and transfer initiation \u2014 all on behalf of the data consumer.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
           },
           "event": [
             {
@@ -283,16 +298,21 @@
           ]
         },
         {
-          "name": "Consumer DP — Health",
+          "name": "Consumer DP \u2014 Health",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{consumerDpHealth}}/check/health",
-              "host": ["{{consumerDpHealth}}"],
-              "path": ["check", "health"]
+              "host": [
+                "{{consumerDpHealth}}"
+              ],
+              "path": [
+                "check",
+                "health"
+              ]
             },
-            "description": "**GET** `/check/health`\n\nCheck Consumer Data Plane health.\n\nThe Consumer DP is present for symmetry. For PUSH transfers, the consumer only needs an HTTP endpoint (not a Data Plane) — the provider's DP pushes data there directly.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
+            "description": "**GET** `/check/health`\n\nCheck Consumer Data Plane health.\n\nThe Consumer DP is present for symmetry. For PUSH transfers, the consumer only needs an HTTP endpoint (not a Data Plane) \u2014 the provider's DP pushes data there directly.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
           },
           "event": [
             {
@@ -319,8 +339,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -328,10 +354,15 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/assets",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "assets"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "assets"
+              ]
             },
-            "description": "**POST** `/v3/assets`\n\nCreate a new asset on the provider. The asset wraps:\n- `properties.name` — human-readable name\n- `properties.dct:type` — asset taxonomy type\n- `dataAddress.baseUrl` — the actual data source URL\n\nThe `@id` is auto-generated as `demo-asset-<timestamp>` by the collection pre-request script.\n\n**Response**: `IdResponse` with the created asset's `@id` and `createdAt` timestamp."
+            "description": "**POST** `/v3/assets`\n\nCreate a new asset on the provider. The asset wraps:\n- `properties.name` \u2014 human-readable name\n- `properties.dct:type` \u2014 asset taxonomy type\n- `dataAddress.baseUrl` \u2014 the actual data source URL\n\nThe `@id` is auto-generated as `demo-asset-<timestamp>` by the collection pre-request script.\n\n**Response**: `IdResponse` with the created asset's `@id` and `createdAt` timestamp."
           },
           "event": [
             {
@@ -351,12 +382,58 @@
           ]
         },
         {
+          "name": "Get Asset by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/assets/{{assetId}}",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "assets",
+                "{{assetId}}"
+              ]
+            },
+            "description": "**GET** `/v3/assets/{id}`\n\nRetrieve a single asset by its ID.\n\n**Response**: Full Asset object with `properties`, `dataAddress`, and metadata."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Asset retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body['@id']).to.eql(pm.collectionVariables.get('assetId'));",
+                  "    console.log('Asset: ' + body['@id']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Query All Assets",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -364,10 +441,16 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/assets/request",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "assets", "request"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "assets",
+                "request"
+              ]
             },
-            "description": "**POST** `/v3/assets/request`\n\nQuery all assets on the provider using a QuerySpec.\n\n- `offset` / `limit` — pagination\n- `sortField` / `sortOrder` — optional sorting\n- `filterExpression` — optional filtering (see next request)\n\n**Response**: Array of Asset objects."
+            "description": "**POST** `/v3/assets/request`\n\nQuery all assets on the provider using a QuerySpec.\n\n- `offset` / `limit` \u2014 pagination\n- `sortField` / `sortOrder` \u2014 optional sorting\n- `filterExpression` \u2014 optional filtering (see next request)\n\n**Response**: Array of Asset objects."
           },
           "event": [
             {
@@ -392,8 +475,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -401,8 +490,14 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/assets/request",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "assets", "request"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "assets",
+                "request"
+              ]
             },
             "description": "**POST** `/v3/assets/request` with `filterExpression`\n\nQuery a specific asset by its ID.\n\n> **Note**: The `operandLeft` must be the full namespace IRI `https://w3id.org/edc/v0.0.1/ns/id`, not just `id`.\n\n**Response**: Array containing the matching asset (or empty array)."
           },
@@ -422,20 +517,71 @@
               }
             }
           ]
+        },
+        {
+          "name": "Update Asset",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/assets",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "assets"
+              ]
+            },
+            "description": "**PUT** `/v3/assets`\n\nUpdate an existing asset. The `@id` in the body identifies which asset to update. All fields are replaced.\n\n**Response**: 204 No Content on success.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"dct\": \"http://purl.org/dc/terms/\"\n  },\n  \"@type\": \"Asset\",\n  \"@id\": \"{{assetId}}\",\n  \"properties\": {\n    \"name\": \"Demo API Asset (Updated)\",\n    \"dct:type\": {\"@id\": \"https://w3id.org/catenax/taxonomy#DemoData\"},\n    \"contenttype\": \"application/json\",\n    \"description\": \"Updated description for the demo asset.\"\n  },\n  \"dataAddress\": {\n    \"@type\": \"DataAddress\",\n    \"type\": \"HttpData\",\n    \"baseUrl\": \"https://jsonplaceholder.typicode.com/todos/1\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Asset updated', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log('Asset update: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "3. Policy Definitions (Provider)",
-      "description": "Create ODRL policy definitions on the **provider**.\n\nTwo types:\n- **Access Policy** — controls who can *see* the asset in the catalog (visibility)\n- **Contract Policy** — controls the constraints for *negotiating* a contract\n\n## CX Policy Constraints\nCatena-X uses custom left operands under `https://w3id.org/catenax/2025/9/policy/`:\n- `FrameworkAgreement` — which framework the consumer agreed to\n- `UsagePurpose` — allowed usage purposes\n- `Membership` — active CX membership\n\n## JSON-LD Gotcha\n`odrl:action` MUST be `{\"@id\": \"odrl:use\"}` — a bare string `\"use\"` causes a 400 validation error.",
+      "description": "Create ODRL policy definitions on the **provider**.\n\nTwo types:\n- **Access Policy** \u2014 controls who can *see* the asset in the catalog (visibility)\n- **Contract Policy** \u2014 controls the constraints for *negotiating* a contract\n\n## CX Policy Constraints\nCatena-X uses custom left operands under `https://w3id.org/catenax/2025/9/policy/`:\n- `FrameworkAgreement` \u2014 which framework the consumer agreed to\n- `UsagePurpose` \u2014 allowed usage purposes\n- `Membership` \u2014 active CX membership\n\n## JSON-LD Gotcha\n`odrl:action` MUST be `{\"@id\": \"odrl:use\"}` \u2014 a bare string `\"use\"` causes a 400 validation error.",
       "item": [
         {
           "name": "Create Access Policy (unrestricted)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -443,10 +589,15 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/policydefinitions",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "policydefinitions"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions"
+              ]
             },
-            "description": "**POST** `/v3/policydefinitions`\n\nCreate an **unrestricted** access policy — empty permission array means *all* connectors can see this asset in the catalog.\n\nFor a membership-gated access policy, you would add:\n```json\n\"odrl:permission\": [{\n  \"odrl:action\": {\"@id\": \"cx-policy:access\"},\n  \"odrl:constraint\": {\n    \"odrl:leftOperand\": {\"@id\": \"cx-policy:Membership\"},\n    \"odrl:operator\": {\"@id\": \"odrl:eq\"},\n    \"odrl:rightOperand\": \"active\"\n  }\n}]\n```"
+            "description": "**POST** `/v3/policydefinitions`\n\nCreate an **unrestricted** access policy \u2014 empty permission array means *all* connectors can see this asset in the catalog.\n\nFor a membership-gated access policy, you would add:\n```json\n\"odrl:permission\": [{\n  \"odrl:action\": {\"@id\": \"cx-policy:access\"},\n  \"odrl:constraint\": {\n    \"odrl:leftOperand\": {\"@id\": \"cx-policy:Membership\"},\n    \"odrl:operator\": {\"@id\": \"odrl:eq\"},\n    \"odrl:rightOperand\": \"active\"\n  }\n}]\n```"
           },
           "event": [
             {
@@ -470,8 +621,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -479,10 +636,15 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/policydefinitions",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "policydefinitions"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions"
+              ]
             },
-            "description": "**POST** `/v3/policydefinitions`\n\nCreate a **contract policy** with Catena-X framework constraints:\n- `FrameworkAgreement = DataExchangeGovernance:1.0`\n- `UsagePurpose isAnyOf cx.core.industrycore:1`\n\nThese constraints require the consumer to hold matching Verifiable Credentials.\n\n### JSON-LD Critical Rules\n- `odrl:action` → `{\"@id\": \"odrl:use\"}` (not bare `\"use\"`)\n- `odrl:leftOperand` → `{\"@id\": \"cx-policy:FrameworkAgreement\"}` (IRI object form)\n- `odrl:operator` → `{\"@id\": \"odrl:eq\"}` (IRI object form)"
+            "description": "**POST** `/v3/policydefinitions`\n\nCreate a **contract policy** with Catena-X framework constraints:\n- `FrameworkAgreement = DataExchangeGovernance:1.0`\n- `UsagePurpose isAnyOf cx.core.industrycore:1`\n\nThese constraints require the consumer to hold matching Verifiable Credentials.\n\n### JSON-LD Critical Rules\n- `odrl:action` \u2192 `{\"@id\": \"odrl:use\"}` (not bare `\"use\"`)\n- `odrl:leftOperand` \u2192 `{\"@id\": \"cx-policy:FrameworkAgreement\"}` (IRI object form)\n- `odrl:operator` \u2192 `{\"@id\": \"odrl:eq\"}` (IRI object form)"
           },
           "event": [
             {
@@ -506,8 +668,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -515,8 +683,14 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/policydefinitions/request",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "policydefinitions", "request"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "request"
+              ]
             },
             "description": "**POST** `/v3/policydefinitions/request`\n\nQuery all policy definitions on the provider. Supports `QuerySpec` with pagination and filtering."
           },
@@ -537,20 +711,212 @@
               }
             }
           ]
+        },
+        {
+          "name": "Get Policy by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/policydefinitions/{{accessPolicyId}}",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "{{accessPolicyId}}"
+              ]
+            },
+            "description": "**GET** `/v3/policydefinitions/{id}`\n\nRetrieve a single policy definition by its ID.\n\n**Response**: Full PolicyDefinition object with ODRL policy content."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Policy retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    console.log('Policy: ' + body['@id']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/policydefinitions/{{contractPolicyId}}",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "{{contractPolicyId}}"
+              ]
+            },
+            "description": "**PUT** `/v3/policydefinitions/{id}`\n\nUpdate an existing policy definition. The entire policy body is replaced.\n\n> Policies referenced by active contract definitions should not be modified.\n\n**Response**: 204 No Content on success.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n    \"cx-policy\": \"{{cxPolicyNs}}\"\n  },\n  \"@id\": \"{{contractPolicyId}}\",\n  \"policy\": {\n    \"@type\": \"odrl:Set\",\n    \"odrl:permission\": [{\n      \"odrl:action\": {\"@id\": \"odrl:use\"},\n      \"odrl:constraint\": {\n        \"odrl:and\": [\n          {\n            \"odrl:leftOperand\": {\"@id\": \"cx-policy:FrameworkAgreement\"},\n            \"odrl:operator\": {\"@id\": \"odrl:eq\"},\n            \"odrl:rightOperand\": \"DataExchangeGovernance:1.0\"\n          },\n          {\n            \"odrl:leftOperand\": {\"@id\": \"cx-policy:UsagePurpose\"},\n            \"odrl:operator\": {\"@id\": \"odrl:isAnyOf\"},\n            \"odrl:rightOperand\": \"cx.core.industrycore:1\"\n          }\n        ]\n      }\n    }],\n    \"odrl:prohibition\": [],\n    \"odrl:obligation\": []\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Policy updated', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log('Policy update: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validate Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/policydefinitions/{{contractPolicyId}}/validate",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "{{contractPolicyId}}",
+                "validate"
+              ]
+            },
+            "description": "**POST** `/v3/policydefinitions/{id}/validate`\n\nValidate a policy definition. Checks whether constraints can be evaluated by the installed policy engine.\n\nUseful for debugging constraint mismatches.\n\n**Response**: Validation result (200 OK if valid).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Policy validation returned', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log('Validation: ' + pm.response.code);",
+                  "    if (pm.response.code === 200) console.log(JSON.stringify(pm.response.json(), null, 2));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Policy Evaluation Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/policydefinitions/{{contractPolicyId}}/evaluationplan",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "{{contractPolicyId}}",
+                "evaluationplan"
+              ]
+            },
+            "description": "**POST** `/v3/policydefinitions/{id}/evaluationplan`\n\nGet the evaluation plan for a policy. Shows which policy functions handle which operands.\n\nUseful for debugging why negotiations fail.\n\n**Response**: Evaluation plan object.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Evaluation plan returned', function () {",
+                  "    // 200 = plan returned; 400 = policyScope missing (expected in some versions)",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        const body = pm.response.json();",
+                  "        console.log('Plan: ' + JSON.stringify(body).substring(0, 300));",
+                  "    } else {",
+                  "        console.log('Evaluation plan requires policyScope (expected for this version).');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "4. Contract Definitions (Provider)",
-      "description": "Contract definitions **link** an access policy, a contract policy, and an asset selector together.\n\nThis is the final step to make an asset visible and negotiable in the dataspace:\n\n```\nContract Definition\n  ├── accessPolicyId    → who can SEE the asset\n  ├── contractPolicyId  → what constraints apply to NEGOTIATE\n  └── assetsSelector    → which assets this applies to\n```",
+      "description": "Contract definitions **link** an access policy, a contract policy, and an asset selector together.\n\nThis is the final step to make an asset visible and negotiable in the dataspace:\n\n```\nContract Definition\n  \u251c\u2500\u2500 accessPolicyId    \u2192 who can SEE the asset\n  \u251c\u2500\u2500 contractPolicyId  \u2192 what constraints apply to NEGOTIATE\n  \u2514\u2500\u2500 assetsSelector    \u2192 which assets this applies to\n```",
       "item": [
         {
           "name": "Create Contract Definition",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -558,10 +924,15 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/contractdefinitions",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "contractdefinitions"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractdefinitions"
+              ]
             },
-            "description": "**POST** `/v3/contractdefinitions`\n\nCreate a contract definition that binds:\n- **accessPolicyId** → the unrestricted access policy\n- **contractPolicyId** → the CX constraint policy\n- **assetsSelector** → filters to the specific demo asset\n\nOnce created, the asset becomes visible in the provider's catalog to consumers who pass the access policy."
+            "description": "**POST** `/v3/contractdefinitions`\n\nCreate a contract definition that binds:\n- **accessPolicyId** \u2192 the unrestricted access policy\n- **contractPolicyId** \u2192 the CX constraint policy\n- **assetsSelector** \u2192 filters to the specific demo asset\n\nOnce created, the asset becomes visible in the provider's catalog to consumers who pass the access policy."
           },
           "event": [
             {
@@ -581,12 +952,59 @@
           ]
         },
         {
+          "name": "Get Contract Definition by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/contractdefinitions/{{contractDefId}}",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractdefinitions",
+                "{{contractDefId}}"
+              ]
+            },
+            "description": "**GET** `/v3/contractdefinitions/{id}`\n\nRetrieve a single contract definition by its ID.\n\n**Response**: Full ContractDefinition with `accessPolicyId`, `contractPolicyId`, `assetsSelector`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Contract definition retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    console.log('Contract Def: ' + body['@id']);",
+                  "    console.log('  Access Policy: ' + body.accessPolicyId);",
+                  "    console.log('  Contract Policy: ' + body.contractPolicyId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Query All Contract Definitions",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -594,10 +1012,16 @@
             },
             "url": {
               "raw": "{{providerMgmt}}/v3/contractdefinitions/request",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "contractdefinitions", "request"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractdefinitions",
+                "request"
+              ]
             },
-            "description": "**POST** `/v3/contractdefinitions/request`\n\nQuery all contract definitions. Each result shows:\n- `accessPolicyId` — the access gating policy\n- `contractPolicyId` — the negotiation constraint policy\n- `assetsSelector` — matching criteria"
+            "description": "**POST** `/v3/contractdefinitions/request`\n\nQuery all contract definitions. Each result shows:\n- `accessPolicyId` \u2014 the access gating policy\n- `contractPolicyId` \u2014 the negotiation constraint policy\n- `assetsSelector` \u2014 matching criteria"
           },
           "event": [
             {
@@ -615,20 +1039,71 @@
               }
             }
           ]
+        },
+        {
+          "name": "Update Contract Definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/contractdefinitions",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractdefinitions"
+              ]
+            },
+            "description": "**PUT** `/v3/contractdefinitions`\n\nUpdate an existing contract definition. The `@id` identifies which to update.\n\n> Changing policies only affects future negotiations.\n\n**Response**: 204 No Content on success.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{contractDefId}}\",\n  \"accessPolicyId\": \"{{accessPolicyId}}\",\n  \"contractPolicyId\": \"{{contractPolicyId}}\",\n  \"assetsSelector\": {\n    \"operandLeft\": \"https://w3id.org/edc/v0.0.1/ns/id\",\n    \"operator\": \"=\",\n    \"operandRight\": \"{{assetId}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Contract definition updated', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log('Contract def update: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "5. Catalog Browsing (Consumer → Provider)",
-      "description": "The **consumer** requests the **provider's** catalog via DSP (Dataspace Protocol).\n\nThis triggers a full DCP authentication flow:\n1. Consumer CP resolves provider DID via BDRS\n2. Consumer requests a Self-Issued token from its IdentityHub\n3. Provider validates the token and returns the catalog\n\nThe catalog contains `dcat:dataset` entries — each with `odrl:hasPolicy` offers that describe available terms.",
+      "name": "5. Catalog Browsing (Consumer \u2192 Provider)",
+      "description": "The **consumer** requests the **provider's** catalog via DSP (Dataspace Protocol).\n\nThis triggers a full DCP authentication flow:\n1. Consumer CP resolves provider DID via BDRS\n2. Consumer requests a Self-Issued token from its IdentityHub\n3. Provider validates the token and returns the catalog\n\nThe catalog contains `dcat:dataset` entries \u2014 each with `odrl:hasPolicy` offers that describe available terms.",
       "item": [
         {
           "name": "Request Full Catalog",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -636,10 +1111,16 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/catalog/request",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "catalog", "request"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "catalog",
+                "request"
+              ]
             },
-            "description": "**POST** `/v3/catalog/request`\n\nFetch the full catalog from the provider.\n\n- `counterPartyAddress` — provider's DSP endpoint (Docker-internal hostname)\n- `counterPartyId` — provider's DID\n- `protocol` — must be `dataspace-protocol-http`\n\n**Response**: DCAT Catalog with `dcat:dataset` array. Each dataset has:\n- `@id` — asset ID\n- `odrl:hasPolicy` — array of ODRL offers with constraints\n\n> This request exercises the full DCP flow (DID resolution → SI token → VP presentation)."
+            "description": "**POST** `/v3/catalog/request`\n\nFetch the full catalog from the provider.\n\n- `counterPartyAddress` \u2014 provider's DSP endpoint (Docker-internal hostname)\n- `counterPartyId` \u2014 provider's DID\n- `protocol` \u2014 must be `dataspace-protocol-http`\n\n**Response**: DCAT Catalog with `dcat:dataset` array. Each dataset has:\n- `@id` \u2014 asset ID\n- `odrl:hasPolicy` \u2014 array of ODRL offers with constraints\n\n> This request exercises the full DCP flow (DID resolution \u2192 SI token \u2192 VP presentation)."
           },
           "event": [
             {
@@ -666,8 +1147,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -675,8 +1162,14 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/catalog/request",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "catalog", "request"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "catalog",
+                "request"
+              ]
             },
             "description": "**POST** `/v3/catalog/request` with `querySpec.filterExpression`\n\nFetch only the specific demo asset from the catalog.\n\nThe test script **automatically extracts** the `offerId` and `catalogAssetId` variables for use in the negotiation step."
           },
@@ -711,20 +1204,87 @@
               }
             }
           ]
+        },
+        {
+          "name": "Request Specific Dataset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/catalog/dataset/request",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "catalog",
+                "dataset",
+                "request"
+              ]
+            },
+            "description": "**POST** `/v3/catalog/dataset/request`\n\nRequest a specific dataset from the provider's catalog by asset ID.\n\nReturns a single `dcat:Dataset` with all its `odrl:hasPolicy` offers.\n\n**Response**: Single DCAT Dataset object.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"odrl\": \"http://www.w3.org/ns/odrl/2/\"\n  },\n  \"counterPartyAddress\": \"{{providerDsp}}\",\n  \"counterPartyId\": \"{{providerDid}}\",\n  \"protocol\": \"dataspace-protocol-http\",\n  \"@id\": \"{{assetId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const aid = pm.collectionVariables.get('assetId');",
+                  "if (!aid) throw new Error('assetId not set. Run \"2. Create Asset\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Dataset returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    console.log('Dataset: ' + body['@id']);",
+                  "    let p = body['odrl:hasPolicy'];",
+                  "    if (!Array.isArray(p)) p = [p];",
+                  "    console.log('Offers: ' + p.length);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "6. Contract Negotiation (Consumer → Provider)",
-      "description": "The **consumer** initiates a contract negotiation with the provider.\n\nThe negotiation payload must include an ODRL `Offer` that **exactly matches** the policy from the catalog — including:\n- `@id` → the offer ID from the catalog\n- `odrl:assigner` → the provider's **BPN** (not DID!)\n- `odrl:target` → the asset ID\n- All constraints with full IRI operands\n\nThe negotiation goes through states: `REQUESTED` → `AGREED` → `VERIFIED` → `FINALIZED`.\n\nOnce `FINALIZED`, a **contract agreement** is created on both sides.",
+      "name": "6. Contract Negotiation (Consumer \u2192 Provider)",
+      "description": "The **consumer** initiates a contract negotiation with the provider.\n\nThe negotiation payload must include an ODRL `Offer` that **exactly matches** the policy from the catalog \u2014 including:\n- `@id` \u2192 the offer ID from the catalog\n- `odrl:assigner` \u2192 the provider's **BPN** (not DID!)\n- `odrl:target` \u2192 the asset ID\n- All constraints with full IRI operands\n\nThe negotiation goes through states: `REQUESTED` \u2192 `AGREED` \u2192 `VERIFIED` \u2192 `FINALIZED`.\n\nOnce `FINALIZED`, a **contract agreement** is created on both sides.",
       "item": [
         {
           "name": "Initiate Negotiation",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -732,8 +1292,13 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/contractnegotiations",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "contractnegotiations"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations"
+              ]
             },
             "description": "**POST** `/v3/contractnegotiations`\n\nInitiate a contract negotiation.\n\n### Critical JSON-LD Rules\n| Field | Correct | Wrong |\n|-------|---------|-------|\n| `odrl:assigner` | `{\"@id\": \"BPNL000000000001\"}` | `{\"@id\": \"did:web:...\"}` |\n| `odrl:action` | `{\"@id\": \"odrl:use\"}` | `\"use\"` |\n| `odrl:leftOperand` | `{\"@id\": \"https://...FrameworkAgreement\"}` | `\"FrameworkAgreement\"` |\n| `@id` (offer) | Exact catalog offer ID | Any other value |\n\n> The `offerId` and `catalogAssetId` are auto-populated from the catalog browse step.\n\n**Response**: `IdResponse` with the `negotiationId`."
           },
@@ -775,14 +1340,23 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "contractnegotiations", "{{negotiationId}}"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations",
+                "{{negotiationId}}"
+              ]
             },
-            "description": "**GET** `/v3/contractnegotiations/{id}`\n\nPoll the negotiation status. States:\n- `REQUESTED` — sent to provider, waiting\n- `AGREED` — provider agreed\n- `VERIFIED` — consumer verified\n- **`FINALIZED`** — agreement created ✓\n- `TERMINATED` — failed ✗\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries.\n> The test script automatically extracts the `agreementId` when finalized."
+            "description": "**GET** `/v3/contractnegotiations/{id}`\n\nPoll the negotiation status. States:\n- `REQUESTED` \u2014 sent to provider, waiting\n- `AGREED` \u2014 provider agreed\n- `VERIFIED` \u2014 consumer verified\n- **`FINALIZED`** \u2014 agreement created \u2713\n- `TERMINATED` \u2014 failed \u2717\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries.\n> The test script automatically extracts the `agreementId` when finalized."
           },
           "event": [
             {
@@ -842,24 +1416,242 @@
               }
             }
           ]
+        },
+        {
+          "name": "Query All Negotiations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/request",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations",
+                "request"
+              ]
+            },
+            "description": "**POST** `/v3/contractnegotiations/request`\n\nQuery all negotiations on the consumer. Supports `QuerySpec` with pagination and filtering.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"offset\": 0,\n  \"limit\": 50\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Negotiations returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    console.log('Total negotiations: ' + body.length);",
+                  "    body.forEach(n => console.log('  - ' + n['@id'] + ' | ' + n.state));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Negotiation State",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}/state",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations",
+                "{{negotiationId}}",
+                "state"
+              ]
+            },
+            "description": "**GET** `/v3/contractnegotiations/{id}/state`\n\nGet only the state (lightweight alternative to full GET).\n\n**Response**: `{\"state\": \"FINALIZED\"}`."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const negId = pm.collectionVariables.get('negotiationId');",
+                  "if (!negId) throw new Error('negotiationId not set. Run \"6. Initiate Negotiation\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Negotiation state returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('State: ' + pm.response.json().state);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Agreement for Negotiation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}/agreement",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations",
+                "{{negotiationId}}",
+                "agreement"
+              ]
+            },
+            "description": "**GET** `/v3/contractnegotiations/{id}/agreement`\n\nGet the agreement produced by a finalized negotiation.\n\nShortcut: instead of extracting `contractAgreementId` and calling `GET /v3/contractagreements/{id}`.\n\n**Response**: Full ContractAgreement object."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const negId = pm.collectionVariables.get('negotiationId');",
+                  "if (!negId) throw new Error('negotiationId not set. Run \"6. Initiate Negotiation\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Agreement for negotiation returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    console.log('Agreement: ' + body['@id']);",
+                  "    console.log('  Asset: ' + body.assetId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Terminate Negotiation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}/terminate",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations",
+                "{{negotiationId}}",
+                "terminate"
+              ]
+            },
+            "description": "**POST** `/v3/contractnegotiations/{id}/terminate`\n\nTerminate an in-progress negotiation. Only callable before `FINALIZED`.\n\n**Response**: 204 No Content.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"reason\": \"Terminating demo negotiation\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const negId = pm.collectionVariables.get('negotiationId');",
+                  "if (!negId) throw new Error('negotiationId not set. Run \"6. Initiate Negotiation\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Negotiation terminated or already finalized', function () {",
+                  "    // 204 = terminated; 400 = invalid state (e.g., already finalized); 409 = conflict",
+                  "    pm.expect([200, 204, 400, 409]).to.include(pm.response.code);",
+                  "    console.log('Terminate negotiation: ' + pm.response.code);",
+                  "    if (pm.response.code === 400) console.log('Negotiation already finalized \u2014 cannot terminate (expected).');",
+                  "    if (pm.response.code === 409) console.log('Already finalized (expected).');",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "7. Contract Agreements",
-      "description": "Once a negotiation is `FINALIZED`, a **contract agreement** exists on both consumer and provider.\n\nThe agreement contains:\n- `assetId` — what was negotiated\n- `providerId` / `consumerId` — parties (BPNs)\n- `contractSigningDate` — epoch timestamp\n- `policy` — the agreed-upon ODRL policy",
+      "description": "Once a negotiation is `FINALIZED`, a **contract agreement** exists on both consumer and provider.\n\nThe agreement contains:\n- `assetId` \u2014 what was negotiated\n- `providerId` / `consumerId` \u2014 parties (BPNs)\n- `contractSigningDate` \u2014 epoch timestamp\n- `policy` \u2014 the agreed-upon ODRL policy",
       "item": [
         {
           "name": "Get Agreement by ID",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{consumerMgmt}}/v3/contractagreements/{{agreementId}}",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "contractagreements", "{{agreementId}}"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractagreements",
+                "{{agreementId}}"
+              ]
             },
             "description": "**GET** `/v3/contractagreements/{id}`\n\nRetrieve a specific contract agreement by its ID.\n\n> The `agreementId` is auto-populated from the negotiation step."
           },
@@ -901,8 +1693,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -910,8 +1708,14 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/contractagreements/request",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "contractagreements", "request"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractagreements",
+                "request"
+              ]
             },
             "description": "**POST** `/v3/contractagreements/request`\n\nQuery all contract agreements on the consumer side.\n\nSupports the same `QuerySpec` with `filterExpression` for searching by `assetId`, `providerId`, etc."
           },
@@ -926,7 +1730,57 @@
                   "    const body = pm.response.json();",
                   "    pm.expect(body).to.be.an('array').that.has.length.greaterThan(0);",
                   "    console.log('Total agreements: ' + body.length);",
-                  "    body.forEach(a => console.log('  - ' + a['@id'] + ' → ' + a.assetId));",
+                  "    body.forEach(a => console.log('  - ' + a['@id'] + ' \u2192 ' + a.assetId));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Negotiation for Agreement",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractagreements/{{agreementId}}/negotiation",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractagreements",
+                "{{agreementId}}",
+                "negotiation"
+              ]
+            },
+            "description": "**GET** `/v3/contractagreements/{id}/negotiation`\n\nGet the negotiation that produced this agreement. Useful for tracing back.\n\n**Response**: Full ContractNegotiation object."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "if (!agrId) throw new Error('agreementId not set. Run negotiation flow (folder 6) until FINALIZED first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Negotiation for agreement returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    console.log('Negotiation: ' + body['@id'] + ' | State: ' + body.state);",
                   "});"
                 ]
               }
@@ -936,16 +1790,22 @@
       ]
     },
     {
-      "name": "8. Transfer Process — HttpData-PULL",
-      "description": "Initiate a **data transfer** using the `HttpData-PULL` pattern.\n\nIn this pattern:\n1. Consumer requests a transfer.\n2. Provider provisions an **EDR (Endpoint Data Reference)** — a short-lived access token.\n3. Consumer uses the EDR to pull data directly from the provider's Data Plane.\n\nTransfer states: `REQUESTED` → `STARTED` → (data flowing) → `COMPLETED` or `TERMINATED`.\n\nWhen state = `STARTED`, the EDR is available.",
+      "name": "8. Transfer Process \u2014 HttpData-PULL",
+      "description": "Initiate a **data transfer** using the `HttpData-PULL` pattern.\n\nIn this pattern:\n1. Consumer requests a transfer.\n2. Provider provisions an **EDR (Endpoint Data Reference)** \u2014 a short-lived access token.\n3. Consumer uses the EDR to pull data directly from the provider's Data Plane.\n\nTransfer states: `REQUESTED` \u2192 `STARTED` \u2192 (data flowing) \u2192 `COMPLETED` or `TERMINATED`.\n\nWhen state = `STARTED`, the EDR is available.",
       "item": [
         {
           "name": "Initiate Transfer",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -953,10 +1813,15 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses"
+              ]
             },
-            "description": "**POST** `/v3/transferprocesses`\n\nStart an HttpData-PULL transfer.\n\n- `contractId` — the agreement from the negotiation\n- `assetId` — must match the negotiated asset\n- `transferType` — `HttpData-PULL` for consumer-pull pattern\n\n**Response**: `IdResponse` with the `transferId`."
+            "description": "**POST** `/v3/transferprocesses`\n\nStart an HttpData-PULL transfer.\n\n- `contractId` \u2014 the agreement from the negotiation\n- `assetId` \u2014 must match the negotiated asset\n- `transferType` \u2014 `HttpData-PULL` for consumer-pull pattern\n\n**Response**: `IdResponse` with the `transferId`."
           },
           "event": [
             {
@@ -996,14 +1861,23 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses", "{{transferId}}"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{transferId}}"
+              ]
             },
-            "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the transfer status. States:\n- `REQUESTED` — sent to provider\n- **`STARTED`** — EDR provisioned, data available ✓\n- `SUSPENDED` — temporarily paused\n- `COMPLETED` — finished normally\n- `TERMINATED` — failed ✗\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries."
+            "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the transfer status. States:\n- `REQUESTED` \u2014 sent to provider\n- **`STARTED`** \u2014 EDR provisioned, data available \u2713\n- `SUSPENDED` \u2014 temporarily paused\n- `COMPLETED` \u2014 finished normally\n- `TERMINATED` \u2014 failed \u2717\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries."
           },
           "event": [
             {
@@ -1033,7 +1907,7 @@
                   "console.log('Transfer state: ' + state + ' (poll ' + (retries + 1) + '/15)');",
                   "",
                   "if (state === 'STARTED') {",
-                  "    pm.test('Transfer STARTED — EDR available', function () {",
+                  "    pm.test('Transfer STARTED \u2014 EDR available', function () {",
                   "        pm.response.to.have.status(200);",
                   "    });",
                   "    pm.collectionVariables.set('_tpPollRetries', 0);",
@@ -1065,8 +1939,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1074,10 +1954,16 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses/request",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses", "request"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "request"
+              ]
             },
-            "description": "**POST** `/v3/transferprocesses/request`\n\nQuery all transfer processes on the consumer. Supports `QuerySpec` with pagination (`offset`/`limit`) and `filterExpression`.\n\nEach transfer object contains:\n- `@id` — transfer process ID\n- `state` — current state (`REQUESTED`, `STARTED`, `COMPLETED`, `SUSPENDED`, `TERMINATED`)\n- `type` — direction: `CONSUMER` or `PROVIDER`\n- `assetId` — the asset being transferred\n- `contractId` — the agreement authorizing this transfer\n- `transferType` — `HttpData-PULL` or `HttpData-PUSH`\n- `dataDestination` — (PUSH only) the target endpoint"
+            "description": "**POST** `/v3/transferprocesses/request`\n\nQuery all transfer processes on the consumer. Supports `QuerySpec` with pagination (`offset`/`limit`) and `filterExpression`.\n\nEach transfer object contains:\n- `@id` \u2014 transfer process ID\n- `state` \u2014 current state (`REQUESTED`, `STARTED`, `COMPLETED`, `SUSPENDED`, `TERMINATED`)\n- `type` \u2014 direction: `CONSUMER` or `PROVIDER`\n- `assetId` \u2014 the asset being transferred\n- `contractId` \u2014 the agreement authorizing this transfer\n- `transferType` \u2014 `HttpData-PULL` or `HttpData-PUSH`\n- `dataDestination` \u2014 (PUSH only) the target endpoint"
           },
           "event": [
             {
@@ -1096,26 +1982,85 @@
               }
             }
           ]
+        },
+        {
+          "name": "Get Transfer State",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/state",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{transferId}}",
+                "state"
+              ]
+            },
+            "description": "**GET** `/v3/transferprocesses/{id}/state`\n\nGet only the transfer state (lightweight).\n\n**Response**: `{\"state\": \"STARTED\"}`."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Transfer state returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('State: ' + pm.response.json().state);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "9. EDR & Data Pull",
-      "description": "After the transfer reaches `STARTED`, an **EDR (Endpoint Data Reference)** is cached.\n\nThe EDR contains:\n- `endpoint` — the provider Data Plane URL to pull data from\n- `authorization` — a short-lived JWT token\n- `tx-auth:refreshEndpoint` — where to refresh the token\n- `tx-auth:expiresIn` — token TTL in seconds (typically 300s)\n\n> **Important**: The `endpoint` uses the Docker hostname (`provider-dp:8081`). For host access, replace with `localhost:19197`.",
+      "description": "After the transfer reaches `STARTED`, an **EDR (Endpoint Data Reference)** is cached.\n\nThe EDR contains:\n- `endpoint` \u2014 the provider Data Plane URL to pull data from\n- `authorization` \u2014 a short-lived JWT token\n- `tx-auth:refreshEndpoint` \u2014 where to refresh the token\n- `tx-auth:expiresIn` \u2014 token TTL in seconds (typically 300s)\n\n> **Important**: The `endpoint` uses the Docker hostname (`provider-dp:8081`). For host access, replace with `localhost:19197`.",
       "item": [
         {
           "name": "Get EDR (DataAddress)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{consumerMgmt}}/v3/edrs/{{transferId}}/dataaddress",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "edrs", "{{transferId}}", "dataaddress"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "edrs",
+                "{{transferId}}",
+                "dataaddress"
+              ]
             },
-            "description": "**GET** `/v3/edrs/{transferProcessId}/dataaddress`\n\nRetrieve the EDR for a given transfer. Returns:\n- `endpoint` — data plane public URL\n- `authorization` — Bearer token\n- `tx-auth:refreshEndpoint` — refresh URL\n- `tx-auth:expiresIn` — seconds until token expires\n\nThe test script automatically sets `edrEndpoint` and `edrToken` variables."
+            "description": "**GET** `/v3/edrs/{transferProcessId}/dataaddress`\n\nRetrieve the EDR for a given transfer. Returns:\n- `endpoint` \u2014 data plane public URL\n- `authorization` \u2014 Bearer token\n- `tx-auth:refreshEndpoint` \u2014 refresh URL\n- `tx-auth:expiresIn` \u2014 seconds until token expires\n\nThe test script automatically sets `edrEndpoint` and `edrToken` variables."
           },
           "event": [
             {
@@ -1145,7 +2090,7 @@
                   "    pm.expect(endpoint).to.be.a('string').that.is.not.empty;",
                   "    pm.expect(token).to.be.a('string').that.is.not.empty;",
                   "",
-                  "    // Rewrite Docker hostname → localhost for host access",
+                  "    // Rewrite Docker hostname \u2192 localhost for host access",
                   "    const hostEndpoint = endpoint.replace('http://provider-dp:8081', pm.collectionVariables.get('providerDpPublic').replace('/api/public', ''));",
                   "    pm.collectionVariables.set('edrEndpoint', hostEndpoint);",
                   "    pm.collectionVariables.set('edrToken', token);",
@@ -1165,13 +2110,18 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "{{edrToken}}" }
+              {
+                "key": "Authorization",
+                "value": "{{edrToken}}"
+              }
             ],
             "url": {
               "raw": "{{edrEndpoint}}",
-              "host": ["{{edrEndpoint}}"]
+              "host": [
+                "{{edrEndpoint}}"
+              ]
             },
-            "description": "**GET** `<edrEndpoint>` with `Authorization: <edrToken>`\n\nPull the actual data from the provider's Data Plane using the EDR token.\n\nThe endpoint and token were auto-extracted from the previous step.\n\n> This is the payoff — actual sovereign data exchange happening here!\n\nFor this demo, the data comes from jsonplaceholder.typicode.com and returns a TODO item."
+            "description": "**GET** `<edrEndpoint>` with `Authorization: <edrToken>`\n\nPull the actual data from the provider's Data Plane using the EDR token.\n\nThe endpoint and token were auto-extracted from the previous step.\n\n> This is the payoff \u2014 actual sovereign data exchange happening here!\n\nFor this demo, the data comes from jsonplaceholder.typicode.com and returns a TODO item."
           },
           "event": [
             {
@@ -1203,20 +2153,134 @@
               }
             }
           ]
+        },
+        {
+          "name": "Refresh EDR Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/edrs/{{transferId}}/refresh",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "edrs",
+                "{{transferId}}",
+                "refresh"
+              ]
+            },
+            "description": "**POST** `/v3/edrs/{transferProcessId}/refresh`\n\nRefresh the EDR token. Returns a new `DataAddress` with fresh `authorization` token.\n\nUseful when the token has expired (default TTL 300s).\n\n**Response**: New DataAddress with refreshed token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('EDR refreshed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    const t = body.authorization;",
+                  "    console.log('Refreshed token: ' + (t ? t.substring(0, 50) + '...' : 'N/A'));",
+                  "    if (t) { pm.collectionVariables.set('edrToken', t); console.log('Updated edrToken'); }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete EDR Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/edrs/{{transferId}}",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "edrs",
+                "{{transferId}}"
+              ]
+            },
+            "description": "**DELETE** `/v3/edrs/{transferProcessId}`\n\nRemove an EDR entry from the cache. After deletion, data can no longer be pulled.\n\n**Response**: 204 No Content."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('EDR deleted', function () {",
+                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "    console.log('Delete EDR: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "10. PUSH Transfer",
-      "description": "**HttpData-PUSH** — the provider's data plane pushes data directly to a consumer-provided HTTP endpoint.\n\nThe consumer can specify **any HTTP endpoint** as the destination — a REST API, data ingestion service, webhook, event queue, etc. In our tests, we use a webhook service (e.g. webhook.site) as a stand-in since there is no real consumer backend.\n\nThis is the alternative to the PULL model (folders 8-9) where the consumer fetches data via EDR.\n\n**How it works:**\n1. Consumer initiates transfer with `transferType: HttpData-PUSH` and a `dataDestination` containing the consumer's endpoint URL\n2. Provider's data plane fetches from the data source and POSTs it to the consumer's endpoint\n3. Transfer reaches `STARTED` state once delivery begins\n\n> **Prerequisite**: A valid `agreementId` from the negotiation flow (folder 6-7).\n> Update the `webhookUrl` collection variable with your own endpoint URL.",
+      "description": "**HttpData-PUSH** \u2014 the provider's data plane pushes data directly to a consumer-provided HTTP endpoint.\n\nThe consumer can specify **any HTTP endpoint** as the destination \u2014 a REST API, data ingestion service, webhook, event queue, etc. In our tests, we use a webhook service (e.g. webhook.site) as a stand-in since there is no real consumer backend.\n\nThis is the alternative to the PULL model (folders 8-9) where the consumer fetches data via EDR.\n\n**How it works:**\n1. Consumer initiates transfer with `transferType: HttpData-PUSH` and a `dataDestination` containing the consumer's endpoint URL\n2. Provider's data plane fetches from the data source and POSTs it to the consumer's endpoint\n3. Transfer reaches `STARTED` state once delivery begins\n\n> **Prerequisite**: A valid `agreementId` from the negotiation flow (folder 6-7).\n> Update the `webhookUrl` collection variable with your own endpoint URL.",
       "item": [
         {
           "name": "Initiate PUSH Transfer",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1224,10 +2288,15 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses"
+              ]
             },
-            "description": "**POST** `/v3/transferprocesses`\n\nInitiate an **HttpData-PUSH** transfer. Unlike PULL transfers, the provider's data plane will actively POST the data to the consumer-provided `dataDestination.baseUrl`.\n\nThe consumer can specify any HTTP endpoint — a REST API, data ingestion service, webhook, etc.\n\n**Key differences from PULL:**\n| | PULL | PUSH |\n|---|---|---|\n| `transferType` | `HttpData-PULL` | `HttpData-PUSH` |\n| `dataDestination` | Not needed | Required — the consumer's HTTP endpoint URL |\n| Data flow | Consumer fetches via EDR | Provider pushes to consumer endpoint |\n| EDR created? | Yes | No |\n\n> **Tip**: For testing, use webhook.site or a similar service to inspect the pushed data."
+            "description": "**POST** `/v3/transferprocesses`\n\nInitiate an **HttpData-PUSH** transfer. Unlike PULL transfers, the provider's data plane will actively POST the data to the consumer-provided `dataDestination.baseUrl`.\n\nThe consumer can specify any HTTP endpoint \u2014 a REST API, data ingestion service, webhook, etc.\n\n**Key differences from PULL:**\n| | PULL | PUSH |\n|---|---|---|\n| `transferType` | `HttpData-PULL` | `HttpData-PUSH` |\n| `dataDestination` | Not needed | Required \u2014 the consumer's HTTP endpoint URL |\n| Data flow | Consumer fetches via EDR | Provider pushes to consumer endpoint |\n| EDR created? | Yes | No |\n\n> **Tip**: For testing, use webhook.site or a similar service to inspect the pushed data."
           },
           "event": [
             {
@@ -1267,12 +2336,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses/{{pushTransferId}}",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses", "{{pushTransferId}}"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{pushTransferId}}"
+              ]
             },
             "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the PUSH transfer status.\n\nFor PUSH transfers, once state = `STARTED`, the provider has begun (or completed) pushing data to your endpoint.\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries."
           },
@@ -1304,7 +2382,7 @@
                   "console.log('PUSH transfer state: ' + state + ' (poll ' + (retries + 1) + '/15)');",
                   "",
                   "if (state === 'STARTED' || state === 'COMPLETED') {",
-                  "    pm.test('PUSH transfer ' + state + ' — data delivered to consumer endpoint', function () {",
+                  "    pm.test('PUSH transfer ' + state + ' \u2014 data delivered to consumer endpoint', function () {",
                   "        pm.response.to.have.status(200);",
                   "        console.log('Check your consumer endpoint for the received data!');",
                   "    });",
@@ -1336,15 +2414,77 @@
     },
     {
       "name": "11. EDR Cache",
-      "description": "Query the consumer's **EDR (Endpoint Data Reference) cache** to inspect and manage active data references.\n\nEDRs are created automatically when a PULL transfer reaches `STARTED` state. Each EDR contains:\n- `endpoint` — the data plane URL to fetch data from\n- `authorization` — a short-lived Bearer token\n- `transferProcessId` — which transfer created it\n\nYou can query EDRs by `assetId` or `agreementId` to find active data references.\n\n> **Note**: PUSH transfers do NOT create EDRs — the provider pushes data directly to the consumer's endpoint.",
+      "description": "Query the consumer's **EDR (Endpoint Data Reference) cache** to inspect and manage active data references.\n\nEDRs are created automatically when a PULL transfer reaches `STARTED` state. Each EDR contains:\n- `endpoint` \u2014 the data plane URL to fetch data from\n- `authorization` \u2014 a short-lived Bearer token\n- `transferProcessId` \u2014 which transfer created it\n\nYou can query EDRs by `assetId` or `agreementId` to find active data references.\n\n> **Note**: PUSH transfers do NOT create EDRs \u2014 the provider pushes data directly to the consumer's endpoint.",
       "item": [
+        {
+          "name": "Initiate EDR Negotiation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/edrs",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "edrs"
+              ]
+            },
+            "description": "**POST** `/v3/edrs`\n\nInitiate a combined negotiation + transfer in one step (Tractus-X convenience endpoint).\n\n1. Starts contract negotiation\n2. Auto-initiates HttpData-PULL transfer when negotiation finalizes\n3. Caches the resulting EDR\n\nReplaces the manual: Negotiate \u2192 Wait \u2192 Transfer \u2192 Wait \u2192 Get EDR flow.\n\nRequest body is same as `POST /v3/contractnegotiations`.\n\n**Response**: `IdResponse` with negotiation ID.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"odrl\": \"http://www.w3.org/ns/odrl/2/\"\n  },\n  \"counterPartyAddress\": \"{{providerDsp}}\",\n  \"counterPartyId\": \"{{providerDid}}\",\n  \"protocol\": \"dataspace-protocol-http\",\n  \"policy\": {\n    \"@type\": \"odrl:Offer\",\n    \"@id\": \"{{offerId}}\",\n    \"odrl:assigner\": {\"@id\": \"{{providerBpn}}\"},\n    \"odrl:target\": {\"@id\": \"{{catalogAssetId}}\"},\n    \"odrl:permission\": [{\n      \"odrl:action\": {\"@id\": \"odrl:use\"},\n      \"odrl:constraint\": {\n        \"odrl:and\": [\n          {\n            \"odrl:leftOperand\": {\"@id\": \"{{cxPolicyNs}}FrameworkAgreement\"},\n            \"odrl:operator\": {\"@id\": \"odrl:eq\"},\n            \"odrl:rightOperand\": \"DataExchangeGovernance:1.0\"\n          },\n          {\n            \"odrl:leftOperand\": {\"@id\": \"{{cxPolicyNs}}UsagePurpose\"},\n            \"odrl:operator\": {\"@id\": \"odrl:isAnyOf\"},\n            \"odrl:rightOperand\": \"cx.core.industrycore:1\"\n          }\n        ]\n      }\n    }],\n    \"odrl:prohibition\": [],\n    \"odrl:obligation\": []\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const offerId = pm.collectionVariables.get('offerId');",
+                  "const catAsset = pm.collectionVariables.get('catalogAssetId');",
+                  "if (!offerId || !catAsset) throw new Error('offerId/catalogAssetId not set. Run \"5. Request Filtered Catalog\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('EDR negotiation initiated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('EDR Negotiation ID: ' + pm.response.json()['@id']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "Query EDRs by Asset ID",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1352,10 +2492,16 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/edrs/request",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "edrs", "request"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "edrs",
+                "request"
+              ]
             },
-            "description": "**POST** `/v3/edrs/request`\n\nQuery cached EDRs filtered by asset ID.\n\nEach EDR entry shows:\n- `transferProcessId` — which transfer created it\n- `agreementId` — which agreement it belongs to\n- `assetId` — the asset\n- `providerId` — the data provider"
+            "description": "**POST** `/v3/edrs/request`\n\nQuery cached EDRs filtered by asset ID.\n\nEach EDR entry shows:\n- `transferProcessId` \u2014 which transfer created it\n- `agreementId` \u2014 which agreement it belongs to\n- `assetId` \u2014 the asset\n- `providerId` \u2014 the data provider"
           },
           "event": [
             {
@@ -1376,12 +2522,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('EDRs found for asset', function () {",
+                  "pm.test('EDRs queried for asset', function () {",
                   "    pm.response.to.have.status(200);",
                   "    const body = pm.response.json();",
-                  "    pm.expect(body).to.be.an('array').that.has.length.greaterThan(0);",
+                  "    pm.expect(body).to.be.an('array');",
                   "    console.log('EDRs for asset: ' + body.length);",
-                  "    body.forEach(e => console.log('  - transfer: ' + e.transferProcessId + ' | agreement: ' + e.agreementId));",
+                  "    if (body.length === 0) {",
+                  "        console.log('No EDRs found \u2014 may have been deleted in earlier step (expected).');",
+                  "    } else {",
+                  "        body.forEach(e => console.log('  - transfer: ' + e.transferProcessId + ' | agreement: ' + e.agreementId));",
+                  "    }",
                   "});"
                 ]
               }
@@ -1393,8 +2543,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1402,10 +2558,16 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/edrs/request",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "edrs", "request"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "edrs",
+                "request"
+              ]
             },
-            "description": "**POST** `/v3/edrs/request`\n\nQuery cached EDRs filtered by agreement ID.\n\nUseful when one agreement has multiple transfers — this returns all EDRs created under that agreement.\n\nFilter field: `agreementId` (the contract agreement ID from folder 7).\n\n**Response**: Array of EDR entries, each with `transferProcessId`, `assetId`, `agreementId`, and `providerId`."
+            "description": "**POST** `/v3/edrs/request`\n\nQuery cached EDRs filtered by agreement ID.\n\nUseful when one agreement has multiple transfers \u2014 this returns all EDRs created under that agreement.\n\nFilter field: `agreementId` (the contract agreement ID from folder 7).\n\n**Response**: Array of EDR entries, each with `transferProcessId`, `assetId`, `agreementId`, and `providerId`."
           },
           "event": [
             {
@@ -1426,11 +2588,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('EDRs found for agreement', function () {",
+                  "pm.test('EDRs queried for agreement', function () {",
                   "    pm.response.to.have.status(200);",
                   "    const body = pm.response.json();",
-                  "    pm.expect(body).to.be.an('array').that.has.length.greaterThan(0);",
+                  "    pm.expect(body).to.be.an('array');",
                   "    console.log('EDRs for agreement: ' + body.length);",
+                  "    if (body.length === 0) {",
+                  "        console.log('No EDRs found \u2014 may have been deleted in earlier step (expected).');",
+                  "    }",
                   "});"
                 ]
               }
@@ -1441,15 +2606,21 @@
     },
     {
       "name": "12. Transfer Lifecycle",
-      "description": "Manage the transfer lifecycle — suspend and terminate active transfers.\n\n- **Suspend** — temporarily pause data flow (may not be supported for all transfer types)\n- **Terminate** — permanently end the transfer with a reason",
+      "description": "Manage the transfer lifecycle \u2014 suspend and terminate active transfers.\n\n- **Suspend** \u2014 temporarily pause data flow (may not be supported for all transfer types)\n- **Terminate** \u2014 permanently end the transfer with a reason",
       "item": [
         {
           "name": "Suspend Transfer",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1457,10 +2628,17 @@
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/suspend",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses", "{{transferId}}", "suspend"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{transferId}}",
+                "suspend"
+              ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/suspend`\n\nAttempt to suspend an active transfer.\n\n> **Note**: Not all transfer types support suspend. HttpData-PULL may return an error — this is expected."
+            "description": "**POST** `/v3/transferprocesses/{id}/suspend`\n\nAttempt to suspend an active transfer.\n\n> **Note**: Not all transfer types support suspend. HttpData-PULL may return an error \u2014 this is expected."
           },
           "event": [
             {
@@ -1481,14 +2659,72 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Suspend may not be supported — both 200 and 4xx are acceptable",
+                  "// Suspend may not be supported \u2014 both 200 and 4xx are acceptable",
                   "if (pm.response.code === 200 || pm.response.code === 204) {",
                   "    pm.test('Transfer suspended', function () { pm.response.to.be.success; });",
                   "} else {",
                   "    pm.test('Suspend not supported (expected for PULL)', function () {",
-                  "        console.log('Status ' + pm.response.code + ' — suspend may not be supported for this transfer type');",
+                  "        console.log('Status ' + pm.response.code + ' \u2014 suspend may not be supported for this transfer type');",
                   "    });",
                   "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resume Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/resume",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{transferId}}",
+                "resume"
+              ]
+            },
+            "description": "**POST** `/v3/transferprocesses/{id}/resume`\n\nResume a previously suspended transfer. Must be in `SUSPENDED` state.\n\n**Response**: 204 No Content, or 409 if not suspended.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Transfer resumed or not applicable', function () {",
+                  "    pm.expect([200, 204, 409]).to.include(pm.response.code);",
+                  "    console.log('Resume: ' + pm.response.code);",
+                  "    if (pm.response.code === 409) console.log('Not suspended \u2014 resume not applicable.');",
+                  "});"
                 ]
               }
             }
@@ -1499,19 +2735,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"reason\": \"Demo completed — cleaning up\"\n}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"reason\": \"Demo completed \u2014 cleaning up\"\n}"
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/terminate",
-              "host": ["{{consumerMgmt}}"],
-              "path": ["v3", "transferprocesses", "{{transferId}}", "terminate"]
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{transferId}}",
+                "terminate"
+              ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/terminate`\n\nPermanently terminate an active transfer.\n\n- `reason` — human-readable termination reason\n\nAfter termination, the EDR is invalidated and data can no longer be pulled."
+            "description": "**POST** `/v3/transferprocesses/{id}/terminate`\n\nPermanently terminate an active transfer.\n\n- `reason` \u2014 human-readable termination reason\n\nAfter termination, the EDR is invalidated and data can no longer be pulled."
           },
           "event": [
             {
@@ -1541,24 +2790,691 @@
               }
             }
           ]
+        },
+        {
+          "name": "Deprovision Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/deprovision",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "transferprocesses",
+                "{{transferId}}",
+                "deprovision"
+              ]
+            },
+            "description": "**POST** `/v3/transferprocesses/{id}/deprovision`\n\nDeprovision resources for a transfer.\n\n> **No-op in EDC 0.15.1** \u2014 deprovisioning is no longer managed by the control plane. Exists for backward compatibility.\n\n**Response**: 204 No Content.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Deprovision accepted', function () {",
+                  "    pm.expect([200, 204, 409]).to.include(pm.response.code);",
+                  "    console.log('Deprovision: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "13. Cleanup (Provider)",
-      "description": "Remove demo resources created during the walkthrough.\n\n**Order matters** — delete in reverse dependency order:\n1. Contract Definition (depends on policies + asset)\n2. Policy Definitions\n3. Asset\n\n> Contract agreements and transfers cannot be deleted — they are immutable audit records.",
+      "name": "14. Business Partner Groups (TX Extension)",
+      "description": "Manage **BPN-to-group mappings** \u2014 a Tractus-X extension.\n\nBPN groups are used by the `BusinessPartnerGroup` policy constraint to restrict access based on group membership.\n\n> **API Path**: `/v3/business-partner-groups`\n> **Extension**: `edc-extensions/bpn-validation`",
       "item": [
+        {
+          "name": "Create BPN Group Mapping",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/business-partner-groups",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "business-partner-groups"
+              ]
+            },
+            "description": "**POST** `/v3/business-partner-groups`\n\nAssign a BPN to one or more groups.\n\n**Response**: 204 No Content.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\"\n  },\n  \"@id\": \"{{consumerBpn}}\",\n  \"tx:groups\": [\n    \"gold-partners\",\n    \"trusted-suppliers\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('BPN group created', function () {",
+                  "    // 204 = created/updated; 200 = also acceptable",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log('Create BPN group mapping: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Groups for BPN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/business-partner-groups/{{consumerBpn}}",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "business-partner-groups",
+                "{{consumerBpn}}"
+              ]
+            },
+            "description": "**GET** `/v3/business-partner-groups/{bpn}`\n\nRetrieve group memberships for a BPN.\n\n**Response**: Object with `bpn` and `groups` array."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('BPN groups retrieved', function () {",
+                  "    // 200 = found; 404 = BPN not registered (if create didn't run)",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        console.log('Groups: ' + JSON.stringify(pm.response.json()));",
+                  "    } else {",
+                  "        console.log('BPN not found in group mappings \u2014 create may not have run.');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get BPNs by Group",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/business-partner-groups/group/gold-partners",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "business-partner-groups",
+                "group",
+                "gold-partners"
+              ]
+            },
+            "description": "**GET** `/v3/business-partner-groups/group/{group}`\n\nRetrieve all BPNs in a specific group.\n\n**Response**: Array of BPN entries."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('BPNs for group retrieved', function () {",
+                  "    // 200 = found; 404 = group not found",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        console.log('BPNs: ' + JSON.stringify(pm.response.json()));",
+                  "    } else {",
+                  "        console.log('Group not found \u2014 may not exist yet.');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/business-partner-groups/groups",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "business-partner-groups",
+                "groups"
+              ]
+            },
+            "description": "**GET** `/v3/business-partner-groups/groups`\n\nRetrieve all defined groups.\n\n**Response**: Array of group names."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('All groups retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('Groups: ' + JSON.stringify(pm.response.json()));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update BPN Group Mapping",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/business-partner-groups",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "business-partner-groups"
+              ]
+            },
+            "description": "**PUT** `/v3/business-partner-groups`\n\nUpdate group memberships for a BPN. Replaces the entire group list.\n\n**Response**: 204 No Content.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\"\n  },\n  \"@id\": \"{{consumerBpn}}\",\n  \"tx:groups\": [\n    \"gold-partners\",\n    \"trusted-suppliers\",\n    \"demo-group\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('BPN group updated', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log('Update BPN group mapping: ' + pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete BPN Group Mapping",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v3/business-partner-groups/{{consumerBpn}}",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "business-partner-groups",
+                "{{consumerBpn}}"
+              ]
+            },
+            "description": "**DELETE** `/v3/business-partner-groups/{bpn}`\n\nRemove a BPN's group mappings.\n\n**Response**: 204 No Content."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('BPN group deleted or not found', function () {",
+                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "    console.log('Delete BPN group: ' + pm.response.code);",
+                  "    if (pm.response.code === 404) console.log('Not found \u2014 already deleted or never created.');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "15. Agreement Retirements (TX Extension)",
+      "description": "Manage **contract agreement retirements** \u2014 a Tractus-X extension.\n\nRetiring makes an agreement inactive without deleting it. Retired agreements cannot be used for new transfers but remain in the audit trail. They can be reactivated later.\n\n> **API Path**: `/v3/contractagreements/retirements`\n> **Extension**: `edc-extensions/agreements`",
+      "item": [
+        {
+          "name": "Retire Agreement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractagreements/retirements",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractagreements",
+                "retirements"
+              ]
+            },
+            "description": "**POST** `/v3/contractagreements/retirements`\n\nRetire a contract agreement. Cannot be used for new transfers after retirement.\n\n**Response**: 204 No Content.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\"\n  },\n  \"edc:agreementId\": \"{{agreementId}}\",\n  \"tx:reason\": \"Demo agreement retirement \\u2014 testing retirement functionality\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "if (!agrId) throw new Error('agreementId not set. Run negotiation flow (folder 6) first.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Agreement retired', function () {",
+                  "    // 204 = retired; 400 = already retired or invalid; 404 = agreement not found",
+                  "    pm.expect([200, 204, 400, 404]).to.include(pm.response.code);",
+                  "    console.log('Retire agreement: ' + pm.response.code);",
+                  "    if (pm.response.code >= 400) {",
+                  "        console.log('Response: ' + pm.response.text().substring(0, 200));",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Query Retired Agreements",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractagreements/retirements/request",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractagreements",
+                "retirements",
+                "request"
+              ]
+            },
+            "description": "**POST** `/v3/contractagreements/retirements/request`\n\nQuery all retired agreements. Supports `QuerySpec` pagination.\n\n**Response**: Array of retired agreement objects.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"offset\": 0,\n  \"limit\": 50\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retired agreements returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    if (Array.isArray(body)) {",
+                  "        console.log('Retired: ' + body.length);",
+                  "        body.forEach(r => console.log('  - ' + r.agreementId));",
+                  "    } else console.log(JSON.stringify(body));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reactivate Retired Agreement",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractagreements/retirements/{{agreementId}}",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractagreements",
+                "retirements",
+                "{{agreementId}}"
+              ]
+            },
+            "description": "**DELETE** `/v3/contractagreements/retirements/{agreementId}`\n\nReactivate a retired agreement. After reactivation it can be used for transfers again.\n\n**Response**: 204 No Content."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "if (!agrId) throw new Error('agreementId not set.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Agreement reactivated or not retired', function () {",
+                  "    // 204 = reactivated; 404 = not retired",
+                  "    pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "    console.log('Reactivate: ' + pm.response.code);",
+                  "    if (pm.response.code === 404) console.log('Agreement not retired \u2014 nothing to reactivate (expected if retire failed).');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "16. Connector Discovery (TX v4alpha)",
+      "description": "Discover connector endpoints and DSP version parameters \u2014 a Tractus-X **v4alpha** (experimental) extension.\n\n> **API Path**: `/v4alpha/connectordiscovery`\n> **Extension**: `edc-extensions/connector-discovery`",
+      "item": [
+        {
+          "name": "Discover DSP Version Parameters",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v4alpha/connectordiscovery/dspversionparams",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v4alpha",
+                "connectordiscovery",
+                "dspversionparams"
+              ]
+            },
+            "description": "**POST** `/v4alpha/connectordiscovery/dspversionparams`\n\nQuery supported DSP version parameters.\n\n**Response**: DSP version and capabilities.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"counterPartyAddress\": \"{{providerDsp}}\",\n  \"counterPartyId\": \"{{providerDid}}\",\n  \"protocol\": \"dataspace-protocol-http\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('DSP version params returned', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "    console.log(JSON.stringify(pm.response.json(), null, 2));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Discover Connectors by BPN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{providerMgmt}}/v4alpha/connectordiscovery/connectors",
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v4alpha",
+                "connectordiscovery",
+                "connectors"
+              ]
+            },
+            "description": "**POST** `/v4alpha/connectordiscovery/connectors`\n\nDiscover connector DSP endpoints for given BPNs.\n\n**Response**: Array of connector endpoint records.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"@context\": {\n    \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n    \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\"\n  },\n  \"@type\": \"tx:ConnectorServiceDiscoveryRequest\",\n  \"edc:counterPartyId\": \"did:web:provider-ih:provider\",\n  \"tx:knownConnectors\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Connectors discovered', function () {",
+                  "    // 200 = connectors found; 400 = no endpoints registered in BDRS (expected in local dev)",
+                  "    pm.expect([200, 204, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        console.log('Discovery result: ' + JSON.stringify(pm.response.json()).substring(0, 500));",
+                  "    } else if (pm.response.code === 400) {",
+                  "        console.log('No connector endpoints registered in BDRS (expected in local dev environment).');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "17. Cleanup (Provider)",
+      "description": "Remove demo resources created during the walkthrough.\n\n**Order matters** \u2014 delete in reverse dependency order:\n1. Negotiation record (if deletable)\n2. Contract Definition (depends on policies + asset)\n3. Policy Definitions\n4. Asset\n\n> Contract agreements and transfers cannot be deleted \u2014 they are immutable audit records.",
+      "item": [
+        {
+          "name": "Delete Negotiation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{consumerMgmt}}/v3/contractnegotiations/{{negotiationId}}",
+              "host": [
+                "{{consumerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractnegotiations",
+                "{{negotiationId}}"
+              ]
+            },
+            "description": "**DELETE** `/v3/contractnegotiations/{id}`\n\nDelete a negotiation record. Only terminated negotiations can be deleted.\n\n**Response**: 204 No Content (or 404/409)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const negId = pm.collectionVariables.get('negotiationId');",
+                  "if (!negId) throw new Error('negotiationId not set.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Negotiation deleted or conflict', function () {",
+                  "    pm.expect([200, 204, 404, 409]).to.include(pm.response.code);",
+                  "    console.log('Delete negotiation: ' + pm.response.code);",
+                  "    if (pm.response.code === 409) console.log('Cannot delete \u2014 finalized (expected).');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "Delete Contract Definition",
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{providerMgmt}}/v3/contractdefinitions/{{contractDefId}}",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "contractdefinitions", "{{contractDefId}}"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "contractdefinitions",
+                "{{contractDefId}}"
+              ]
             },
             "description": "**DELETE** `/v3/contractdefinitions/{id}`\n\nRemove the contract definition. The asset will no longer appear in the catalog for new negotiations."
           },
@@ -1582,14 +3498,23 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{providerMgmt}}/v3/policydefinitions/{{accessPolicyId}}",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "policydefinitions", "{{accessPolicyId}}"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "{{accessPolicyId}}"
+              ]
             },
-            "description": "**DELETE** `/v3/policydefinitions/{id}`\n\nRemove the access policy.\n\nThe access policy controls catalog visibility — once deleted, the associated contract definition can no longer authorize catalog access.\n\n> **Prerequisite**: Delete the contract definition first (it references this policy). Deleting a policy still referenced by a contract definition may fail.\n\n**Expected**: 204 No Content (or 404 if already deleted)."
+            "description": "**DELETE** `/v3/policydefinitions/{id}`\n\nRemove the access policy.\n\nThe access policy controls catalog visibility \u2014 once deleted, the associated contract definition can no longer authorize catalog access.\n\n> **Prerequisite**: Delete the contract definition first (it references this policy). Deleting a policy still referenced by a contract definition may fail.\n\n**Expected**: 204 No Content (or 404 if already deleted)."
           },
           "event": [
             {
@@ -1610,14 +3535,23 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{providerMgmt}}/v3/policydefinitions/{{contractPolicyId}}",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "policydefinitions", "{{contractPolicyId}}"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "policydefinitions",
+                "{{contractPolicyId}}"
+              ]
             },
-            "description": "**DELETE** `/v3/policydefinitions/{id}`\n\nRemove the contract policy.\n\nThe contract policy defines the ODRL constraints that consumers must satisfy during negotiation — once deleted, no new negotiations can reference it.\n\n> **Prerequisite**: Delete the contract definition first.\n\n**Expected**: 204 No Content (or 404 if already deleted)."
+            "description": "**DELETE** `/v3/policydefinitions/{id}`\n\nRemove the contract policy.\n\nThe contract policy defines the ODRL constraints that consumers must satisfy during negotiation \u2014 once deleted, no new negotiations can reference it.\n\n> **Prerequisite**: Delete the contract definition first.\n\n**Expected**: 204 No Content (or 404 if already deleted)."
           },
           "event": [
             {
@@ -1638,14 +3572,23 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "x-api-key", "value": "{{apiKey}}" }
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
             ],
             "url": {
               "raw": "{{providerMgmt}}/v3/assets/{{assetId}}",
-              "host": ["{{providerMgmt}}"],
-              "path": ["v3", "assets", "{{assetId}}"]
+              "host": [
+                "{{providerMgmt}}"
+              ],
+              "path": [
+                "v3",
+                "assets",
+                "{{assetId}}"
+              ]
             },
-            "description": "**DELETE** `/v3/assets/{id}`\n\nRemove the demo asset.\n\n> **Note**: If the asset has active agreements, this may fail with a conflict error. That's expected — assets with agreements are protected."
+            "description": "**DELETE** `/v3/assets/{id}`\n\nRemove the demo asset.\n\n> **Note**: If the asset has active agreements, this may fail with a conflict error. That's expected \u2014 assets with agreements are protected."
           },
           "event": [
             {
@@ -1657,7 +3600,7 @@
                   "    pm.expect([200, 204, 404, 409]).to.include(pm.response.code);",
                   "    console.log('Delete asset: ' + pm.response.code);",
                   "    if (pm.response.code === 409) {",
-                  "        console.log('Asset has active agreements — cannot delete (expected).');",
+                  "        console.log('Asset has active agreements \u2014 cannot delete (expected).');",
                   "    }",
                   "});",
                   "",
