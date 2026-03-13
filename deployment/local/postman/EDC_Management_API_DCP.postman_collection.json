@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "tx-edc-mgmt-api-dcp-local",
     "name": "Tractus-X EDC — Management API (Local DCP)",
-    "description": "# Tractus-X EDC Management API — Local DCP Deployment\n\nComprehensive collection covering the **full EDC Management API v3** for a local DCP (Decentralized Claims Protocol) deployment with per-company IdentityHub wallets.\n\n## Architecture\n\n| Component | Host Port | Docker Name |\n|-----------|-----------|-------------|\n| Provider Control Plane | 19191-19195 | provider-cp |\n| Provider Data Plane | 19196-19198 | provider-dp |\n| Consumer Control Plane | 29191-29195 | consumer-cp |\n| Consumer Data Plane | 29196-29198 | consumer-dp |\n| Provider IdentityHub | 7181/7292 | provider-ih |\n| Consumer IdentityHub | 8182/8293 | consumer-ih |\n| BDRS Server | 8580/8581 | bdrs-server |\n| Issuer Service | 18181/18292 | issuerservice |\n\n## How to Use\n\n### Quick Start (Run All)\n1. Right-click the collection → **Run collection**\n2. All requests execute in order — test scripts chain variables automatically.\n3. The flow: Create assets → policies → contract defs → browse catalog → negotiate → transfer → pull data → cleanup.\n\n### Step-by-Step\n1. Run **1. Health Checks** to verify deployment.\n2. Run **2. Asset Management** → creates a demo asset on the provider.\n3. Run **3. Policy Definitions** → creates access + contract policies.\n4. Run **4. Contract Definitions** → links policies to the asset.\n5. Run **5. Catalog Browsing** → consumer fetches the provider's catalog.\n6. Run **6. Contract Negotiation** → consumer negotiates with provider.\n   - *Poll Negotiation Status* must reach `FINALIZED` before proceeding.\n7. Run **7. Contract Agreements** → inspect the signed agreement.\n8. Run **8. Transfer Process** → initiate HttpData-PULL transfer.\n   - *Poll Transfer Status* must reach `STARTED` before proceeding.\n9. Run **9. EDR & Data Pull** → retrieve the EDR token and pull actual data.\n10. Run **10. EDR Cache** → query cached EDRs by various filters.\n11. Run **11. Transfer Lifecycle** → suspend/terminate the transfer.\n12. Run **12. Cleanup** → remove demo resources.\n\n## JSON-LD Gotchas\n\n> These were discovered through extensive debugging and are baked into every request:\n\n- **`odrl:action`** must be `{\"@id\": \"odrl:use\"}` — bare `\"use\"` fails validation.\n- **`odrl:assigner`** in negotiations must be the **BPN** (e.g., `BPNL000000000001`), not the DID.\n- **`odrl:leftOperand`** for CX policies must use full IRIs: `{\"@id\": \"https://w3id.org/catenax/2025/9/policy/FrameworkAgreement\"}`.\n- **`odrl:target`** must match the asset `@id` from the catalog exactly.\n- **`@id` (Offer ID)** in negotiation must match the catalog's `odrl:hasPolicy.@id` exactly.\n\n## Variables\n\nAll configuration is in **Collection Variables** — edit them to match your deployment.",
+    "description": "# Tractus-X EDC Management API — Local DCP Deployment\n\nComprehensive collection covering the **full EDC Management API v3** for a local DCP (Decentralized Claims Protocol) deployment with per-company IdentityHub wallets.\n\n## Architecture\n\n| Component | Host Port | Docker Name |\n|-----------|-----------|-------------|\n| Provider Control Plane | 19191-19195 | provider-cp |\n| Provider Data Plane | 19196-19198 | provider-dp |\n| Consumer Control Plane | 29191-29195 | consumer-cp |\n| Consumer Data Plane | 29196-29198 | consumer-dp |\n| Provider IdentityHub | 7181/7292 | provider-ih |\n| Consumer IdentityHub | 8182/8293 | consumer-ih |\n| BDRS Server | 8580/8581 | bdrs-server |\n| Issuer Service | 18181/18292 | issuerservice |\n\n## How to Use\n\n### Quick Start (Run All)\n1. Right-click the collection → **Run collection**\n2. All requests execute in order — test scripts chain variables automatically.\n3. The flow: Create assets → policies → contract defs → browse catalog → negotiate → transfer → pull data → cleanup.\n\n### Step-by-Step\n1. Run **1. Health Checks** to verify deployment.\n2. Run **2. Asset Management** → creates a demo asset on the provider.\n3. Run **3. Policy Definitions** → creates access + contract policies.\n4. Run **4. Contract Definitions** → links policies to the asset.\n5. Run **5. Catalog Browsing** → consumer fetches the provider's catalog.\n6. Run **6. Contract Negotiation** → consumer negotiates with provider.\n   - *Poll Negotiation Status* must reach `FINALIZED` before proceeding.\n7. Run **7. Contract Agreements** → inspect the signed agreement.\n8. Run **8. Transfer Process** → initiate HttpData-PULL transfer.\n   - *Poll Transfer Status* must reach `STARTED` before proceeding.\n9. Run **9. EDR & Data Pull** → retrieve the EDR token and pull actual data.\n10. Run **10. EDR Cache** → query cached EDRs by various filters.\n11. Run **11. Transfer Lifecycle** → suspend/terminate the transfer.\n12. Run **12. Cleanup** → remove demo resources.\n\n## JSON-LD Gotchas\n\n> These were discovered through extensive debugging and are baked into every request:\n\n- **`odrl:action`** must be `{\"@id\": \"odrl:use\"}` — bare `\"use\"` fails validation.\n- **`odrl:assigner`** in negotiations must be the **BPN** (e.g., `BPNL000000000001`), not the DID.\n- **`odrl:leftOperand`** for CX policies must use full IRIs: `{\"@id\": \"https://w3id.org/catenax/2025/9/policy/FrameworkAgreement\"}`.\n- **`odrl:target`** must match the asset `@id` from the catalog exactly.\n- **`@id` (Offer ID)** in negotiation must match the catalog's `odrl:hasPolicy.@id` exactly.\n\n## Variables\n\nAll configuration is in **Collection Variables** — edit them to match your deployment.\n\n## Running with Newman\n\n```bash\nnewman run EDC_Management_API_DCP.postman_collection.json --delay-request 2000\n```\n\nThe `--delay-request 2000` flag adds a 2-second delay between requests, which is important for polling loops (negotiation status, transfer status) that use `postman.setNextRequest()` retries.\n\n## Pre-request Guards\n\nDependent requests (negotiation, transfer, EDR) include **pre-request guard scripts** that check if required variables are set. If you run a request out of order, you'll get a clear error message telling you which step to run first.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -154,7 +154,7 @@
       "key": "webhookUrl",
       "value": "http://209.38.170.63:8084/83ef68c8-6cef-4f59-910d-627490b713f0",
       "type": "string",
-      "description": "Webhook endpoint for HttpData-PUSH transfers (e.g. webhook.site or similar)"
+      "description": "Consumer HTTP endpoint for PUSH transfers. Can be any URL that accepts POST — a REST API, data ingestion service, etc. Use webhook.site for testing."
     },
     {
       "key": "pushTransferId",
@@ -240,7 +240,7 @@
               "host": ["{{providerDpHealth}}"],
               "path": ["check", "health"]
             },
-            "description": "**GET** `/check/health`\n\nCheck Provider Data Plane health.\n\nThe Data Plane is responsible for the actual data transfer — both PULL (serving data via EDR) and PUSH (posting data to webhooks).\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
+            "description": "**GET** `/check/health`\n\nCheck Provider Data Plane health.\n\nThe Data Plane is responsible for the actual data transfer — both PULL (serving data via EDR) and PUSH (posting data to consumer-provided endpoints).\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
           },
           "event": [
             {
@@ -292,7 +292,7 @@
               "host": ["{{consumerDpHealth}}"],
               "path": ["check", "health"]
             },
-            "description": "**GET** `/check/health`\n\nCheck Consumer Data Plane health.\n\nThe Consumer DP handles incoming data for PUSH transfers and serves as the proxy for outgoing PULL requests.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
+            "description": "**GET** `/check/health`\n\nCheck Consumer Data Plane health.\n\nThe Consumer DP is present for symmetry. For PUSH transfers, the consumer only needs an HTTP endpoint (not a Data Plane) — the provider's DP pushes data there directly.\n\nExpected: HTTP 200 with `{\"isSystemHealthy\": true}`."
           },
           "event": [
             {
@@ -739,6 +739,20 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure catalog variables are set",
+                  "const offerId = pm.collectionVariables.get('offerId');",
+                  "const catAsset = pm.collectionVariables.get('catalogAssetId');",
+                  "if (!offerId || !catAsset) {",
+                  "    throw new Error('offerId or catalogAssetId not set. Run \"5. Request Filtered Catalog\" first.');",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -768,7 +782,7 @@
               "host": ["{{consumerMgmt}}"],
               "path": ["v3", "contractnegotiations", "{{negotiationId}}"]
             },
-            "description": "**GET** `/v3/contractnegotiations/{id}`\n\nPoll the negotiation status. States:\n- `REQUESTED` — sent to provider, waiting\n- `AGREED` — provider agreed\n- `VERIFIED` — consumer verified\n- **`FINALIZED`** — agreement created ✓\n- `TERMINATED` — failed ✗\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> The test script automatically extracts the `agreementId` when finalized."
+            "description": "**GET** `/v3/contractnegotiations/{id}`\n\nPoll the negotiation status. States:\n- `REQUESTED` — sent to provider, waiting\n- `AGREED` — provider agreed\n- `VERIFIED` — consumer verified\n- **`FINALIZED`** — agreement created ✓\n- `TERMINATED` — failed ✗\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries.\n> The test script automatically extracts the `agreementId` when finalized."
           },
           "event": [
             {
@@ -928,6 +942,20 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure agreement and asset are set",
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "const catAsset = pm.collectionVariables.get('catalogAssetId');",
+                  "if (!agrId || !catAsset) {",
+                  "    throw new Error('agreementId or catalogAssetId not set. Run negotiation flow (folder 6) first.');",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -957,7 +985,7 @@
               "host": ["{{consumerMgmt}}"],
               "path": ["v3", "transferprocesses", "{{transferId}}"]
             },
-            "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the transfer status. States:\n- `REQUESTED` — sent to provider\n- **`STARTED`** — EDR provisioned, data available ✓\n- `SUSPENDED` — temporarily paused\n- `COMPLETED` — finished normally\n- `TERMINATED` — failed ✗\n\n> **Auto-retries** up to 15 times when run via newman/collection runner."
+            "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the transfer status. States:\n- `REQUESTED` — sent to provider\n- **`STARTED`** — EDR provisioned, data available ✓\n- `SUSPENDED` — temporarily paused\n- `COMPLETED` — finished normally\n- `TERMINATED` — failed ✗\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries."
           },
           "event": [
             {
@@ -1068,6 +1096,19 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure transfer ID is set",
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) {",
+                  "    throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1111,6 +1152,20 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure EDR variables are set",
+                  "const ep = pm.collectionVariables.get('edrEndpoint');",
+                  "const tk = pm.collectionVariables.get('edrToken');",
+                  "if (!ep || !tk) {",
+                  "    throw new Error('edrEndpoint or edrToken not set. Run \"9. Get EDR\" first.');",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -1129,8 +1184,8 @@
       ]
     },
     {
-      "name": "10. PUSH Transfer (Webhook)",
-      "description": "**HttpData-PUSH** — the provider's data plane pushes data directly to a consumer-specified HTTP endpoint (webhook).\n\nThis is the alternative to the PULL model (folders 8-9) where the consumer fetches data via EDR.\n\n**How it works:**\n1. Consumer initiates transfer with `transferType: HttpData-PUSH` and a `dataDestination` containing the webhook URL\n2. Provider's data plane POSTs the data to the webhook\n3. Transfer reaches `STARTED` state once delivery begins\n\n> **Prerequisite**: A valid `agreementId` from the negotiation flow (folder 6-7).\n> Update the `webhookUrl` collection variable with your own endpoint (e.g. webhook.site).",
+      "name": "10. PUSH Transfer",
+      "description": "**HttpData-PUSH** — the provider's data plane pushes data directly to a consumer-provided HTTP endpoint.\n\nThe consumer can specify **any HTTP endpoint** as the destination — a REST API, data ingestion service, webhook, event queue, etc. In our tests, we use a webhook service (e.g. webhook.site) as a stand-in since there is no real consumer backend.\n\nThis is the alternative to the PULL model (folders 8-9) where the consumer fetches data via EDR.\n\n**How it works:**\n1. Consumer initiates transfer with `transferType: HttpData-PUSH` and a `dataDestination` containing the consumer's endpoint URL\n2. Provider's data plane fetches from the data source and POSTs it to the consumer's endpoint\n3. Transfer reaches `STARTED` state once delivery begins\n\n> **Prerequisite**: A valid `agreementId` from the negotiation flow (folder 6-7).\n> Update the `webhookUrl` collection variable with your own endpoint URL.",
       "item": [
         {
           "name": "Initiate PUSH Transfer",
@@ -1142,16 +1197,30 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"counterPartyAddress\": \"{{providerDsp}}\",\n  \"connectorId\": \"{{providerDid}}\",\n  \"protocol\": \"dataspace-protocol-http\",\n  \"contractId\": \"{{agreementId}}\",\n  \"assetId\": \"{{catalogAssetId}}\",\n  \"transferType\": \"HttpData-PUSH\",\n  \"dataDestination\": {\n    \"type\": \"HttpData\",\n    \"baseUrl\": \"{{webhookUrl}}\"\n  }\n}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"counterPartyAddress\": \"{{providerDsp}}\",\n  \"counterPartyId\": \"{{providerDid}}\",\n  \"protocol\": \"dataspace-protocol-http\",\n  \"contractId\": \"{{agreementId}}\",\n  \"assetId\": \"{{catalogAssetId}}\",\n  \"transferType\": \"HttpData-PUSH\",\n  \"dataDestination\": {\n    \"type\": \"HttpData\",\n    \"baseUrl\": \"{{webhookUrl}}\"\n  }\n}"
             },
             "url": {
               "raw": "{{consumerMgmt}}/v3/transferprocesses",
               "host": ["{{consumerMgmt}}"],
               "path": ["v3", "transferprocesses"]
             },
-            "description": "**POST** `/v3/transferprocesses`\n\nInitiate an **HttpData-PUSH** transfer. Unlike PULL transfers, the provider's data plane will actively POST the data to the specified `dataDestination.baseUrl` (your webhook).\n\n**Key differences from PULL:**\n| | PULL | PUSH |\n|---|---|---|\n| `transferType` | `HttpData-PULL` | `HttpData-PUSH` |\n| `dataDestination` | Not needed | Required — the webhook URL |\n| Data flow | Consumer fetches via EDR | Provider pushes to webhook |\n| EDR created? | Yes | No |\n\n> **Tip**: Use webhook.site or a similar service to inspect the pushed data."
+            "description": "**POST** `/v3/transferprocesses`\n\nInitiate an **HttpData-PUSH** transfer. Unlike PULL transfers, the provider's data plane will actively POST the data to the consumer-provided `dataDestination.baseUrl`.\n\nThe consumer can specify any HTTP endpoint — a REST API, data ingestion service, webhook, etc.\n\n**Key differences from PULL:**\n| | PULL | PUSH |\n|---|---|---|\n| `transferType` | `HttpData-PULL` | `HttpData-PUSH` |\n| `dataDestination` | Not needed | Required — the consumer's HTTP endpoint URL |\n| Data flow | Consumer fetches via EDR | Provider pushes to consumer endpoint |\n| EDR created? | Yes | No |\n\n> **Tip**: For testing, use webhook.site or a similar service to inspect the pushed data."
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guard: ensure agreement and asset are set",
+                  "const agrId = pm.collectionVariables.get('agreementId');",
+                  "const catAsset = pm.collectionVariables.get('catalogAssetId');",
+                  "if (!agrId || !catAsset) {",
+                  "    throw new Error('agreementId or catalogAssetId not set. Run negotiation flow (folder 6) first.');",
+                  "}"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -1182,7 +1251,7 @@
               "host": ["{{consumerMgmt}}"],
               "path": ["v3", "transferprocesses", "{{pushTransferId}}"]
             },
-            "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the PUSH transfer status.\n\nFor PUSH transfers, once state = `STARTED`, the provider has begun (or completed) pushing data to your webhook.\n\n> **Auto-retries** up to 15 times when run via newman/collection runner."
+            "description": "**GET** `/v3/transferprocesses/{id}`\n\nPoll the PUSH transfer status.\n\nFor PUSH transfers, once state = `STARTED`, the provider has begun (or completed) pushing data to your endpoint.\n\n> **Auto-retries** up to 15 times when run via newman/collection runner.\n> Use `--delay-request 2000` in Newman to add 2s between retries."
           },
           "event": [
             {
@@ -1207,9 +1276,9 @@
                   "console.log('PUSH transfer state: ' + state + ' (poll ' + (retries + 1) + '/15)');",
                   "",
                   "if (state === 'STARTED' || state === 'COMPLETED') {",
-                  "    pm.test('PUSH transfer ' + state + ' — data pushed to webhook', function () {",
+                  "    pm.test('PUSH transfer ' + state + ' — data delivered to consumer endpoint', function () {",
                   "        pm.response.to.have.status(200);",
-                  "        console.log('Check your webhook for the received data!');",
+                  "        console.log('Check your consumer endpoint for the received data!');",
                   "    });",
                   "    pm.collectionVariables.set('_pushPollRetries', 0);",
                   "} else if (state === 'TERMINATED') {",
@@ -1239,7 +1308,7 @@
     },
     {
       "name": "11. EDR Cache",
-      "description": "Query the consumer's **EDR (Endpoint Data Reference) cache** to inspect and manage active data references.\n\nEDRs are created automatically when a PULL transfer reaches `STARTED` state. Each EDR contains:\n- `endpoint` — the data plane URL to fetch data from\n- `authorization` — a short-lived Bearer token\n- `transferProcessId` — which transfer created it\n\nYou can query EDRs by `assetId` or `agreementId` to find active data references.\n\n> **Note**: PUSH transfers do NOT create EDRs — the provider pushes data directly to the webhook.",
+      "description": "Query the consumer's **EDR (Endpoint Data Reference) cache** to inspect and manage active data references.\n\nEDRs are created automatically when a PULL transfer reaches `STARTED` state. Each EDR contains:\n- `endpoint` — the data plane URL to fetch data from\n- `authorization` — a short-lived Bearer token\n- `transferProcessId` — which transfer created it\n\nYou can query EDRs by `assetId` or `agreementId` to find active data references.\n\n> **Note**: PUSH transfers do NOT create EDRs — the provider pushes data directly to the consumer's endpoint.",
       "item": [
         {
           "name": "Query EDRs by Asset ID",
