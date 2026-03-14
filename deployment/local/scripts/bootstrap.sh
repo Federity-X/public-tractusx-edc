@@ -371,11 +371,11 @@ docker exec provider-postgres psql -U provider -d provider -c "
   UPDATE keypair_resource SET key_id = '${PROVIDER_DID}#provider-key'
     WHERE key_id = 'provider-key';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,id}', '\"${PROVIDER_DID}#provider-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,id}', '\"${PROVIDER_DID}#provider-key\"'
+  )::json WHERE did = '${PROVIDER_DID}';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,publicKeyJwk,kid}', '\"${PROVIDER_DID}#provider-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,publicKeyJwk,kid}', '\"${PROVIDER_DID}#provider-key\"'
+  )::json WHERE did = '${PROVIDER_DID}';
 " > /dev/null 2>&1 && echo "  Provider key IDs fixed." || echo "  WARNING: Provider key fix failed."
 
 echo "  Fixing consumer key IDs in consumer-postgres..."
@@ -383,11 +383,11 @@ docker exec consumer-postgres psql -U consumer -d consumer -c "
   UPDATE keypair_resource SET key_id = '${CONSUMER_DID}#consumer-key'
     WHERE key_id = 'consumer-key';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,id}', '\"${CONSUMER_DID}#consumer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,id}', '\"${CONSUMER_DID}#consumer-key\"'
+  )::json WHERE did = '${CONSUMER_DID}';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,publicKeyJwk,kid}', '\"${CONSUMER_DID}#consumer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,publicKeyJwk,kid}', '\"${CONSUMER_DID}#consumer-key\"'
+  )::json WHERE did = '${CONSUMER_DID}';
 " > /dev/null 2>&1 && echo "  Consumer key IDs fixed." || echo "  WARNING: Consumer key fix failed."
 
 echo "  Fixing issuer key IDs in issuer-postgres..."
@@ -395,11 +395,11 @@ docker exec issuer-postgres psql -U postgres -d issuerservice -c "
   UPDATE keypair_resource SET key_id = '${ISSUER_DID}#issuer-key'
     WHERE key_id = 'issuer-key';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,id}', '\"${ISSUER_DID}#issuer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,id}', '\"${ISSUER_DID}#issuer-key\"'
+  )::json WHERE did = '${ISSUER_DID}';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,publicKeyJwk,kid}', '\"${ISSUER_DID}#issuer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,publicKeyJwk,kid}', '\"${ISSUER_DID}#issuer-key\"'
+  )::json WHERE did = '${ISSUER_DID}';
 " > /dev/null 2>&1 && echo "  Issuer key IDs fixed." || echo "  WARNING: Issuer key fix failed."
 echo ""
 
@@ -446,9 +446,9 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/d
 echo "  Adding IssuerService endpoint to issuer DID..."
 docker exec issuer-postgres psql -U postgres -d issuerservice -c "
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{service}',
-    COALESCE(did_document->'service', '[]'::jsonb) || '[{\"id\":\"issuer-service\",\"type\":\"IssuerService\",\"serviceEndpoint\":\"http://issuerservice:13132/api/issuance/v1alpha/participants/${ISSUER_B64}\"}]'::jsonb
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{service}',
+    COALESCE(did_document::jsonb->'service', '[]'::jsonb) || '[{\"id\":\"issuer-service\",\"type\":\"IssuerService\",\"serviceEndpoint\":\"http://issuerservice:13132/api/issuance/v1alpha/participants/${ISSUER_B64}\"}]'::jsonb
+  )::json WHERE did = '${ISSUER_DID}';
 " > /dev/null 2>&1 && echo "  Issuer IssuerService endpoint added." || echo "  WARNING: Issuer IssuerService endpoint failed."
 echo ""
 
@@ -617,6 +617,15 @@ echo ""
 # ========================================
 echo "Step 10: Requesting credentials via DCP..."
 
+# Retrieve credential definition IDs from issuer DB (POST returns empty body)
+MEMBERSHIP_DEF_ID=$(docker exec issuer-postgres psql -U postgres -d issuerservice -tAc \
+    "SELECT id FROM credential_definitions WHERE credential_type='MembershipCredential' LIMIT 1;")
+BPN_DEF_ID=$(docker exec issuer-postgres psql -U postgres -d issuerservice -tAc \
+    "SELECT id FROM credential_definitions WHERE credential_type='BpnCredential' LIMIT 1;")
+DEG_DEF_ID=$(docker exec issuer-postgres psql -U postgres -d issuerservice -tAc \
+    "SELECT id FROM credential_definitions WHERE credential_type='DataExchangeGovernanceCredential' LIMIT 1;")
+echo "  Credential definition IDs: Membership=${MEMBERSHIP_DEF_ID}, BPN=${BPN_DEF_ID}, DEG=${DEG_DEF_ID}"
+
 echo "  Requesting MembershipCredential for provider..."
 curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/credentials/request" \
     -H "x-api-key: ${SUPERUSER_KEY}" \
@@ -626,7 +635,8 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/c
       \"holderPid\": \"provider-membership-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"MembershipCredential\"
+        \"type\": \"MembershipCredential\",
+        \"id\": \"${MEMBERSHIP_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Provider MembershipCredential requested." || echo "  WARNING: Provider MembershipCredential request failed."
 
@@ -639,7 +649,8 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/c
       \"holderPid\": \"consumer-membership-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"MembershipCredential\"
+        \"type\": \"MembershipCredential\",
+        \"id\": \"${MEMBERSHIP_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Consumer MembershipCredential requested." || echo "  WARNING: Consumer MembershipCredential request failed."
 
@@ -652,7 +663,8 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/c
       \"holderPid\": \"provider-bpn-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"BpnCredential\"
+        \"type\": \"BpnCredential\",
+        \"id\": \"${BPN_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Provider BpnCredential requested." || echo "  WARNING: Provider BpnCredential request failed."
 
@@ -665,7 +677,8 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/c
       \"holderPid\": \"consumer-bpn-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"BpnCredential\"
+        \"type\": \"BpnCredential\",
+        \"id\": \"${BPN_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Consumer BpnCredential requested." || echo "  WARNING: Consumer BpnCredential request failed."
 
@@ -678,7 +691,8 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/c
       \"holderPid\": \"provider-deg-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"DataExchangeGovernanceCredential\"
+        \"type\": \"DataExchangeGovernanceCredential\",
+        \"id\": \"${DEG_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Provider DataExchangeGovernanceCredential requested." || echo "  WARNING: Provider DataExchangeGovernanceCredential request failed."
 
@@ -691,7 +705,8 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/c
       \"holderPid\": \"consumer-deg-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"DataExchangeGovernanceCredential\"
+        \"type\": \"DataExchangeGovernanceCredential\",
+        \"id\": \"${DEG_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Consumer DataExchangeGovernanceCredential requested." || echo "  WARNING: Consumer DataExchangeGovernanceCredential request failed."
 
