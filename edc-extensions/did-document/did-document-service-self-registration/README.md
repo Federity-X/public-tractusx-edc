@@ -38,3 +38,13 @@ The extension is controlled by the following configuration properties:
 ## Disable the Extension
 - Set the property `tx.edc.did.service.self.registration.enabled=false` in your configuration to disable this feature.
 - Do not include any extension which provides the implementation of SPI `DidDocumentServiceClient` to update the DID Document.
+
+## Available `DidDocumentServiceClient` Implementations
+
+| Module | Wallet / Backend | Activation Condition |
+|--------|-----------------|---------------------|
+| `did-document-service-dim` | SAP DIM | `tx.edc.did.service.client.type=dim` |
+| `did-document-service-identityhub` | Eclipse Tractus-X IdentityHub | `tx.edc.did.service.client.type=identityhub` |
+
+Set `tx.edc.did.service.client.type` to select which client implementation is active.
+Only one client can be active at a time.
