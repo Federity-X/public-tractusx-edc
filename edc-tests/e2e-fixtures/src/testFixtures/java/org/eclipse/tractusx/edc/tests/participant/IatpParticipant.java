@@ -61,6 +61,7 @@ public class IatpParticipant extends TractusxIatpParticipantBase {
         settings.put("web.http.credentials.path", csService.get().getPath());
         if (dimUri != null) {
             settings.put("tx.edc.iam.sts.dim.url", dimUri.get().toString());
+            settings.put("tx.edc.did.service.client.type", "dim");
         }
         return super.getConfig().merge(ConfigFactory.fromMap(settings));
     }

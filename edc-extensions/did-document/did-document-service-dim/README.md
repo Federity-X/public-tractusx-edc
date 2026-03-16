@@ -119,7 +119,7 @@ This extension activates when **all** of the following conditions are met:
 2. `tx.edc.iam.sts.dim.url` is configured
 3. A `DimOauth2Client` implementation is available
 
-If any condition is not met, the extension logs an informational message and does not register a client.
+If any condition is not met, the extension logs an informational or warning message and does not register a client.
 
 ## Configuration
 
