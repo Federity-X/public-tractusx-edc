@@ -35,7 +35,7 @@ This extension activates when **all** of the following conditions are met:
 4. `tx.edc.ih.participant.context.id` is configured
 5. `edc.iam.issuer.id` is configured
 
-If any condition is not met, the extension logs an informational message and does not register a client.
+If any condition is not met, the extension logs an informational or warning message and does not register a client.
 
 ## Configuration
 

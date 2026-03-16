@@ -115,6 +115,18 @@ class DidDocumentServiceIdentityHubClientExtensionTest {
     }
 
     @Test
+    void shouldNotRegister_whenIdentityApiUrlIsInvalid(ServiceExtensionContext context, ObjectFactory factory) {
+        var settings = allSettings();
+        settings.put("tx.edc.ih.identity.api.url", "not-a-valid-url");
+        when(context.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
+
+        var extension = factory.constructInstance(DidDocumentServiceIdentityHubClientExtension.class);
+        extension.initialize(context);
+
+        verify(monitor).warning(contains("is not a valid HTTP(S) URL"));
+    }
+
+    @Test
     void shouldNotRegister_whenParticipantContextIdMissing(ServiceExtensionContext context, ObjectFactory factory) {
         var settings = allSettings();
         settings.remove("tx.edc.ih.participant.context.id");

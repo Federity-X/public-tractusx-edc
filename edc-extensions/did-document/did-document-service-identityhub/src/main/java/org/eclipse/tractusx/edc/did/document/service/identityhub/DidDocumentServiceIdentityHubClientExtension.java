@@ -19,6 +19,7 @@
 
 package org.eclipse.tractusx.edc.did.document.service.identityhub;
 
+import okhttp3.HttpUrl;
 import org.eclipse.edc.http.spi.EdcHttpClient;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provides;
@@ -38,10 +39,11 @@ import org.eclipse.tractusx.edc.spi.did.document.service.DidDocumentServiceClien
  * <p>
  * The API key is resolved from the vault using the alias specified in {@code tx.edc.ih.identity.api.key.alias}.
  */
+// Note: Both this and DidDocumentServiceDimClientExtension declare @Provides(DidDocumentServiceClient.class).
+// Only one extension will call registerService() at runtime, selected by tx.edc.did.service.client.type.
 @Provides(DidDocumentServiceClient.class)
 public class DidDocumentServiceIdentityHubClientExtension implements ServiceExtension {
 
-    public static final String TX_EDC_DID_SERVICE_CLIENT_TYPE = "tx.edc.did.service.client.type";
     public static final String CLIENT_TYPE_IDENTITYHUB = "identityhub";
     public static final String TX_EDC_IH_IDENTITY_API_URL = "tx.edc.ih.identity.api.url";
     public static final String TX_EDC_IH_IDENTITY_API_KEY_ALIAS = "tx.edc.ih.identity.api.key.alias";
@@ -71,18 +73,23 @@ public class DidDocumentServiceIdentityHubClientExtension implements ServiceExte
     @Setting(key = "edc.iam.issuer.id", description = "DID of this connector", required = false)
     private String ownDid;
 
-    @Setting(key = TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'dim', 'identityhub')", required = false)
+    @Setting(key = DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'dim', 'identityhub')", required = false)
     private String clientType;
 
     @Override
     public void initialize(ServiceExtensionContext context) {
         if (!CLIENT_TYPE_IDENTITYHUB.equalsIgnoreCase(clientType)) {
-            monitor.info("IdentityHub DidDocumentServiceClient will not be registered: %s is not set to '%s'".formatted(TX_EDC_DID_SERVICE_CLIENT_TYPE, CLIENT_TYPE_IDENTITYHUB));
+            monitor.info("IdentityHub DidDocumentServiceClient will not be registered: %s is not set to '%s'".formatted(DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, CLIENT_TYPE_IDENTITYHUB));
             return;
         }
 
         if (identityApiUrl == null || identityApiUrl.isBlank()) {
             monitor.info("IdentityHub DidDocumentServiceClient will not be registered: %s is not configured".formatted(TX_EDC_IH_IDENTITY_API_URL));
+            return;
+        }
+
+        if (HttpUrl.parse(identityApiUrl) == null) {
+            monitor.warning("IdentityHub DidDocumentServiceClient will not be registered: %s is not a valid HTTP(S) URL: '%s'".formatted(TX_EDC_IH_IDENTITY_API_URL, identityApiUrl));
             return;
         }
 

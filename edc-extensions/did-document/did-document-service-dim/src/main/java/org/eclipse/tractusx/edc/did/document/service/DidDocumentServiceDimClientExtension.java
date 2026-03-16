@@ -32,10 +32,11 @@ import org.eclipse.tractusx.edc.spi.did.document.service.DidDocumentServiceClien
 
 import java.net.URI;
 
+// Note: Both this and DidDocumentServiceIdentityHubClientExtension declare @Provides(DidDocumentServiceClient.class).
+// Only one extension will call registerService() at runtime, selected by tx.edc.did.service.client.type.
 @Provides(DidDocumentServiceClient.class)
 public class DidDocumentServiceDimClientExtension implements ServiceExtension {
 
-    public static final String TX_EDC_DID_SERVICE_CLIENT_TYPE = "tx.edc.did.service.client.type";
     public static final String CLIENT_TYPE_DIM = "dim";
 
     @Inject
@@ -56,19 +57,19 @@ public class DidDocumentServiceDimClientExtension implements ServiceExtension {
     @Setting(key = "edc.participant.id", description = "EDC Participant Id")
     private String ownDid;
 
-    @Setting(key = TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'dim', 'identityhub')", required = false)
+    @Setting(key = DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'dim', 'identityhub')", required = false)
     private String clientType;
 
     @Override
     public void initialize(ServiceExtensionContext context) {
 
         if (!CLIENT_TYPE_DIM.equalsIgnoreCase(clientType)) {
-            monitor.info("DidDocumentServiceDIMClient will not be registered because %s is not set to '%s'".formatted(TX_EDC_DID_SERVICE_CLIENT_TYPE, CLIENT_TYPE_DIM));
+            monitor.info("DidDocumentServiceDIMClient will not be registered because %s is not set to '%s'".formatted(DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, CLIENT_TYPE_DIM));
             return;
         }
 
         if (dimUrl == null || dimUrl.isBlank() || dimOauth2Client == null) {
-            monitor.info("DidDocumentServiceDIMClient will not be registered because DIM URL not configured or an implementation of DimOauth2Client is missing");
+            monitor.warning("DidDocumentServiceDIMClient will not be registered because DIM URL not configured or an implementation of DimOauth2Client is missing");
         } else {
             var client = new DidDocumentServiceDimClient(
                     httpClient,
