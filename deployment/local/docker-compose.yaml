@@ -14,9 +14,8 @@
 #   1. Issuer stack running on edc-net
 #      IdentityHub repo: https://github.com/Federity-X/public-tractusx-identityhub/tree/dcp-flow-local-deployment-with-upstream-0.15.1
 #   2. Build IH image in IH repo: docker build -t identityhub:local runtimes/identityhub/
-#   3. Build EDC shadow JARs:
-#        ./gradlew :edc-controlplane:edc-controlplane-postgresql-hashicorp-vault:shadowJar
-#        ./gradlew :edc-dataplane:edc-dataplane-hashicorp-vault:shadowJar
+#   3. Build EDC JARs:
+#        ./gradlew clean build -x test
 #   4. Build EDC Docker images:
 #        docker build -t edc-controlplane:local --build-arg JAR=edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/build/libs/edc-controlplane-postgresql-hashicorp-vault.jar -f deployment/local/Dockerfile .
 #        docker build -t edc-dataplane:local --build-arg JAR=edc-dataplane/edc-dataplane-hashicorp-vault/build/libs/edc-dataplane-hashicorp-vault.jar -f deployment/local/Dockerfile .
@@ -261,6 +260,9 @@ services:
       EDC_IAM_DID_WEB_USE_HTTPS: "false"
       # Tell status-list downloader to request JSON (IssuerService defaults to JWT)
       EDC_IAM_CREDENTIAL_REVOCATION_MIMETYPE: "application/json"
+      # Default web context (required for health check endpoint)
+      WEB_HTTP_PORT: "8080"
+      WEB_HTTP_PATH: "/api"
       # Web server ports
       WEB_HTTP_DIRECTORY_PORT: "8580"
       WEB_HTTP_DIRECTORY_PATH: "/api/directory"

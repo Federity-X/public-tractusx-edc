@@ -318,10 +318,11 @@ See the [IdentityHub deployment README](https://github.com/Federity-X/public-tra
 
 - Docker Desktop (macOS/Windows) or Docker Engine (Linux)
 - Docker Compose v2+
+- Create the shared Docker network (once): `docker network create edc-net`
 
 ### 3. Java 21
 
-Required for building the EDC shadow JARs:
+Required for building the EDC connector JARs:
 ```bash
 java -version  # Should show 21+
 ```
@@ -337,15 +338,17 @@ java -version  # Should show 21+
 ## Quick Start
 
 ```bash
-# 1. Ensure the issuer stack is running (from the IdentityHub repo)
+# 1. Ensure the shared Docker network exists
+docker network create edc-net 2>/dev/null || true
+
+# 2. Ensure the issuer stack is running (from the IdentityHub repo)
 docker ps | grep issuerservice  # Should show issuerservice container
 
-# 2. Build EDC shadow JARs (from tractusx-edc repo root)
+# 3. Build EDC JARs (from tractusx-edc repo root)
 cd /path/to/tractusx-edc
-./gradlew :edc-controlplane:edc-controlplane-postgresql-hashicorp-vault:shadowJar \
-          :edc-dataplane:edc-dataplane-hashicorp-vault:shadowJar
+./gradlew clean build -x test
 
-# 3. Build EDC Docker images
+# 4. Build EDC Docker images
 docker build -t edc-controlplane:local \
   --build-arg JAR=edc-controlplane/edc-controlplane-postgresql-hashicorp-vault/build/libs/edc-controlplane-postgresql-hashicorp-vault.jar \
   -f deployment/local/Dockerfile .
@@ -354,15 +357,18 @@ docker build -t edc-dataplane:local \
   --build-arg JAR=edc-dataplane/edc-dataplane-hashicorp-vault/build/libs/edc-dataplane-hashicorp-vault.jar \
   -f deployment/local/Dockerfile .
 
-# 4. Start infrastructure + connectors
+# 5. Start infrastructure + connectors
 cd deployment/local
 docker compose up -d
 
-# 5. Run bootstrap (participant creation, vault seeding, credential issuance,
+# 6. Wait for all containers to become healthy (~30s)
+docker ps --format 'table {{.Names}}\t{{.Status}}' | sort
+
+# 7. Run bootstrap (participant creation, vault seeding, credential issuance,
 #    BDRS seeding, asset + policy creation, E2E verification)
 bash scripts/bootstrap.sh
 
-# 6. Run end-to-end test (catalog → negotiate → transfer → pull data)
+# 8. Run end-to-end test (catalog → negotiate → transfer → pull data)
 bash scripts/test-transfer.sh
 ```
 
@@ -391,7 +397,7 @@ bash scripts/test-transfer.sh
 | provider-ih | 7181 | Identity API (DID, credentials) |
 | provider-ih | 7292 | STS (Security Token Service) |
 | provider-ih | 7131 | Resolution API |
-| provider-ih | 7151 | IH Presentation API |
+| provider-ih | 7151 | Identity Management API |
 | provider-ih | 7100 | DID Document (`.well-known`) |
 | provider-cp | 19191 | Default API (health check) |
 | provider-cp | 19192 | Control API |
@@ -411,7 +417,7 @@ bash scripts/test-transfer.sh
 | consumer-ih | 8182 | Identity API |
 | consumer-ih | 8293 | STS |
 | consumer-ih | 8132 | Resolution API |
-| consumer-ih | 8152 | Presentation API |
+| consumer-ih | 8152 | Identity Management API |
 | consumer-ih | 8100 | DID Document |
 | consumer-cp | 29191 | Default API (health check) |
 | consumer-cp | 29192 | Control API |
@@ -465,7 +471,7 @@ Each participant (provider, consumer) receives 3 VCs from the issuer:
 
 | Script | Purpose |
 |--------|---------|
-| [`scripts/bootstrap.sh`](scripts/bootstrap.sh) | Full environment bootstrap (16 steps): participant creation, vault seeding, credential issuance, BDRS seeding, asset/policy setup, E2E verification |
+| [`scripts/bootstrap.sh`](scripts/bootstrap.sh) | Full environment bootstrap (16 steps): participant creation, vault seeding, DID document setup (CredentialService + DataService endpoints), credential issuance, BDRS seeding, asset/policy setup, E2E verification |
 | [`scripts/test-transfer.sh`](scripts/test-transfer.sh) | E2E transfer test: catalog → negotiate → PULL transfer → pull data |
 | [`scripts/test-push-transfer.sh`](scripts/test-push-transfer.sh) | E2E PUSH transfer test: asset creation → negotiate → PUSH data to consumer endpoint (uses webhook.site as stand-in) |
 | [`scripts/demo-management-api.sh`](scripts/demo-management-api.sh) | Comprehensive 20-operation Management API demo covering all endpoints |
@@ -481,8 +487,8 @@ postman/EDC_Management_API_DCP.postman_collection.json
 ```
 
 **Features:**
-- **16 folders**, **65 requests** covering the complete EDC Management API v3 + TX extensions
-- **65 assertions, 0 failures** — all endpoints return actual success responses (only 2 use tolerant assertions for infrastructure-dependent edge cases)
+- **16 folders**, **68 requests** covering the complete EDC Management API v3 + TX extensions
+- **65 assertions, 0 failures** — all endpoints return actual success responses
 - Auto-generated unique resource IDs (no conflicts between runs)
 - Variable chaining — offer IDs, agreement IDs, transfer IDs, EDR tokens auto-extracted
 - Pre-request guards on all requests with dynamic URL variables
@@ -631,14 +637,16 @@ curl -s http://localhost:8100/consumer/did.json | jq .  # Consumer DID Document
 curl -s http://localhost:18100/issuer/did.json | jq .   # Issuer DID Document
 
 # BDRS
+curl -s http://localhost:8580/api/check/health | jq .  # BDRS health
 curl -s http://localhost:8581/api/management/bpn-directory \
-  -H "x-api-key: testkey" | jq .
+  -H "x-api-key: testkey" | jq .  # BDRS directory contents
 ```
 
 ### Common issues
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
+| BDRS shows unhealthy | Missing default web port config | Ensure `WEB_HTTP_PORT` and `WEB_HTTP_PATH` are set in BDRS environment |
 | Catalog returns empty | Access policy mismatch or missing VCs | Check `docker logs consumer-cp` for DCP auth errors |
 | Negotiation TERMINATED | Policy action format wrong | Use `{"@id": "odrl:use"}` not `"use"` |
 | 401 on DSP endpoint | SI token audience mismatch | Verify `edc.participant.id` = full DID on CPs |
@@ -684,7 +692,7 @@ deployment/local/
 ├── README.md                      ← This file
 ├── PRODUCTION_DEPLOYMENT_GUIDE.md ← What to change for production (infra team reference)
 ├── Dockerfile                     ← Multi-stage Docker build for CP and DP
-├── docker-compose.yaml            ← 11 containers (provider, consumer, BDRS)
+├── docker-compose.yaml            ← 11 containers (provider, consumer, BDRS) + 3 from IH repo = 14 total
 ├── config/
 │   ├── provider-cp.properties     ← Provider Control Plane config
 │   ├── provider-dp.properties     ← Provider Data Plane config

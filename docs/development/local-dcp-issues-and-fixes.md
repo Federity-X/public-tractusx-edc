@@ -22,6 +22,9 @@ exact fix applied for each one.
 12. [Policy Action Type Mismatch (`"use"` vs `"odrl:use"`)](#12-policy-action-type-mismatch)
 13. [Diagnostic Logging in `VerifiablePresentationCacheImpl`](#13-diagnostic-logging)
 14. [Bootstrap Script — Full E2E Automation](#14-bootstrap-script)
+15. [DataService Self-Registration Timing Issue](#15-dataservice-self-registration-timing-issue)
+16. [BDRS Server Unhealthy — Missing Default Web Context](#16-bdrs-server-unhealthy)
+17. [PostgreSQL `json` vs `jsonb` Cast in DID Document Updates](#17-postgresql-json-vs-jsonb-cast)
 
 ---
 
@@ -485,12 +488,12 @@ entire setup in 16 steps:
 | 0c    | Store BDRS management API key in issuer-vault |
 | 1     | Create provider participant in provider-ih |
 | 2     | Create consumer participant in consumer-ih |
-| 3     | Store secrets in per-company vaults (STS secrets, transfer proxy JWK keys) |
+| 3     | Store secrets in per-company vaults (STS secrets, transfer proxy JWK keys, IH API keys) |
 | 4     | Verify STS token acquisition |
 | 5     | Create issuer participant in issuerservice |
 | 6     | Register holders (provider, consumer) in issuerservice |
 | 7     | Fix key IDs to full DID URL format |
-| 8     | Add service endpoints to DID documents |
+| 8     | Add CredentialService + DataService + IssuerService endpoints to DID documents |
 | 9     | Create attestation + credential definitions |
 | 10    | Request credentials via DCP (Membership, BPN, DataExchangeGovernance) |
 | 11    | Verify credentials (expecting 3 each) |
@@ -554,3 +557,110 @@ already-bootstrapped deployment.
 | `odrl:assigner` (negotiation) | Provider BPN, not DID | DSP v0.8 BPN extraction |
 | `odrl:action` (negotiation) | `{"@id": "odrl:use"}` | Policy comparison requires full IRI |
 | `odrl:leftOperand` (negotiation) | Full IRI with `{"@id": "..."}` | Avoids `IRI_CONFUSED_WITH_PREFIX` |
+
+---
+
+## 15. DataService Self-Registration Timing Issue
+
+**Problem:** After deploying all containers fresh, the BDRS connector discovery API
+returned 400 — "No connector endpoints found for counterPartyId did:web:provider-ih:provider".
+The DID document had `CredentialService` but **no `DataService`** entry. Without a
+`DataService` entry, the provider's DSP endpoint cannot be discovered from its DID.
+
+**Root Cause:** The connector self-registration feature
+(`tx.edc.did.service.self.registration.enabled=true`) runs at **connector startup**.
+However, it needs the IH API key from Vault (`provider-ih-api-key`), which is only seeded
+in bootstrap Step 3 — **after** the containers have already started.
+
+Log evidence:
+```
+IdentityHub DidDocumentServiceClient will not be registered:
+could not resolve API key from vault alias 'provider-ih-api-key'
+```
+```
+Did Document Service Client not available or not enabled, skipping self-registration
+```
+
+**Fix:** Added explicit DataService registration in `bootstrap.sh` Step 8+, using the
+IdentityHub Identity Admin API:
+
+```bash
+# Register DataService for provider
+curl -sf -X POST "http://localhost:7151/api/identity/v1alpha/participants/${PROVIDER_B64}/dids/${PROVIDER_DID_B64}/endpoints?autoPublish=true" \
+  -H "x-api-key: ${IH_SUPERUSER_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "did:web:provider-ih:provider#DataService",
+    "type": "DataService",
+    "serviceEndpoint": "http://provider-cp:8084/api/v1/dsp/.well-known/dspace-version"
+  }'
+```
+
+The self-registration properties remain in the CP configuration so that it **will** work
+correctly if the connector is restarted after bootstrap (since Vault keys are then available).
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Step 8 (DataService registration for provider and consumer)
+
+---
+
+## 16. BDRS Server Unhealthy — Missing Default Web Context
+
+**Problem:** After deployment, `docker ps` showed `bdrs-server` as `(unhealthy)`. All other
+containers with health checks showed `(healthy)`.
+
+**Root Cause:** The `tractusx/bdrs-server:latest` Docker image has a **built-in health check**:
+```
+HEALTHCHECK CMD curl --fail http://localhost:8080/api/check/health
+```
+
+The health check targets port 8080 (EDC's default web context). However, the docker-compose
+configuration only defined the BDRS-specific ports (8580 for directory API, 8581 for
+management API) and did **not** configure the standard EDC default web context. Without
+`WEB_HTTP_PORT` and `WEB_HTTP_PATH`, port 8080 had no listener, and the health check
+returned "connection refused" (exit code 7).
+
+**Fix:** Added the default web context configuration to the BDRS service in
+`docker-compose.yaml`:
+
+```yaml
+bdrs-server:
+  environment:
+    WEB_HTTP_PORT: "8080"
+    WEB_HTTP_PATH: "/api"
+```
+
+This enables the standard EDC web module on port 8080, which serves the
+`/api/check/health` endpoint that the built-in health check expects.
+
+**Files changed:**
+- `deployment/local/docker-compose.yaml` — Added `WEB_HTTP_PORT` and `WEB_HTTP_PATH` to BDRS environment
+
+---
+
+## 17. PostgreSQL `json` vs `jsonb` Cast in DID Document Updates
+
+**Problem:** Bootstrap Steps 7 and 8 update DID documents stored in PostgreSQL using
+`jsonb_set()`. The SQL failed with:
+```
+ERROR: function jsonb_set(json, text[], jsonb) does not exist
+```
+
+**Root Cause:** The `did_document` column in the IdentityHub database uses the `json` type
+(not `jsonb`). PostgreSQL's `jsonb_set()` function requires `jsonb` input. The column
+needed to be cast to `jsonb` for manipulation, then cast back to `json` for storage.
+
+**Fix:** Added explicit casts in all `UPDATE` statements in Steps 7 and 8:
+
+```sql
+-- Before (fails)
+UPDATE did_document
+SET did_document = jsonb_set(did_document, '{verificationMethod,0,id}', ...);
+
+-- After (works)
+UPDATE did_document
+SET did_document = jsonb_set(did_document::jsonb, '{verificationMethod,0,id}', ...)::json;
+```
+
+**Files changed:**
+- `deployment/local/scripts/bootstrap.sh` — Steps 7 and 8 (all 6+ UPDATE statements)
