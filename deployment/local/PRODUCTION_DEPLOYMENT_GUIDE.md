@@ -422,6 +422,51 @@ web.http.management.auth.oidc.audience=edc-management-api
 
 ---
 
+## 7b. DID Document Self-Registration
+
+### What's different locally
+
+The local deployment configures the IdentityHub client for `DataService` self-registration
+on connector startup:
+
+```properties
+tx.edc.did.service.client.type=identityhub
+tx.edc.ih.identity.api.url=http://provider-ih:15151/api/identity
+tx.edc.ih.identity.api.key.alias=provider-ih-api-key
+tx.edc.ih.participant.context.id=provider
+tx.edc.did.service.self.registration.enabled=true
+tx.edc.did.service.self.deregistration.enabled=true
+tx.edc.did.service.self.registration.id=did:web:provider-ih:provider#DataService
+```
+
+The IH API key is the super-user key stored in Vault during bootstrap.
+
+> **Local caveat:** On a fresh deployment, self-registration fails at startup because
+> the IH API key (`provider-ih-api-key`) is only seeded into Vault in bootstrap Step 3 —
+> **after** the containers have already started. The bootstrap script works around this
+> by explicitly registering `DataService` endpoints in Step 8 via the IH Identity Admin API.
+> On subsequent restarts (after bootstrap has run), self-registration works correctly
+> since the Vault keys are already present. In production, where Vault secrets are
+> pre-provisioned before the connector starts, this timing issue does not arise.
+
+### Production requirements
+
+| Property | Local | Production |
+|----------|-------|------------|
+| `tx.edc.did.service.client.type` | `identityhub` | `identityhub` or `dim` (depending on wallet backend) |
+| `tx.edc.ih.identity.api.url` | `http://provider-ih:15151/api/identity` | `https://identityhub.company.com/api/identity` (HTTPS!) |
+| `tx.edc.ih.identity.api.key.alias` | `provider-ih-api-key` (super-user key) | Scoped API key with minimal permissions (not super-user) |
+| `tx.edc.ih.participant.context.id` | `provider` | Your organization's participant context ID |
+| `tx.edc.did.service.self.registration.id` | `did:web:provider-ih:provider#DataService` | Your production DID with service fragment |
+| `tx.edc.did.service.self.deregistration.enabled` | `true` | `false` for scaled deployments (multiple replicas) |
+
+**Key security considerations:**
+- The IH API key should **not** be the super-user key in production. Create a scoped API token with only the permissions needed to manage DID document service endpoints.
+- For **scaled connector deployments** (multiple replicas), disable `self.deregistration` — otherwise, the first pod to shut down removes the `DataService` entry while other pods are still running.
+- For **DIM wallet backends**, set `tx.edc.did.service.client.type=dim` and configure the DIM-specific properties (`tx.edc.iam.sts.dim.url`).
+
+---
+
 ## 8. Credential Issuance & Trust Anchors
 
 ### What's different locally

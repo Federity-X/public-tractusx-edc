@@ -19,15 +19,6 @@
 
 package org.eclipse.tractusx.edc.iam.dcp.cache;
 
-import static java.lang.String.format;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.UnaryOperator;
-
 import org.eclipse.edc.iam.verifiablecredentials.rules.IsInValidityPeriod;
 import org.eclipse.edc.iam.verifiablecredentials.rules.IsNotRevoked;
 import org.eclipse.edc.iam.verifiablecredentials.spi.VerifiableCredentialValidationService;
@@ -38,11 +29,21 @@ import org.eclipse.edc.iam.verifiablecredentials.spi.model.VerifiablePresentatio
 import org.eclipse.edc.iam.verifiablecredentials.spi.validation.CredentialValidationRule;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.result.Result;
-import static org.eclipse.edc.spi.result.Result.success;
 import org.eclipse.edc.spi.result.StoreResult;
 import org.eclipse.tractusx.edc.spi.dcp.VerifiablePresentationCache;
 import org.eclipse.tractusx.edc.spi.dcp.VerifiablePresentationCacheEntry;
 import org.eclipse.tractusx.edc.spi.dcp.VerifiablePresentationCacheStore;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.UnaryOperator;
+
+import static java.lang.String.format;
+import static org.eclipse.edc.spi.result.Result.success;
 
 /**
  * Implementation of the {@link VerifiablePresentationCache}. Performs common tasks like checking

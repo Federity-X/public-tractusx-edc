@@ -14,7 +14,7 @@
 #   3. Stores secrets in per-company vaults
 #   4. Creates issuer participant in issuerservice
 #   5. Registers holders (provider, consumer) in issuerservice
-#   6. Adds CredentialService endpoints to provider/consumer DID documents
+#   6. Adds CredentialService + DataService endpoints to provider/consumer DID documents
 #   7. Adds IssuerService endpoint to issuer DID document
 #   8. Creates attestation + credential definitions in issuerservice
 #   9. Requests credentials (MembershipCredential, BpnCredential, DataExchangeGovernanceCredential)
@@ -255,6 +255,10 @@ print(gen())
 ")
 store_vault_secret "${PROVIDER_VAULT_URL}" "provider-transfer-proxy-key" "${PROVIDER_PROXY_JWK}"
 
+# IH Identity API key — needed by the DidDocumentServiceIdentityHubClient
+store_vault_secret "${PROVIDER_VAULT_URL}" "provider-ih-api-key" "${SUPERUSER_KEY}"
+echo "  Stored provider-ih-api-key in provider vault."
+
 echo "  --- Consumer Vault ---"
 if [ -n "${CONSUMER_CLIENT_SECRET}" ]; then
     store_vault_secret "${CONSUMER_VAULT_URL}" "consumer-sts-secret" "${CONSUMER_CLIENT_SECRET}"
@@ -288,6 +292,10 @@ def gen():
 print(gen())
 ")
 store_vault_secret "${CONSUMER_VAULT_URL}" "consumer-transfer-proxy-key" "${CONSUMER_PROXY_JWK}"
+
+# IH Identity API key — needed by the DidDocumentServiceIdentityHubClient
+store_vault_secret "${CONSUMER_VAULT_URL}" "consumer-ih-api-key" "${SUPERUSER_KEY}"
+echo "  Stored consumer-ih-api-key in consumer vault."
 echo ""
 
 # ========================================
@@ -371,11 +379,11 @@ docker exec provider-postgres psql -U provider -d provider -c "
   UPDATE keypair_resource SET key_id = '${PROVIDER_DID}#provider-key'
     WHERE key_id = 'provider-key';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,id}', '\"${PROVIDER_DID}#provider-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,id}', '\"${PROVIDER_DID}#provider-key\"'
+  )::json WHERE did IS NOT NULL;
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,publicKeyJwk,kid}', '\"${PROVIDER_DID}#provider-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,publicKeyJwk,kid}', '\"${PROVIDER_DID}#provider-key\"'
+  )::json WHERE did IS NOT NULL;
 " > /dev/null 2>&1 && echo "  Provider key IDs fixed." || echo "  WARNING: Provider key fix failed."
 
 echo "  Fixing consumer key IDs in consumer-postgres..."
@@ -383,11 +391,11 @@ docker exec consumer-postgres psql -U consumer -d consumer -c "
   UPDATE keypair_resource SET key_id = '${CONSUMER_DID}#consumer-key'
     WHERE key_id = 'consumer-key';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,id}', '\"${CONSUMER_DID}#consumer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,id}', '\"${CONSUMER_DID}#consumer-key\"'
+  )::json WHERE did IS NOT NULL;
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,publicKeyJwk,kid}', '\"${CONSUMER_DID}#consumer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,publicKeyJwk,kid}', '\"${CONSUMER_DID}#consumer-key\"'
+  )::json WHERE did IS NOT NULL;
 " > /dev/null 2>&1 && echo "  Consumer key IDs fixed." || echo "  WARNING: Consumer key fix failed."
 
 echo "  Fixing issuer key IDs in issuer-postgres..."
@@ -395,17 +403,21 @@ docker exec issuer-postgres psql -U postgres -d issuerservice -c "
   UPDATE keypair_resource SET key_id = '${ISSUER_DID}#issuer-key'
     WHERE key_id = 'issuer-key';
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,id}', '\"${ISSUER_DID}#issuer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,id}', '\"${ISSUER_DID}#issuer-key\"'
+  )::json WHERE did IS NOT NULL;
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{verificationMethod,0,publicKeyJwk,kid}', '\"${ISSUER_DID}#issuer-key\"'
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{verificationMethod,0,publicKeyJwk,kid}', '\"${ISSUER_DID}#issuer-key\"'
+  )::json WHERE did IS NOT NULL;
 " > /dev/null 2>&1 && echo "  Issuer key IDs fixed." || echo "  WARNING: Issuer key fix failed."
 echo ""
 
 # ========================================
 # Step 8: Add service endpoints to DID documents
 # ========================================
+# NOTE: DataService endpoints must be registered in bootstrap because the
+# connector's self-registration feature requires IH API key vault secrets
+# which are only seeded in Step 3 — after the connectors have already started.
+# The self-registration will work on subsequent restarts but not on first boot.
 echo "Step 8: Adding service endpoints to DID documents..."
 
 # Provider DID: add CredentialService endpoint
@@ -417,12 +429,12 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/d
     -d "{\"id\": \"credential-service\", \"type\": \"CredentialService\", \"serviceEndpoint\": \"http://provider-ih:13131/api/credentials/v1/participants/${PROVIDER_B64}\"}" \
     > /dev/null 2>&1 && echo "  Provider CredentialService added." || echo "  WARNING: Provider CredentialService failed."
 
-# Provider DID: add DataService endpoint (DSP protocol — needed for connector discovery)
+# Provider DID: add DataService endpoint (DSP well-known version endpoint)
 echo "  Adding DataService to provider DID..."
 curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/dids/${PROVIDER_DID_B64}/endpoints?autoPublish=true" \
     -H "x-api-key: ${SUPERUSER_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"id\": \"dsp-endpoint\", \"type\": \"DataService\", \"serviceEndpoint\": \"http://provider-cp:8084/api/v1/dsp\"}" \
+    -d "{\"id\": \"${PROVIDER_DID}#DataService\", \"type\": \"DataService\", \"serviceEndpoint\": \"http://provider-cp:8084/api/v1/dsp/.well-known/dspace-version\"}" \
     > /dev/null 2>&1 && echo "  Provider DataService added." || echo "  WARNING: Provider DataService failed."
 
 # Consumer DID: add CredentialService endpoint
@@ -434,21 +446,21 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/d
     -d "{\"id\": \"credential-service\", \"type\": \"CredentialService\", \"serviceEndpoint\": \"http://consumer-ih:13131/api/credentials/v1/participants/${CONSUMER_B64}\"}" \
     > /dev/null 2>&1 && echo "  Consumer CredentialService added." || echo "  WARNING: Consumer CredentialService failed."
 
-# Consumer DID: add DataService endpoint (DSP protocol — needed for connector discovery)
+# Consumer DID: add DataService endpoint (DSP well-known version endpoint)
 echo "  Adding DataService to consumer DID..."
 curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/dids/${CONSUMER_DID_B64}/endpoints?autoPublish=true" \
     -H "x-api-key: ${SUPERUSER_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"id\": \"dsp-endpoint\", \"type\": \"DataService\", \"serviceEndpoint\": \"http://consumer-cp:8084/api/v1/dsp\"}" \
+    -d "{\"id\": \"${CONSUMER_DID}#DataService\", \"type\": \"DataService\", \"serviceEndpoint\": \"http://consumer-cp:8084/api/v1/dsp/.well-known/dspace-version\"}" \
     > /dev/null 2>&1 && echo "  Consumer DataService added." || echo "  WARNING: Consumer DataService failed."
 
 # Issuer DID: add IssuerService endpoint (via DB since IS identity API isn't exposed to host)
 echo "  Adding IssuerService endpoint to issuer DID..."
 docker exec issuer-postgres psql -U postgres -d issuerservice -c "
   UPDATE did_resources SET did_document = jsonb_set(
-    did_document, '{service}',
-    COALESCE(did_document->'service', '[]'::jsonb) || '[{\"id\":\"issuer-service\",\"type\":\"IssuerService\",\"serviceEndpoint\":\"http://issuerservice:13132/api/issuance/v1alpha/participants/${ISSUER_B64}\"}]'::jsonb
-  ) WHERE did IS NOT NULL;
+    did_document::jsonb, '{service}',
+    COALESCE(did_document::jsonb->'service', '[]'::jsonb) || '[{\"id\":\"issuer-service\",\"type\":\"IssuerService\",\"serviceEndpoint\":\"http://issuerservice:13132/api/issuance/v1alpha/participants/${ISSUER_B64}\"}]'::jsonb
+  )::json WHERE did IS NOT NULL;
 " > /dev/null 2>&1 && echo "  Issuer IssuerService endpoint added." || echo "  WARNING: Issuer IssuerService endpoint failed."
 echo ""
 
@@ -507,6 +519,10 @@ docker exec issuer-postgres psql -U postgres -d issuerservice -c "
     ('provider', '${PROVIDER_BPN}', '${PROVIDER_BPN}'), ('consumer', '${CONSUMER_BPN}', '${CONSUMER_BPN}')
     ON CONFLICT DO NOTHING;
 " > /dev/null 2>&1 && echo "  Attestation tables created and seeded." || echo "  WARNING: Attestation table creation failed."
+
+MEMBERSHIP_DEF_ID=""
+BPN_DEF_ID=""
+DEG_DEF_ID=""
 
 echo "  Creating MembershipCredential definition..."
 MEMBERSHIP_DEF_RESP=$(curl -sf -X POST "${IS_ADMIN_URL}/v1alpha/participants/${ISSUER_B64}/credentialdefinitions" \
@@ -617,6 +633,20 @@ echo ""
 # ========================================
 echo "Step 10: Requesting credentials via DCP..."
 
+# Credential requests need definition IDs from Step 9 and use 'type' (not 'credentialType')
+if [ -z "${MEMBERSHIP_DEF_ID}" ] || [ -z "${BPN_DEF_ID}" ] || [ -z "${DEG_DEF_ID}" ]; then
+    echo "  WARNING: Missing credential definition IDs from Step 9. Querying from DB..."
+    MEMBERSHIP_DEF_ID=$(docker exec issuer-postgres psql -U postgres -d issuerservice -t -c \
+      "SELECT id FROM credential_definitions WHERE credential_type='MembershipCredential';" 2>/dev/null | tr -d ' \n')
+    BPN_DEF_ID=$(docker exec issuer-postgres psql -U postgres -d issuerservice -t -c \
+      "SELECT id FROM credential_definitions WHERE credential_type='BpnCredential';" 2>/dev/null | tr -d ' \n')
+    DEG_DEF_ID=$(docker exec issuer-postgres psql -U postgres -d issuerservice -t -c \
+      "SELECT id FROM credential_definitions WHERE credential_type='DataExchangeGovernanceCredential';" 2>/dev/null | tr -d ' \n')
+    echo "  MembershipCredential def: ${MEMBERSHIP_DEF_ID}"
+    echo "  BpnCredential def: ${BPN_DEF_ID}"
+    echo "  DataExchangeGovernanceCredential def: ${DEG_DEF_ID}"
+fi
+
 echo "  Requesting MembershipCredential for provider..."
 curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/credentials/request" \
     -H "x-api-key: ${SUPERUSER_KEY}" \
@@ -626,7 +656,8 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/c
       \"holderPid\": \"provider-membership-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"MembershipCredential\"
+        \"type\": \"MembershipCredential\",
+        \"id\": \"${MEMBERSHIP_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Provider MembershipCredential requested." || echo "  WARNING: Provider MembershipCredential request failed."
 
@@ -639,7 +670,8 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/c
       \"holderPid\": \"consumer-membership-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"MembershipCredential\"
+        \"type\": \"MembershipCredential\",
+        \"id\": \"${MEMBERSHIP_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Consumer MembershipCredential requested." || echo "  WARNING: Consumer MembershipCredential request failed."
 
@@ -652,7 +684,8 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/c
       \"holderPid\": \"provider-bpn-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"BpnCredential\"
+        \"type\": \"BpnCredential\",
+        \"id\": \"${BPN_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Provider BpnCredential requested." || echo "  WARNING: Provider BpnCredential request failed."
 
@@ -665,7 +698,8 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/c
       \"holderPid\": \"consumer-bpn-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"BpnCredential\"
+        \"type\": \"BpnCredential\",
+        \"id\": \"${BPN_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Consumer BpnCredential requested." || echo "  WARNING: Consumer BpnCredential request failed."
 
@@ -678,7 +712,8 @@ curl -sf -X POST "${PROVIDER_IH_IDENTITY}/v1alpha/participants/${PROVIDER_B64}/c
       \"holderPid\": \"provider-deg-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"DataExchangeGovernanceCredential\"
+        \"type\": \"DataExchangeGovernanceCredential\",
+        \"id\": \"${DEG_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Provider DataExchangeGovernanceCredential requested." || echo "  WARNING: Provider DataExchangeGovernanceCredential request failed."
 
@@ -691,7 +726,8 @@ curl -sf -X POST "${CONSUMER_IH_IDENTITY}/v1alpha/participants/${CONSUMER_B64}/c
       \"holderPid\": \"consumer-deg-request\",
       \"credentials\": [{
         \"format\": \"VC1_0_JWT\",
-        \"credentialType\": \"DataExchangeGovernanceCredential\"
+        \"type\": \"DataExchangeGovernanceCredential\",
+        \"id\": \"${DEG_DEF_ID}\"
       }]
     }" > /dev/null 2>&1 && echo "  Consumer DataExchangeGovernanceCredential requested." || echo "  WARNING: Consumer DataExchangeGovernanceCredential request failed."
 
