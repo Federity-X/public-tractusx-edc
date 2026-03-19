@@ -1369,7 +1369,12 @@
                   "// Initialize retry counter",
                   "let retries = pm.collectionVariables.get('_negPollRetries');",
                   "if (!retries) retries = 0;",
-                  "pm.collectionVariables.set('_negPollRetries', Number(retries));"
+                  "pm.collectionVariables.set('_negPollRetries', Number(retries));",
+                  "// Add 2s delay between polls (DCP credential exchange needs time)",
+                  "if (Number(retries) > 0) {",
+                  "    const start = Date.now();",
+                  "    while (Date.now() - start < 2000) { /* busy-wait */ }",
+                  "}"
                 ]
               }
             },
@@ -1935,7 +1940,12 @@
                   "}",
                   "let retries = pm.collectionVariables.get('_tpPollRetries');",
                   "if (!retries) retries = 0;",
-                  "pm.collectionVariables.set('_tpPollRetries', Number(retries));"
+                  "pm.collectionVariables.set('_tpPollRetries', Number(retries));",
+                  "// Add 2s delay between polls",
+                  "if (Number(retries) > 0) {",
+                  "    const start = Date.now();",
+                  "    while (Date.now() - start < 2000) { /* busy-wait */ }",
+                  "}"
                 ]
               }
             },
@@ -2413,7 +2423,12 @@
                   "}",
                   "let retries = pm.collectionVariables.get('_pushPollRetries');",
                   "if (!retries) retries = 0;",
-                  "pm.collectionVariables.set('_pushPollRetries', Number(retries));"
+                  "pm.collectionVariables.set('_pushPollRetries', Number(retries));",
+                  "// Add 2s delay between polls",
+                  "if (Number(retries) > 0) {",
+                  "    const start = Date.now();",
+                  "    while (Date.now() - start < 2000) { /* busy-wait */ }",
+                  "}"
                 ]
               }
             },
@@ -2753,7 +2768,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "const tId = pm.collectionVariables.get('pushTransferId');",
-                  "if (!tId) throw new Error('pushTransferId not set. Run \"10. PUSH Transfer\" first.');"
+                  "if (!tId) throw new Error('pushTransferId not set. Run \"10. PUSH Transfer\" first.');",
+                  "// Wait 2s for SUSPENDED state to fully propagate",
+                  "const start = Date.now();",
+                  "while (Date.now() - start < 2000) { /* busy-wait */ }"
                 ]
               }
             },

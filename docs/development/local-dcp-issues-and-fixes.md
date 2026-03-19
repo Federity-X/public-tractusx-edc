@@ -25,6 +25,7 @@ exact fix applied for each one.
 15. [DataService Self-Registration Timing Issue](#15-dataservice-self-registration-timing-issue)
 16. [BDRS Server Unhealthy — Missing Default Web Context](#16-bdrs-server-unhealthy)
 17. [PostgreSQL `json` vs `jsonb` Cast in DID Document Updates](#17-postgresql-json-vs-jsonb-cast)
+18. [Stale Issuer DB Volume on Fresh Restart](#18-stale-issuer-db-volume-on-fresh-restart)
 
 ---
 
@@ -664,3 +665,44 @@ SET did_document = jsonb_set(did_document::jsonb, '{verificationMethod,0,id}', .
 
 **Files changed:**
 - `deployment/local/scripts/bootstrap.sh` — Steps 7 and 8 (all 6+ UPDATE statements)
+
+---
+
+## 18. Stale Issuer DB Volume on Fresh Restart
+
+**Symptom:** After a fresh restart, credential issuance fails silently — `bootstrap.sh`
+Step 11 shows `Total: 0` credentials for both provider and consumer. Issuer logs contain:
+
+```
+JWSSigner cannot be generated for private key 'issuer-key':
+Private key with ID 'issuer-key' not found in Config
+```
+
+**Root cause:** The deployment uses two separate Docker Compose files:
+- **EDC stack** (`tractusx-edc/deployment/local/docker-compose.yaml`) — 11 services
+- **Issuer stack** (`tractusx-identityhub/deployment/local/docker-compose.yaml`) — 3 services
+
+Running `docker compose down -v` on only the EDC stack removes EDC volumes but leaves the
+issuer PostgreSQL volume (`issuer-postgres-data`) intact. Meanwhile, `issuer-vault` runs in
+HashiCorp Vault **dev mode** (in-memory) — all secrets are lost on restart.
+
+On the next `docker compose up`, issuer-postgres still has the old participant context and
+keypair DB records (including `issuer-key`), but the actual private key no longer exists in
+the fresh vault. When the issuer attempts to sign VCs, it finds the keypair reference in the
+DB but cannot locate the corresponding secret in vault, causing issuance to fail with
+state 300 (ERROR).
+
+**Fix:** Always tear down **both** compose stacks with `-v`:
+
+```bash
+# 1. Stop issuer stack first
+cd /path/to/tractusx-identityhub/deployment/local
+docker compose down -v
+
+# 2. Stop EDC stack
+cd /path/to/tractusx-edc/deployment/local
+docker compose down -v
+```
+
+**Files changed:**
+- `deployment/local/README.md` — Updated "Clean up" section with warning about both stacks
