@@ -304,6 +304,9 @@ git clone -b dcp-flow-local-deployment-with-upstream-0.15.1 \
   https://github.com/Federity-X/public-tractusx-identityhub.git
 cd public-tractusx-identityhub
 
+# Build IdentityHub JARs (must complete before Docker build)
+./gradlew clean build
+
 # Build the IdentityHub Docker image
 docker build -t identityhub:local runtimes/identityhub/
 
@@ -346,7 +349,7 @@ docker ps | grep issuerservice  # Should show issuerservice container
 
 # 3. Build EDC JARs (from tractusx-edc repo root)
 cd /path/to/tractusx-edc
-./gradlew clean build -x test
+./gradlew clean build
 
 # 4. Build EDC Docker images
 docker build -t edc-controlplane:local \
@@ -500,12 +503,12 @@ postman/EDC_Management_API_DCP.postman_collection.json
 
 ```bash
 npm install -g newman
-newman run postman/EDC_Management_API_DCP.postman_collection.json \
-  --delay-request 2000 --timeout-request 30000
+newman run postman/EDC_Management_API_DCP.postman_collection.json
 ```
 
-> **Important:** The `--delay-request 2000` flag is required. Without it, polling loops fire too fast
-> for DCP VP/VC handshakes to complete (~4-6s for the full DSP negotiation flow).
+> **Note:** The collection includes built-in 2-second delays between polling retries (negotiation,
+> transfer, resume). No extra flags are needed. If you still see timeouts on slower machines,
+> add `--delay-request 2000 --timeout-request 30000` to the command above.
 
 ---
 
@@ -656,13 +659,18 @@ curl -s http://localhost:8581/api/management/bpn-directory \
 
 ### Clean up
 
+> **Important**: Always tear down **both** compose stacks with `-v` when doing a fresh restart.
+> The issuer stack (IdentityHub) uses a separate PostgreSQL volume. If only the EDC stack is
+> removed, the issuer database retains stale participant/keypair data while the Vault (dev mode,
+> in-memory) loses all secrets — causing credential issuance failures (`Private key not found`).
+
 ```bash
-# Stop and remove EDC stack (preserves issuer stack)
-cd deployment/local
+# 1. Stop issuer stack FIRST (from IdentityHub repo)
+cd /path/to/public-tractusx-identityhub/deployment/local
 docker compose down -v
 
-# Full cleanup including issuer stack (from IdentityHub repo)
-cd /path/to/public-tractusx-identityhub/deployment/local
+# 2. Stop EDC stack
+cd /path/to/tractusx-edc/deployment/local
 docker compose down -v
 ```
 
