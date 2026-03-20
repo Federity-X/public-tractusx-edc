@@ -25,7 +25,7 @@ to avoid creating duplicate `service` entries and manage itself.
 3. Add an extension that will implement the lifecycle management logic.
 4. Another extension implements the SPI's interface as client for [SAP DIV's write endpoint to the did document](https://api.sap.com/api/DIV/path/CompanyIdentityV2HttpController_updateCompanyIdentity_v2.0.0).
 5. An additional extension implements the SPI's interface as client for the **IdentityHub Identity Admin API** (`/v1alpha/participants/{contextIdB64}/dids/{didB64}/endpoints`), enabling self-registration for deployments using Eclipse Tractus-X IdentityHub as their wallet.
-6. A **client type selector** (`tx.edc.did.service.client.type`) explicitly chooses which wallet implementation is active (`dim` or `identityhub`). Each extension only checks its own type value, avoiding cross-references between implementations and enabling clean extensibility for future wallet backends.
+6. A **client type selector** (`tx.edc.did.service.client.type`) explicitly chooses which wallet implementation is active (`div` or `identityhub`). Each extension only checks its own type value, avoiding cross-references between implementations and enabling clean extensibility for future wallet backends.
 
 The lifecycle management logic is designed to ensure functional correctness while limiting outbound HTTP traffic on 
 startup. It shall behave acoording to the following diagram:
@@ -96,7 +96,7 @@ available but undiscoverable endpoints as consequence of deletion from every con
 
 ## Wallet selection — alternatives considered
 
-When multiple `DidDocumentServiceClient` implementations exist (DIM, IdentityHub, potentially others), the runtime
+When multiple `DidDocumentServiceClient` implementations exist (DIV, IdentityHub, potentially others), the runtime
 needs a mechanism to activate exactly one. Three approaches were evaluated:
 
 | Option | Mechanism | Pros | Cons |

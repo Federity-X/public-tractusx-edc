@@ -53,9 +53,9 @@ If any condition is not met, the extension logs an informational or warning mess
 ## Client Type Selector
 
 The property `tx.edc.did.service.client.type` controls which `DidDocumentServiceClient` implementation is active.
-Both the DIM and IdentityHub extensions read this property:
+Both the DIV and IdentityHub extensions read this property:
 
-- `tx.edc.did.service.client.type=dim` → DIM client activates.
+- `tx.edc.did.service.client.type=div` → DIV client activates.
 - `tx.edc.did.service.client.type=identityhub` → IdentityHub client activates.
 - Not set → no client is registered, self-registration is a no-op.
 

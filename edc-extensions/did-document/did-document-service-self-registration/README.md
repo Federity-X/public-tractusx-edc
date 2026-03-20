@@ -43,7 +43,7 @@ The extension is controlled by the following configuration properties:
 
 | Module | Wallet / Backend | Activation Condition |
 |--------|-----------------|---------------------|
-| `did-document-service-dim` | SAP DIM | `tx.edc.did.service.client.type=dim` |
+| `did-document-service-div` | SAP DIV | `tx.edc.did.service.client.type=div` |
 | `did-document-service-identityhub` | Eclipse Tractus-X IdentityHub | `tx.edc.did.service.client.type=identityhub` |
 
 Set `tx.edc.did.service.client.type` to select which client implementation is active.

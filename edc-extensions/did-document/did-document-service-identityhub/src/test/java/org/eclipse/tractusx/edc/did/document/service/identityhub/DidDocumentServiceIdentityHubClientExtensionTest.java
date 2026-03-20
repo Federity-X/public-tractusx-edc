@@ -81,7 +81,7 @@ class DidDocumentServiceIdentityHubClientExtensionTest {
     @Test
     void shouldNotRegister_whenClientTypeIsNotIdentityhub(ServiceExtensionContext context, ObjectFactory factory) {
         var settings = allSettings();
-        settings.put("tx.edc.did.service.client.type", "dim");
+        settings.put("tx.edc.did.service.client.type", "div");
         when(context.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
 
         var extension = factory.constructInstance(DidDocumentServiceIdentityHubClientExtension.class);

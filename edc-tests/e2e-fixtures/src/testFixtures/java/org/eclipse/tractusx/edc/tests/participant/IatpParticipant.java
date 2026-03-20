@@ -59,9 +59,9 @@ public class IatpParticipant extends TractusxIatpParticipantBase {
         var settings = new HashMap<String, String>();
         settings.put("web.http.credentials.port", String.valueOf(csService.get().getPort()));
         settings.put("web.http.credentials.path", csService.get().getPath());
-        if (dimUri != null) {
-            settings.put("tx.edc.iam.sts.dim.url", dimUri.get().toString());
-            settings.put("tx.edc.did.service.client.type", "dim");
+        if (divUri != null) {
+            settings.put("tx.edc.iam.sts.div.url", divUri.get().toString());
+            settings.put("tx.edc.did.service.client.type", "div");
         }
         return super.getConfig().merge(ConfigFactory.fromMap(settings));
     }
@@ -70,7 +70,7 @@ public class IatpParticipant extends TractusxIatpParticipantBase {
         runtimeExtension.getService(Vault.class).storeSecret(getDid(), getPrivateKeyAlias(), getPrivateKeyAsString());
 
         try {
-            // runtime has CredentialStore, DIM tests cases
+            // runtime has CredentialStore, DIV tests cases
             var credentialStore = runtimeExtension.getService(CredentialStore.class);
             issueCredentials(issuer).forEach(credentialStore::create);
         } catch (EdcException e) {

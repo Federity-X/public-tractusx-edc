@@ -63,7 +63,7 @@ public interface DidDocumentServiceClient {
 
     /**
      * Configuration property that selects which {@code DidDocumentServiceClient} implementation to activate.
-     * Valid values: {@code "dim"}, {@code "identityhub"}.
+     * Valid values: {@code "div"}, {@code "identityhub"}.
      */
     String TX_EDC_DID_SERVICE_CLIENT_TYPE = "tx.edc.did.service.client.type";
 

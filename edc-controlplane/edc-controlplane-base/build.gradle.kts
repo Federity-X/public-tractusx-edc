@@ -27,7 +27,7 @@ configurations.all {
     // edr-cache-api excluded due to edr controller signature clash with tx-edr-api-v2 that provides same functionality with token auto_refresh capability
     exclude(group = "org.eclipse.edc", module = "edr-cache-api")
 
-    // decentralized-claims-sts-remote-client excluded because we have the tx-dcp-sts-dim that takes care to define the correct client in case of DIM
+    // decentralized-claims-sts-remote-client excluded because we have the tx-dcp-sts-div that takes care to define the correct client in case of DIV
     exclude("org.eclipse.edc", "decentralized-claims-sts-remote-client")
 }
 
@@ -63,9 +63,6 @@ dependencies {
     }
     runtimeOnly(libs.edc.bom.controlplane.dcp)
 
-    runtimeOnly(libs.edc.bom.federatedcatalog.base)
-    runtimeOnly(libs.edc.bom.federatedcatalog.dcp)
-
     implementation(project(":core:edr-core"))
     implementation(project(":core:json-ld-core"))
     implementation(project(":core:json-ld-cx"))
@@ -79,11 +76,10 @@ dependencies {
     implementation(project(":edc-extensions:data-flow-properties-provider"))
     implementation(project(":edc-extensions:dcp:cx-dcp"))
     implementation(project(":edc-extensions:dcp:tx-dcp"))
-    implementation(project(":edc-extensions:dcp:tx-dcp-sts-dim"))
+    implementation(project(":edc-extensions:dcp:tx-dcp-sts-div"))
     implementation(project(":edc-extensions:dcp:verifiable-presentation-cache"))
     implementation(project(":edc-extensions:edr:edr-api-v2"))
     implementation(project(":edc-extensions:edr:edr-callback"))
-    implementation(project(":edc-extensions:federated-catalog"))
     implementation(project(":edc-extensions:provision-additional-headers"))
     implementation(project(":edc-extensions:tokenrefresh-handler"))
     implementation(project(":edc-extensions:validators:empty-asset-selector"))
@@ -93,7 +89,7 @@ dependencies {
     implementation(project(":edc-extensions:token-interceptor"))
     implementation(project(":edc-extensions:event-subscriber"))
     implementation(project(":edc-extensions:did-document:did-document-service-self-registration"))
-    implementation(project(":edc-extensions:did-document:did-document-service-dim"))
+    implementation(project(":edc-extensions:did-document:did-document-service-div"))
     implementation(project(":edc-extensions:did-document:did-document-service-identityhub"))
 
     runtimeOnly(libs.bundles.edc.monitoring)

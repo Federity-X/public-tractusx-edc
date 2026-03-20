@@ -39,7 +39,7 @@ import org.eclipse.tractusx.edc.spi.did.document.service.DidDocumentServiceClien
  * <p>
  * The API key is resolved from the vault using the alias specified in {@code tx.edc.ih.identity.api.key.alias}.
  */
-// Note: Both this and DidDocumentServiceDimClientExtension declare @Provides(DidDocumentServiceClient.class).
+// Note: Both this and DidDocumentServiceDivClientExtension declare @Provides(DidDocumentServiceClient.class).
 // Only one extension will call registerService() at runtime, selected by tx.edc.did.service.client.type.
 @Provides(DidDocumentServiceClient.class)
 public class DidDocumentServiceIdentityHubClientExtension implements ServiceExtension {
@@ -73,7 +73,7 @@ public class DidDocumentServiceIdentityHubClientExtension implements ServiceExte
     @Setting(key = "edc.iam.issuer.id", description = "DID of this connector", required = false)
     private String ownDid;
 
-    @Setting(key = DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'dim', 'identityhub')", required = false)
+    @Setting(key = DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'div', 'identityhub')", required = false)
     private String clientType;
 
     @Override
