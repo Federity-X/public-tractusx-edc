@@ -62,6 +62,13 @@ import org.eclipse.edc.spi.result.ServiceResult;
 public interface DidDocumentServiceClient {
 
     /**
+     * Configuration property key for selecting the DID document service client implementation.
+     * <p>
+     * Valid values: {@code "div"}, {@code "identityhub"}.
+     */
+    String TX_EDC_DID_SERVICE_CLIENT_TYPE = "tx.edc.did.service.client.type";
+
+    /**
      * Creates or updates a service entry in the DID document.
      *
      * @param service to be updated

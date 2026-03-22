@@ -256,6 +256,27 @@ spec:
               value: "false"
             - name: "TX_EDC_DID_SERVICE_SELF_REGISTRATION_ID"
               value: {{ .Values.iatp.didService.selfRegistration.id | quote }}
+            {{- if eq .Values.iatp.didService.clientType "identityhub" }}
+              {{- $_ := required "iatp.didService.identityHub.apiUrl is required when clientType is identityhub" .Values.iatp.didService.identityHub.apiUrl }}
+              {{- $_ := required "iatp.didService.identityHub.apiKeyAlias is required when clientType is identityhub" .Values.iatp.didService.identityHub.apiKeyAlias }}
+              {{- $_ := required "iatp.didService.identityHub.participantContextId is required when clientType is identityhub" .Values.iatp.didService.identityHub.participantContextId }}
+            {{- end }}
+            {{- with .Values.iatp.didService.clientType }}
+            - name: "TX_EDC_DID_SERVICE_CLIENT_TYPE"
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.iatp.didService.identityHub.apiUrl }}
+            - name: "TX_EDC_IH_IDENTITY_API_URL"
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.iatp.didService.identityHub.apiKeyAlias }}
+            - name: "TX_EDC_IH_IDENTITY_API_KEY_ALIAS"
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.iatp.didService.identityHub.participantContextId }}
+            - name: "TX_EDC_IH_PARTICIPANT_CONTEXT_ID"
+              value: {{ . | quote }}
+            {{- end }}
             - name: "TX_EDC_DCP_CACHE_ENABLED"
               value: {{ .Values.iatp.cache.enabled | quote }}
             - name: "TX_EDC_DCP_CACHE_VALIDITY_SECONDS"

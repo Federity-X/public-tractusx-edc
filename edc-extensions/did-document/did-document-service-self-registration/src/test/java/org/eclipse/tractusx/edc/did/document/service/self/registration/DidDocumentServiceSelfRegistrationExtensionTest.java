@@ -109,24 +109,11 @@ class DidDocumentServiceSelfRegistrationExtensionTest {
                 service.getType().equals(DATA_SERVICE_TYPE) &&
                 service.getServiceEndpoint().equals(DSP_URL + "/.well-known/dspace-version")));
         verify(monitor).severe(contains("Failed to self-register DID Document service"));
-        verify(monitor, never()).info("Did Document Service Client not available or not enabled, skipping self-registration");
+        verify(monitor, never()).info("Self-registration not enabled, skipping");
 
         extension.shutdown();
         verify(didDocumentServiceClient).deleteById(SERVICE_ID);
         verify(monitor).severe(contains("Failed to unregister DID Document service"));
-    }
-
-    @Test
-    void start_shouldNotSelfRegister_whenClientNotPresent(ObjectFactory objectFactory) {
-
-        var extension = objectFactory.constructInstance(DidDocumentServiceSelfRegistrationExtension.class);
-        extension.start();
-
-        verify(didDocumentServiceClient, never()).update(any(Service.class));
-        verify(monitor).info("Did Document Service Client not available or not enabled, skipping self-registration");
-
-        extension.shutdown();
-        verify(didDocumentServiceClient, never()).deleteById(anyString());
     }
 
     @Test
@@ -140,7 +127,7 @@ class DidDocumentServiceSelfRegistrationExtensionTest {
         extension.start();
 
         verify(didDocumentServiceClient, never()).update(any(Service.class));
-        verify(monitor).info("Did Document Service Client not available or not enabled, skipping self-registration");
+        verify(monitor).info("Self-registration not enabled, skipping");
 
         extension.shutdown();
         verify(didDocumentServiceClient, never()).deleteById(anyString());
@@ -169,7 +156,7 @@ class DidDocumentServiceSelfRegistrationExtensionTest {
     void start_shouldNotSelfRegister_whenEnabledAndServiceIdEmptyOrBlank(String serviceId, ServiceExtensionContext context, ObjectFactory objectFactory) {
 
         var settings = Map.of("tx.edc.did.service.self.registration.enabled", "true",
-                "tx.edc.did.service.self.dregistration.enabled", "true",
+                "tx.edc.did.service.self.deregistration.enabled", "true",
                 "tx.edc.did.service.self.registration.id", serviceId);
         when(context.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
         context.registerService(DidDocumentServiceClient.class, didDocumentServiceClient);

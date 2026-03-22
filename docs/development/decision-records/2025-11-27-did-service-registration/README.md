@@ -91,3 +91,30 @@ they can set `TX_EDC_DID_SERVICE_SELF_DEREGISTRATION_ENABLED=false` in the map `
 This approach may result in dangling references from the did document to dead endpoints. Cleanup of those lies outside
 tractusx-edc responsibility and should be done on the DID service directly. This state is more desirable than having 
 available but undiscoverable endpoints as consequence of deletion from every container that shuts down.
+
+## IdentityHub Implementation (2026-03)
+
+### Context
+
+The initial implementation (above) only supported SAP DIV as the DID document service backend.
+To support IdentityHub as an alternative, a second client implementation was added.
+
+### Decision
+
+A config-selector pattern was chosen over module-exclusion. Both the DIV and IdentityHub extensions
+declare `@Provides(DidDocumentServiceClient.class)` but only the extension matching the configured
+`tx.edc.did.service.client.type` property actually registers a client instance. This allows both
+modules to be included in the classpath simultaneously — the operator selects the active backend
+through configuration alone.
+
+### Tradeoffs
+
+- **Dual `@Provides`:** Both extensions declare `@Provides` for the same SPI. This works because
+  only one actually calls `context.registerService()`. The EDC runtime does not enforce that every
+  `@Provides` annotation results in a registration — it only checks at resolution time.
+- **Config constant in SPI:** The `TX_EDC_DID_SERVICE_CLIENT_TYPE` constant lives in the SPI
+  interface (`DidDocumentServiceClient`) so both extensions can reference it without depending on
+  each other. This slightly broadens the SPI surface but avoids a circular or shared-constant module.
+- **Init-time Vault resolution:** The IdentityHub client resolves the API key from the Vault at
+  extension initialization time rather than per-request. This simplifies the client but means that
+  key rotation requires a restart.
