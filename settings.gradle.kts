@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023 Contributors to the Eclipse Foundation
  * Copyright (c) 2026 Cofinity-X GmbH
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
