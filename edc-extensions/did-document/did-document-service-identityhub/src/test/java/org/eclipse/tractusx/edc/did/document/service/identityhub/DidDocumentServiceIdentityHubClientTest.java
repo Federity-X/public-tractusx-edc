@@ -23,6 +23,8 @@ package org.eclipse.tractusx.edc.did.document.service.identityhub;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.eclipse.edc.http.spi.EdcHttpClient;
 import org.eclipse.edc.iam.did.spi.document.Service;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -34,7 +36,10 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.edc.junit.assertions.AbstractResultAssert.assertThat;
@@ -105,8 +110,8 @@ class DidDocumentServiceIdentityHubClientTest {
         verify(httpClient, times(2)).execute(requestCaptor.capture(), anyList(), any());
 
         var url = requestCaptor.getAllValues().get(0).url().toString();
-        var expectedContextId = Base64.getUrlEncoder().withoutPadding().encodeToString(PARTICIPANT_CONTEXT_ID.getBytes());
-        var expectedDid = Base64.getUrlEncoder().withoutPadding().encodeToString(OWN_DID.getBytes());
+        var expectedContextId = Base64.getUrlEncoder().withoutPadding().encodeToString(PARTICIPANT_CONTEXT_ID.getBytes(StandardCharsets.UTF_8));
+        var expectedDid = Base64.getUrlEncoder().withoutPadding().encodeToString(OWN_DID.getBytes(StandardCharsets.UTF_8));
         assertThat(url).contains(expectedContextId);
         assertThat(url).contains(expectedDid);
     }
@@ -256,5 +261,69 @@ class DidDocumentServiceIdentityHubClientTest {
         var result = client.deleteById(SERVICE_ID);
 
         assertThat(result).isFailed();
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "   "})
+    void update_shouldValidateServiceType(String type) {
+        var service = new Service(SERVICE_ID, type, SERVICE_ENDPOINT);
+        var result = client.update(service);
+
+        assertThat(result).isFailed();
+        verify(httpClient, never()).execute(any(Request.class), anyList(), any());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void createResponseMapper_shouldTolerate409AndReject500() {
+        when(httpClient.execute(any(Request.class), anyList(), any()))
+                .thenReturn(Result.success("")) // delete
+                .thenReturn(Result.success("")); // create
+
+        var service = new Service(SERVICE_ID, SERVICE_TYPE, SERVICE_ENDPOINT);
+        client.update(service);
+
+        var mapperCaptor = ArgumentCaptor.forClass(Function.class);
+        verify(httpClient, times(2)).execute(any(Request.class), anyList(), mapperCaptor.capture());
+
+        Function<Response, Result<String>> createMapper = mapperCaptor.getAllValues().get(1);
+
+        assertThat(createMapper.apply(mockResponse(201, "created"))).isSucceeded();
+        assertThat(createMapper.apply(mockResponse(204, ""))).isSucceeded();
+        assertThat(createMapper.apply(mockResponse(409, "conflict"))).isSucceeded();
+        assertThat(createMapper.apply(mockResponse(500, "server error"))).isFailed();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void deleteResponseMapper_shouldTolerate400AndReject500() {
+        when(httpClient.execute(any(Request.class), anyList(), any()))
+                .thenReturn(Result.success(""));
+
+        client.deleteById(SERVICE_ID);
+
+        var mapperCaptor = ArgumentCaptor.forClass(Function.class);
+        verify(httpClient).execute(any(Request.class), anyList(), mapperCaptor.capture());
+
+        Function<Response, Result<String>> deleteMapper = mapperCaptor.getValue();
+
+        assertThat(deleteMapper.apply(mockResponse(200, "ok"))).isSucceeded();
+        assertThat(deleteMapper.apply(mockResponse(204, ""))).isSucceeded();
+        assertThat(deleteMapper.apply(mockResponse(400, "not found in DID"))).isSucceeded();
+        assertThat(deleteMapper.apply(mockResponse(500, "server error"))).isFailed();
+    }
+
+    private Response mockResponse(int code, String body) {
+        var response = mock(Response.class);
+        when(response.code()).thenReturn(code);
+        var responseBody = mock(ResponseBody.class);
+        try {
+            when(responseBody.string()).thenReturn(body);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        when(response.body()).thenReturn(responseBody);
+        return response;
     }
 }

@@ -37,6 +37,7 @@ import org.eclipse.tractusx.edc.spi.did.document.service.DidDocumentServiceClien
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.function.Function;
@@ -78,8 +79,8 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
         this.identityApiUrl = identityApiUrl;
         this.apiKey = apiKey;
         this.monitor = monitor.withPrefix(getClass().getSimpleName());
-        this.encodedContextId = Base64.getUrlEncoder().withoutPadding().encodeToString(participantContextId.getBytes());
-        this.encodedDid = Base64.getUrlEncoder().withoutPadding().encodeToString(ownDid.getBytes());
+        this.encodedContextId = Base64.getUrlEncoder().withoutPadding().encodeToString(participantContextId.getBytes(StandardCharsets.UTF_8));
+        this.encodedDid = Base64.getUrlEncoder().withoutPadding().encodeToString(ownDid.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
