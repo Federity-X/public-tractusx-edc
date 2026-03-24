@@ -39,7 +39,6 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.edc.junit.assertions.AbstractResultAssert.assertThat;
@@ -283,6 +282,19 @@ class DidDocumentServiceIdentityHubClientTest {
         verify(httpClient, never()).execute(any(Request.class), anyList(), any());
     }
 
+    @Test
+    void update_shouldLogSevere_whenPostFailsAfterDelete() {
+        when(httpClient.execute(any(Request.class), anyList(), any()))
+                .thenReturn(Result.success("")) // delete OK
+                .thenReturn(Result.failure("Server error")); // create fails
+
+        var service = new Service(SERVICE_ID, SERVICE_TYPE, SERVICE_ENDPOINT);
+        var result = client.update(service);
+
+        assertThat(result).isFailed();
+        verify(monitor).severe(org.mockito.ArgumentMatchers.contains("POST failed after successful DELETE"));
+    }
+
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"", "   "})
@@ -294,44 +306,25 @@ class DidDocumentServiceIdentityHubClientTest {
         verify(httpClient, never()).execute(any(Request.class), anyList(), any());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void createResponseMapper_shouldTolerate409AndReject500() {
-        when(httpClient.execute(any(Request.class), anyList(), any()))
-                .thenReturn(Result.success("")) // delete
-                .thenReturn(Result.success("")); // create
+        var mapper = client.createResponseMapper();
 
-        var service = new Service(SERVICE_ID, SERVICE_TYPE, SERVICE_ENDPOINT);
-        client.update(service);
-
-        var mapperCaptor = ArgumentCaptor.forClass(Function.class);
-        verify(httpClient, times(2)).execute(any(Request.class), anyList(), mapperCaptor.capture());
-
-        Function<Response, Result<String>> createMapper = mapperCaptor.getAllValues().get(1);
-
-        assertThat(createMapper.apply(mockResponse(201, "created"))).isSucceeded();
-        assertThat(createMapper.apply(mockResponse(204, ""))).isSucceeded();
-        assertThat(createMapper.apply(mockResponse(409, "conflict"))).isSucceeded();
-        assertThat(createMapper.apply(mockResponse(500, "server error"))).isFailed();
+        assertThat(mapper.apply(mockResponse(200, "ok"))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(201, "created"))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(204, ""))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(409, "conflict"))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(500, "server error"))).isFailed();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void deleteResponseMapper_shouldTolerate400AndReject500() {
-        when(httpClient.execute(any(Request.class), anyList(), any()))
-                .thenReturn(Result.success(""));
+        var mapper = client.deleteResponseMapper();
 
-        client.deleteById(SERVICE_ID);
-
-        var mapperCaptor = ArgumentCaptor.forClass(Function.class);
-        verify(httpClient).execute(any(Request.class), anyList(), mapperCaptor.capture());
-
-        Function<Response, Result<String>> deleteMapper = mapperCaptor.getValue();
-
-        assertThat(deleteMapper.apply(mockResponse(200, "ok"))).isSucceeded();
-        assertThat(deleteMapper.apply(mockResponse(204, ""))).isSucceeded();
-        assertThat(deleteMapper.apply(mockResponse(400, "not found in DID"))).isSucceeded();
-        assertThat(deleteMapper.apply(mockResponse(500, "server error"))).isFailed();
+        assertThat(mapper.apply(mockResponse(200, "ok"))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(204, ""))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(400, "not found in DID"))).isSucceeded();
+        assertThat(mapper.apply(mockResponse(500, "server error"))).isFailed();
     }
 
     private Response mockResponse(int code, String body) {

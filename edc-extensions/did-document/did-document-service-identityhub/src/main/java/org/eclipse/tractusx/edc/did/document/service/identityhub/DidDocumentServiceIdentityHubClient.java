@@ -40,6 +40,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static org.eclipse.edc.http.spi.FallbackFactories.retryWhenStatusIsNotIn;
@@ -59,13 +60,15 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
     private static final String API_PATH_ENDPOINTS = "endpoints";
     private static final MediaType JSON = MediaType.parse("application/json");
 
+    // Status codes treated as success — shared between retry lists and response mappers
+    static final Set<Integer> CREATE_SUCCESS_CODES = Set.of(200, 201, 204, 409);
+    static final Set<Integer> DELETE_SUCCESS_CODES = Set.of(200, 204, 400);
+
     private final EdcHttpClient httpClient;
     private final ObjectMapper mapper;
-    private final String identityApiUrl;
+    private final HttpUrl endpointsBaseUrl;
     private final String apiKey;
     private final Monitor monitor;
-    private final String encodedContextId;
-    private final String encodedDid;
 
     public DidDocumentServiceIdentityHubClient(EdcHttpClient httpClient,
                                                ObjectMapper mapper,
@@ -76,18 +79,27 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
                                                Monitor monitor) {
         this.httpClient = httpClient;
         this.mapper = mapper;
-        this.identityApiUrl = identityApiUrl;
         this.apiKey = apiKey;
         this.monitor = monitor.withPrefix(getClass().getSimpleName());
-        this.encodedContextId = Base64.getUrlEncoder().withoutPadding().encodeToString(participantContextId.getBytes(StandardCharsets.UTF_8));
-        this.encodedDid = Base64.getUrlEncoder().withoutPadding().encodeToString(ownDid.getBytes(StandardCharsets.UTF_8));
+        var encodedContextId = Base64.getUrlEncoder().withoutPadding().encodeToString(participantContextId.getBytes(StandardCharsets.UTF_8));
+        var encodedDid = Base64.getUrlEncoder().withoutPadding().encodeToString(ownDid.getBytes(StandardCharsets.UTF_8));
+        this.endpointsBaseUrl = HttpUrl.parse(identityApiUrl).newBuilder()
+                .addPathSegment(API_PATH_VERSION)
+                .addPathSegment(API_PATH_PARTICIPANTS)
+                .addPathSegment(encodedContextId)
+                .addPathSegment(API_PATH_DIDS)
+                .addPathSegment(encodedDid)
+                .addPathSegment(API_PATH_ENDPOINTS)
+                .build();
     }
 
     @Override
     public ServiceResult<Void> update(Service service) {
         return validateService(service)
                 .compose(v -> deleteServiceEntry(service.getId(), false))
-                .compose(v -> createServiceEntry(service))
+                .compose(v -> createServiceEntry(service)
+                        .onFailure(f -> monitor.severe("POST failed after successful DELETE for service %s — IdentityHub may hold unpublished intermediate state. "
+                                .concat("Next update() call should recover. Failure: %s").formatted(asString(service), f.getFailureDetail()))))
                 .onSuccess(v -> monitor.info("Updated service entry %s in DID Document".formatted(asString(service))))
                 .onFailure(f -> monitor.warning("Failed to update service entry %s with failure %s".formatted(asString(service), f.getFailureDetail())));
     }
@@ -122,7 +134,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
     private ServiceResult<Void> createServiceEntry(Service service) {
         try {
             var body = mapper.writeValueAsString(service);
-            var url = endpointsUrl()
+            var url = endpointsBaseUrl.newBuilder()
                     .addQueryParameter("autoPublish", "true")
                     .build();
             var request = new Request.Builder()
@@ -130,7 +142,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
                     .post(RequestBody.create(body, JSON))
                     .addHeader("x-api-key", apiKey)
                     .build();
-            var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(200, 201, 204, 409)), createResponseMapper());
+            var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(CREATE_SUCCESS_CODES.stream().mapToInt(Integer::intValue).toArray())), createResponseMapper());
             return result.succeeded() ? ServiceResult.success() : ServiceResult.unexpected(result.getFailureDetail());
         } catch (JsonProcessingException e) {
             return ServiceResult.unexpected("Failed to serialize service: %s".formatted(e.getMessage()));
@@ -138,7 +150,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
     }
 
     private ServiceResult<Void> deleteServiceEntry(String serviceId, boolean autoPublish) {
-        var url = endpointsUrl()
+        var url = endpointsBaseUrl.newBuilder()
                 .addQueryParameter("serviceId", serviceId)
                 .addQueryParameter("autoPublish", String.valueOf(autoPublish))
                 .build();
@@ -147,42 +159,24 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
                 .delete()
                 .addHeader("x-api-key", apiKey)
                 .build();
-        var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(200, 204, 400)), deleteResponseMapper());
+        var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(DELETE_SUCCESS_CODES.stream().mapToInt(Integer::intValue).toArray())), deleteResponseMapper());
         return result.succeeded() ? ServiceResult.success() : ServiceResult.unexpected(result.getFailureDetail());
     }
 
-    private HttpUrl.Builder endpointsUrl() {
-        return HttpUrl.parse(identityApiUrl).newBuilder()
-                .addPathSegment(API_PATH_VERSION)
-                .addPathSegment(API_PATH_PARTICIPANTS)
-                .addPathSegment(encodedContextId)
-                .addPathSegment(API_PATH_DIDS)
-                .addPathSegment(encodedDid)
-                .addPathSegment(API_PATH_ENDPOINTS);
-    }
-
-    private Function<Response, Result<String>> createResponseMapper() {
+    Function<Response, Result<String>> createResponseMapper() {
         return response -> {
             var code = response.code();
-            if (code == 200 || code == 201 || code == 204) {
-                return Result.success(readBody(response));
-            }
-            if (code == 409) {
-                // Service already exists — tolerated for idempotency
+            if (CREATE_SUCCESS_CODES.contains(code)) {
                 return Result.success(readBody(response));
             }
             return Result.failure("Create service endpoint failed with status %d: %s".formatted(code, readBody(response)));
         };
     }
 
-    private Function<Response, Result<String>> deleteResponseMapper() {
+    Function<Response, Result<String>> deleteResponseMapper() {
         return response -> {
             var code = response.code();
-            if (code == 200 || code == 204) {
-                return Result.success(readBody(response));
-            }
-            if (code == 400) {
-                // Service not in DID — tolerated for idempotency (first-time registration)
+            if (DELETE_SUCCESS_CODES.contains(code)) {
                 return Result.success(readBody(response));
             }
             return Result.failure("Delete service endpoint failed with status %d: %s".formatted(code, readBody(response)));
