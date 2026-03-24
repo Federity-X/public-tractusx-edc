@@ -1,5 +1,6 @@
 /********************************************************************************
  * Copyright (c) 2024 Bayerische Motoren Werke Aktiengesellschaft (BMW AG)
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -40,6 +41,9 @@ public abstract class TractusxIatpParticipantBase extends TractusxParticipantBas
     protected LazySupplier<URI> stsUri;
     protected String stsClientId;
     protected String trustedIssuer;
+    protected String identityHubApiUrl;
+    protected String identityHubApiKeyAlias;
+    protected String identityHubParticipantContextId;
 
     public Config iatpConfig() {
         var additionalSettings = Map.of(
@@ -86,6 +90,21 @@ public abstract class TractusxIatpParticipantBase extends TractusxParticipantBas
 
         public B credentialServiceUri(LazySupplier<URI> credentialServiceUri) {
             participant.credentialServiceUri = credentialServiceUri;
+            return self();
+        }
+
+        public B identityHubApiUrl(String identityHubApiUrl) {
+            participant.identityHubApiUrl = identityHubApiUrl;
+            return self();
+        }
+
+        public B identityHubApiKeyAlias(String identityHubApiKeyAlias) {
+            participant.identityHubApiKeyAlias = identityHubApiKeyAlias;
+            return self();
+        }
+
+        public B identityHubParticipantContextId(String identityHubParticipantContextId) {
+            participant.identityHubParticipantContextId = identityHubParticipantContextId;
             return self();
         }
 

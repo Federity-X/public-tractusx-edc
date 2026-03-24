@@ -22,12 +22,21 @@ When enabled, the extension registers a service entry with below details in the 
 ## Configuration
 The extension is controlled by the following configuration properties:
 
-| Property                                       | Required | Default | Description                                                          |
-|------------------------------------------------|----------|---------|----------------------------------------------------------------------|
-| `tx.edc.did.service.self.registration.enabled` | false    | false   | Enables or disables self-registration extension.                     |
-| `tx.edc.did.service.self.registration.id`      | false    | (none)  | The ID to use for service self-registration (should be a valid URI). |
+| Property                                          | Required | Default | Description                                                          |
+|---------------------------------------------------|----------|---------|----------------------------------------------------------------------|
+| `tx.edc.did.service.self.registration.enabled`    | false    | false   | Enables or disables self-registration extension.                     |
+| `tx.edc.did.service.self.deregistration.enabled`  | false    | false   | Enables or disables self-deregistration on shutdown.                 |
+| `tx.edc.did.service.self.registration.id`         | false    | (none)  | The ID to use for service self-registration (should be a valid URI). |
 
 > `tx.edc.did.service.self.registration.id` is required if self-registration is enabled (`tx.edc.did.service.self.registration.enabled=true`).
+
+## Prerequisites
+
+This extension requires a `DidDocumentServiceClient` implementation to be available at runtime.
+The active client is selected via the `tx.edc.did.service.client.type` property:
+
+- `div` — uses the SAP DIV backend (module `did-document-service-div`)
+- `identityhub` — uses the IdentityHub backend (module `did-document-service-identityhub`)
 
 ## Extension Lifecycle
 - **On Startup:**

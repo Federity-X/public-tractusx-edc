@@ -3,6 +3,7 @@
 #  Copyright (c) 2023 Mercedes-Benz Tech Innovation GmbH
 #  Copyright (c) 2023 Bayerische Motoren Werke Aktiengesellschaft (BMW AG)
 #  Copyright (c) 2021,2024 Contributors to the Eclipse Foundation
+#  Copyright (c) 2026 Technovative Solutions
 #
 #  See the NOTICE file(s) distributed with this work for additional
 #  information regarding copyright ownership.
@@ -67,11 +68,20 @@ iatp:
         # -- Alias under which the client secret is stored in the vault for requesting OAuth2 access token for DIV access
         secret_alias:
   didService:
+    # -- DID document service client type: "div" or "identityhub"
+    clientType: ""
     selfRegistration:
       # -- Whether Service Self Registration is enabled
       enabled: false
       # -- Unique id of connector to be used for register / unregister service inside did document (must be valid URI)
       id: "did:web:changeme"
+    identityHub:
+      # -- IdentityHub Identity Admin API base URL (must include base path, e.g. http://identityhub:15151/api/identity)
+      apiUrl: ""
+      # -- Vault alias for X-Api-Key used to authenticate with IdentityHub
+      apiKeyAlias: ""
+      # -- IdentityHub participant context ID
+      participantContextId: ""
   # - Configures the Verifiable Presentation cache
   cache:
     # -- Whether the Verifiable Presentation cache is enabled

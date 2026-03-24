@@ -1,6 +1,7 @@
 /********************************************************************************
  * Copyright (c) 2024 Bayerische Motoren Werke Aktiengesellschaft (BMW AG)
  * Copyright (c) 2026 Cofinity-X GmbH
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -61,6 +62,13 @@ public class IatpParticipant extends TractusxIatpParticipantBase {
         settings.put("web.http.credentials.path", csService.get().getPath());
         if (divUri != null) {
             settings.put("tx.edc.iam.sts.div.url", divUri.get().toString());
+            settings.put("tx.edc.did.service.client.type", "div");
+        }
+        if (identityHubApiUrl != null) {
+            settings.put("tx.edc.did.service.client.type", "identityhub");
+            settings.put("tx.edc.ih.identity.api.url", identityHubApiUrl);
+            settings.put("tx.edc.ih.identity.api.key.alias", identityHubApiKeyAlias);
+            settings.put("tx.edc.ih.participant.context.id", identityHubParticipantContextId);
         }
         return super.getConfig().merge(ConfigFactory.fromMap(settings));
     }

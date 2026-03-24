@@ -110,3 +110,13 @@ The client's purpose is to be injected in the `did-document-service-self-registr
 }
 ```
 > All APIs require authentication using an authentication token generated via DIV.
+
+## Configuration
+
+| Property | Required | Description |
+|---|---|---|
+| `tx.edc.did.service.client.type` | yes | Must be set to `"div"` to activate this extension |
+| `tx.edc.iam.sts.div.url` | yes | DIV API base URL |
+| `edc.participant.id` | yes | This connector's DID |
+
+Additionally, an implementation of `DivOauth2Client` must be available on the classpath for authentication.

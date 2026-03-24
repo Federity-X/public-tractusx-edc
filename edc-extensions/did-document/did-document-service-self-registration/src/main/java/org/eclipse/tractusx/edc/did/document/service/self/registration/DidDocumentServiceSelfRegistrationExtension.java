@@ -1,5 +1,6 @@
 /********************************************************************************
  * Copyright (c) 2025 SAP SE
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -62,10 +63,17 @@ public class DidDocumentServiceSelfRegistrationExtension implements ServiceExten
 
     @Override
     public void start() {
-        Optional.ofNullable(didDocumentServiceClient)
-                .filter(client -> selfRegistrationEnabled)
-                .ifPresentOrElse(this::selfRegisterDidDocumentService,
-                        () -> monitor.info("Did Document Service Client not available or not enabled, skipping self-registration"));
+        if (didDocumentServiceClient == null) {
+            if (selfRegistrationEnabled) {
+                monitor.warning("Self-registration is enabled but no DidDocumentServiceClient is available — check tx.edc.did.service.client.type configuration");
+            } else {
+                monitor.info("Did Document Service Client not available, skipping self-registration");
+            }
+        } else if (selfRegistrationEnabled) {
+            selfRegisterDidDocumentService(didDocumentServiceClient);
+        } else {
+            monitor.info("Self-registration not enabled, skipping");
+        }
     }
 
     @Override
