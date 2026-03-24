@@ -230,6 +230,7 @@ class DidDocumentServiceIdentityHubClientTest {
         verify(httpClient).execute(requestCaptor.capture(), anyList(), any());
         assertThat(requestCaptor.getValue().method()).isEqualTo("DELETE");
         assertThat(requestCaptor.getValue().url().queryParameter("serviceId")).isEqualTo(SERVICE_ID);
+        assertThat(requestCaptor.getValue().url().queryParameter("autoPublish")).isEqualTo("true");
     }
 
     @Test
@@ -261,6 +262,25 @@ class DidDocumentServiceIdentityHubClientTest {
         var result = client.deleteById(SERVICE_ID);
 
         assertThat(result).isFailed();
+    }
+
+    @Test
+    void update_shouldRejectInvalidUriServiceId() {
+        var service = new Service("invalid uri with spaces", SERVICE_TYPE, SERVICE_ENDPOINT);
+        var result = client.update(service);
+
+        assertThat(result).isFailed();
+        assertThat(result.getFailureDetail()).contains("valid URI");
+        verify(httpClient, never()).execute(any(Request.class), anyList(), any());
+    }
+
+    @Test
+    void deleteById_shouldRejectInvalidUriServiceId() {
+        var result = client.deleteById("invalid uri with spaces");
+
+        assertThat(result).isFailed();
+        assertThat(result.getFailureDetail()).contains("valid URI");
+        verify(httpClient, never()).execute(any(Request.class), anyList(), any());
     }
 
     @ParameterizedTest

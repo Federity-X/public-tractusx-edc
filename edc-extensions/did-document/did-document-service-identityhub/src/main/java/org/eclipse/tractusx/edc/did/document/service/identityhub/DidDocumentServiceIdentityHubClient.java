@@ -95,7 +95,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
     @Override
     public ServiceResult<Void> deleteById(String id) {
         return validateServiceId(id)
-                .compose(v -> deleteServiceEntry(id, false))
+                .compose(v -> deleteServiceEntry(id, true))
                 .onSuccess(v -> monitor.info("Deleted service entry %s".formatted(id)))
                 .onFailure(f -> monitor.severe("Failed to delete service entry %s: %s".formatted(id, f.getFailureDetail())));
     }
@@ -130,7 +130,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
                     .post(RequestBody.create(body, JSON))
                     .addHeader("x-api-key", apiKey)
                     .build();
-            var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(200, 201, 204, 400, 401, 403, 404, 409)), createResponseMapper());
+            var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(200, 201, 204, 409)), createResponseMapper());
             return result.succeeded() ? ServiceResult.success() : ServiceResult.unexpected(result.getFailureDetail());
         } catch (JsonProcessingException e) {
             return ServiceResult.unexpected("Failed to serialize service: %s".formatted(e.getMessage()));
@@ -147,7 +147,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
                 .delete()
                 .addHeader("x-api-key", apiKey)
                 .build();
-        var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(200, 201, 204, 400, 401, 403, 404, 409)), deleteResponseMapper());
+        var result = httpClient.execute(request, List.of(retryWhenStatusIsNotIn(200, 204, 400)), deleteResponseMapper());
         return result.succeeded() ? ServiceResult.success() : ServiceResult.unexpected(result.getFailureDetail());
     }
 
@@ -195,7 +195,7 @@ public class DidDocumentServiceIdentityHubClient implements DidDocumentServiceCl
             return body != null ? body.string() : "";
         } catch (IOException e) {
             monitor.warning("Failed to read response body", e);
-            return "";
+            return "[unreadable body: %s]".formatted(e.getMessage());
         }
     }
 

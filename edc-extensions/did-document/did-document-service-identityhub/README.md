@@ -37,8 +37,10 @@ Request body: JSON-serialized `Service` object (`id`, `type`, `serviceEndpoint`)
 
 ### Remove Service Endpoint
 ```
-DELETE /v1alpha/participants/{base64url(contextId)}/dids/{base64url(did)}/endpoints?serviceId={id}&autoPublish=false
+DELETE /v1alpha/participants/{base64url(contextId)}/dids/{base64url(did)}/endpoints?serviceId={id}&autoPublish={true|false}
 ```
+- `autoPublish=false` during `update()` (the subsequent POST publishes both changes)
+- `autoPublish=true` during standalone `deleteById()` (e.g. deregistration on shutdown)
 
 ### Update Strategy
 

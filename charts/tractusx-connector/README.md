@@ -260,6 +260,10 @@ helm install my-release tractusx-edc/tractusx-connector --version 0.13.0-SNAPSHO
 | fullnameOverride | string | `""` |  |
 | iatp.cache.enabled | bool | `true` | Whether the Verifiable Presentation cache is enabled |
 | iatp.cache.validity | int | `86400` | Validity of the Verifiable Presentation cache in seconds |
+| iatp.didService.clientType | string | `""` | DID document service client type: "div" or "identityhub" |
+| iatp.didService.identityHub.apiKeyAlias | string | `""` | Vault alias for X-Api-Key used to authenticate with IdentityHub |
+| iatp.didService.identityHub.apiUrl | string | `""` | IdentityHub Identity Admin API base URL (must include base path, e.g. http://identityhub:15151/api/identity) |
+| iatp.didService.identityHub.participantContextId | string | `""` | IdentityHub participant context ID |
 | iatp.didService.selfRegistration.enabled | bool | `false` | Whether Service Self Registration is enabled |
 | iatp.didService.selfRegistration.id | string | `"did:web:changeme"` | Unique id of connector to be used for register / unregister service inside did document (must be valid URI) |
 | iatp.id | string | `"did:web:changeme"` | Decentralized IDentifier (DID) of the connector |
