@@ -1,6 +1,7 @@
 /********************************************************************************
  * Copyright (c) 2022 Mercedes-Benz Tech Innovation GmbH
  * Copyright (c) 2021,2022 Contributors to the Eclipse Foundation
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -90,6 +91,7 @@ dependencies {
     implementation(project(":edc-extensions:event-subscriber"))
     implementation(project(":edc-extensions:did-document:did-document-service-self-registration"))
     implementation(project(":edc-extensions:did-document:did-document-service-div"))
+    implementation(project(":edc-extensions:did-document:did-document-service-identityhub"))
 
     runtimeOnly(libs.bundles.edc.monitoring)
     runtimeOnly(libs.edc.aws.validator.data.address.s3)

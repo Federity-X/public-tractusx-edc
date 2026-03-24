@@ -67,11 +67,20 @@ iatp:
         # -- Alias under which the client secret is stored in the vault for requesting OAuth2 access token for DIV access
         secret_alias:
   didService:
+    # -- Type of DidDocumentServiceClient to activate. Supported values: 'div', 'identityhub'. Leave empty to disable.
+    clientType:
     selfRegistration:
       # -- Whether Service Self Registration is enabled
       enabled: false
       # -- Unique id of connector to be used for register / unregister service inside did document (must be valid URI)
       id: "did:web:changeme"
+    identityHub:
+      # -- IdentityHub Identity Admin API URL (e.g. https://ih.example.com:15151/api/identity). Required when using IdentityHub wallets (not DIV) for DID self-registration.
+      apiUrl:
+      # -- Vault alias for the IdentityHub Identity API key (x-api-key header)
+      apiKeyAlias:
+      # -- IdentityHub participant context ID (short name, e.g. 'provider')
+      participantContextId:
   # - Configures the Verifiable Presentation cache
   cache:
     # -- Whether the Verifiable Presentation cache is enabled

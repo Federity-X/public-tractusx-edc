@@ -110,3 +110,47 @@ The client's purpose is to be injected in the `did-document-service-self-registr
 }
 ```
 > All APIs require authentication using an authentication token generated via DIV.
+
+## Activation
+
+This extension activates when **all** of the following conditions are met:
+
+1. `tx.edc.did.service.client.type` is set to `div`
+2. `tx.edc.iam.sts.div.url` is configured
+3. A `DivOauth2Client` implementation is available
+
+If any condition is not met, the extension logs an informational or warning message and does not register a client.
+
+## Configuration
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| `tx.edc.did.service.client.type` | No | Must be set to `div` to activate this extension |
+| `tx.edc.iam.sts.div.url` | No | STS DIV endpoint URL |
+| `edc.participant.id` | Yes | The DID / participant ID of this connector |
+
+> All optional properties participate in the extension's own validation logic.
+> The extension gracefully skips registration if any required setting is missing.
+
+## Client Type Selector
+
+The property `tx.edc.did.service.client.type` controls which `DidDocumentServiceClient` implementation is active.
+Both the DIV and IdentityHub extensions read this property:
+
+- `tx.edc.did.service.client.type=div` → DIV client activates.
+- `tx.edc.did.service.client.type=identityhub` → IdentityHub client activates.
+- Not set → no client is registered, self-registration is a no-op.
+
+This design ensures clean separation: each extension only checks its own type and config,
+with no cross-references to other extensions' settings.
+
+## Helm Configuration
+
+```yaml
+iatp:
+  didService:
+    clientType: "div"
+    selfRegistration:
+      enabled: true
+      id: "did:web:example.com:connector#DataService"
+```

@@ -1,5 +1,6 @@
 /********************************************************************************
  * Copyright (c) 2025 SAP SE
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -32,8 +33,12 @@ import org.eclipse.tractusx.edc.spi.did.document.service.DidDocumentServiceClien
 
 import java.net.URI;
 
+// Note: Both this and DidDocumentServiceIdentityHubClientExtension declare @Provides(DidDocumentServiceClient.class).
+// Only one extension will call registerService() at runtime, selected by tx.edc.did.service.client.type.
 @Provides(DidDocumentServiceClient.class)
 public class DidDocumentServiceDivClientExtension implements ServiceExtension {
+
+    public static final String CLIENT_TYPE_DIV = "div";
 
     @Inject
     private EdcHttpClient httpClient;
@@ -53,11 +58,19 @@ public class DidDocumentServiceDivClientExtension implements ServiceExtension {
     @Setting(key = "edc.participant.id", description = "EDC Participant Id")
     private String ownDid;
 
+    @Setting(key = DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, description = "Type of DidDocumentServiceClient to activate (e.g. 'div', 'identityhub')", required = false)
+    private String clientType;
+
     @Override
     public void initialize(ServiceExtensionContext context) {
 
+        if (!CLIENT_TYPE_DIV.equalsIgnoreCase(clientType)) {
+            monitor.info("DidDocumentServiceDIVClient will not be registered because %s is not set to '%s'".formatted(DidDocumentServiceClient.TX_EDC_DID_SERVICE_CLIENT_TYPE, CLIENT_TYPE_DIV));
+            return;
+        }
+
         if (divUrl == null || divUrl.isBlank() || divOauth2Client == null) {
-            monitor.info("DidDocumentServiceDIVClient will not be registered because DIV URL not configured or an implementation of DivOauth2Client is missing");
+            monitor.warning("DidDocumentServiceDIVClient will not be registered because DIV URL not configured or an implementation of DivOauth2Client is missing");
         } else {
             var client = new DidDocumentServiceDivClient(
                     httpClient,

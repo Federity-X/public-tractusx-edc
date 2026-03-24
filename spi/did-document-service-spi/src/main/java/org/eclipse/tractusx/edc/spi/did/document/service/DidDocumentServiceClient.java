@@ -1,5 +1,6 @@
 /********************************************************************************
  * Copyright (c) 2025 SAP SE
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -60,6 +61,12 @@ import org.eclipse.edc.spi.result.ServiceResult;
  */
 @ExtensionPoint
 public interface DidDocumentServiceClient {
+
+    /**
+     * Configuration property that selects which {@code DidDocumentServiceClient} implementation to activate.
+     * Valid values: {@code "div"}, {@code "identityhub"}.
+     */
+    String TX_EDC_DID_SERVICE_CLIENT_TYPE = "tx.edc.did.service.client.type";
 
     /**
      * Creates or updates a service entry in the DID document.

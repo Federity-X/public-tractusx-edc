@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023 Contributors to the Eclipse Foundation
  * Copyright (c) 2026 Cofinity-X GmbH
+ * Copyright (c) 2026 Technovative Solutions
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -96,6 +97,7 @@ include(":edc-extensions:dataspace-protocol:cx-dataspace-protocol")
 include(":edc-extensions:dataspace-protocol:dataspace-protocol-core")
 include(":edc-extensions:did-document:did-document-service-self-registration")
 include(":edc-extensions:did-document:did-document-service-div")
+include(":edc-extensions:did-document:did-document-service-identityhub")
 
 include(":edc-extensions:agreements")
 include(":edc-extensions:agreements:retirement-evaluation-core")
