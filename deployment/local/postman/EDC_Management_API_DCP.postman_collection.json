@@ -152,7 +152,7 @@
     },
     {
       "key": "webhookUrl",
-      "value": "http://209.38.170.63:8084/83ef68c8-6cef-4f59-910d-627490b713f0",
+      "value": "http://209.38.170.63:8084/8e07f61e-b370-47a9-8d06-62579bf8cb99",
       "type": "string",
       "description": "Consumer HTTP endpoint for PUSH transfers. Can be any URL that accepts POST \u2014 a REST API, data ingestion service, etc. Use webhook.site for testing."
     },
@@ -2667,7 +2667,7 @@
     },
     {
       "name": "12. Transfer Lifecycle",
-      "description": "**Origin: Upstream EDC** \u2014 standard transfer lifecycle operations, used as-is.\n\nManage the transfer lifecycle \u2014 suspend, resume, terminate, and deprovision transfers.\n\n- **Suspend/Resume** \u2014 demonstrated on the PUSH transfer (HttpData-PULL does not support suspend)\n- **Terminate/Deprovision** \u2014 demonstrated on the PULL transfer\n\n> **Why two different transfers?** PULL transfers use long-lived EDR tokens \u2014 suspend/resume is not meaningful.\n> PUSH transfers actively stream data, so suspend/resume controls the data flow.",
+      "description": "**Origin: Upstream EDC** \u2014 standard transfer lifecycle operations, used as-is.\n\nManage the transfer lifecycle \u2014 suspend, resume, terminate, and deprovision transfers.\n\n- **Suspend/Resume** \u2014 demonstrated on the PULL transfer (stays in STARTED state)\n- **Terminate/Deprovision** \u2014 demonstrated on the PULL transfer after resume\n\n> **Note**: PUSH transfers to finite data sources (single HTTP endpoint) reach COMPLETED almost immediately,\n> so they cannot be suspended. The PULL transfer stays in STARTED and is suitable for lifecycle demos.",
       "item": [
         {
           "name": "Suspend Transfer",
@@ -2685,21 +2685,21 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{pushTransferId}}\",\n  \"reason\": \"Demonstrating transfer suspend\"\n}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{transferId}}\",\n  \"reason\": \"Demonstrating transfer suspend\"\n}"
             },
             "url": {
-              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{pushTransferId}}/suspend",
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/suspend",
               "host": [
                 "{{consumerMgmt}}"
               ],
               "path": [
                 "v3",
                 "transferprocesses",
-                "{{pushTransferId}}",
+                "{{transferId}}",
                 "suspend"
               ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/suspend`\n\nSuspend an active PUSH transfer. Temporarily pauses data flow.\n\n> Uses the **PUSH transfer** because HttpData-PULL does not support suspend \u2014 PULL transfers use long-lived EDR tokens and have no active data stream to pause.\n\n**Response**: 204 No Content."
+            "description": "**POST** `/v3/transferprocesses/{id}/suspend`\n\nSuspend an active PULL transfer. Pauses the transfer process.\n\n> Uses the **PULL transfer** because it stays in STARTED state. PUSH transfers to finite data sources complete immediately and cannot be suspended.\n\n**Response**: 204 No Content."
           },
           "event": [
             {
@@ -2707,10 +2707,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Guard: ensure pushTransferId is set",
-                  "const tId = pm.collectionVariables.get('pushTransferId');",
+                  "// Guard: ensure transferId is set",
+                  "const tId = pm.collectionVariables.get('transferId');",
                   "if (!tId) {",
-                  "    throw new Error('pushTransferId not set. Run \"10. PUSH Transfer\" first.');",
+                  "    throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
                   "}"
                 ]
               }
@@ -2722,7 +2722,7 @@
                 "exec": [
                   "pm.test('Transfer suspended', function () {",
                   "    pm.expect(pm.response.code).to.equal(204);",
-                  "    console.log('PUSH transfer suspended successfully');",
+                  "    console.log('PULL transfer suspended successfully');",
                   "});"
                 ]
               }
@@ -2744,21 +2744,21 @@
               }
             ],
             "url": {
-              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{pushTransferId}}/resume",
+              "raw": "{{consumerMgmt}}/v3/transferprocesses/{{transferId}}/resume",
               "host": [
                 "{{consumerMgmt}}"
               ],
               "path": [
                 "v3",
                 "transferprocesses",
-                "{{pushTransferId}}",
+                "{{transferId}}",
                 "resume"
               ]
             },
-            "description": "**POST** `/v3/transferprocesses/{id}/resume`\n\nResume a previously suspended PUSH transfer. The transfer must be in `SUSPENDED` state.\n\n> Uses the **PUSH transfer** \u2014 same transfer that was suspended in the previous step.\n\n**Response**: 204 No Content.",
+            "description": "**POST** `/v3/transferprocesses/{id}/resume`\n\nResume a previously suspended PULL transfer. The transfer must be in `SUSPENDED` state.\n\n> Uses the **PULL transfer** \u2014 same transfer that was suspended in the previous step.\n\n**Response**: 204 No Content.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{pushTransferId}}\"\n}"
+              "raw": "{\n  \"@context\": {\"@vocab\": \"https://w3id.org/edc/v0.0.1/ns/\"},\n  \"@id\": \"{{transferId}}\"\n}"
             }
           },
           "event": [
@@ -2767,8 +2767,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const tId = pm.collectionVariables.get('pushTransferId');",
-                  "if (!tId) throw new Error('pushTransferId not set. Run \"10. PUSH Transfer\" first.');",
+                  "const tId = pm.collectionVariables.get('transferId');",
+                  "if (!tId) throw new Error('transferId not set. Run \"8. Initiate Transfer\" first.');",
                   "// Wait 2s for SUSPENDED state to fully propagate",
                   "const start = Date.now();",
                   "while (Date.now() - start < 2000) { /* busy-wait */ }"
@@ -2782,7 +2782,7 @@
                 "exec": [
                   "pm.test('Transfer resumed', function () {",
                   "    pm.expect(pm.response.code).to.equal(204);",
-                  "    console.log('PUSH transfer resumed successfully');",
+                  "    console.log('PULL transfer resumed successfully');",
                   "});"
                 ]
               }
