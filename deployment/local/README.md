@@ -686,7 +686,7 @@ docker compose down -v
 ## Known Issues & Fixes
 
 See [docs/development/local-dcp-issues-and-fixes.md](../../docs/development/local-dcp-issues-and-fixes.md)
-for a comprehensive catalog of all 14 issues encountered during setup and their exact fixes.
+for a comprehensive catalog of all 23 issues encountered during setup and their exact fixes.
 
 ---
 

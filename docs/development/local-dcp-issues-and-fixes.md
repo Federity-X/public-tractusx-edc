@@ -30,6 +30,7 @@ exact fix applied for each one.
 20. [IdentityHub 0.15.1 `participantcontextconfig` Datasource](#20-identityhub-0151-participantcontextconfig-datasource)
 21. [BDRS Image Healthcheck Reports Unhealthy (Wrong Endpoint)](#21-bdrs-image-healthcheck-reports-unhealthy)
 22. [Data Plane Self-Registration Race Condition](#22-data-plane-self-registration-race-condition)
+23. [Data Plane Callback Failure — Missing `edc.control.endpoint`](#23-data-plane-callback-failure--missing-edccontrolendpoint)
 
 ---
 
@@ -940,3 +941,58 @@ the `bdrs-server` service, targeting `/api/check/liveness` instead:
 
 **Files changed:**
 - `deployment/local/docker-compose.yaml` — Added `healthcheck` block to `bdrs-server` service
+
+---
+
+## 23. Data Plane Callback Failure — Missing `edc.control.endpoint`
+
+**Symptom:** PUSH transfers complete data delivery to the consumer's HTTP endpoint
+(e.g., webhook.site receives the data), but the transfer process stays stuck in
+`STARTED` state and never transitions to `COMPLETED`. Data Plane logs show:
+
+```
+Failed to send callback request: HTTP Status = 0
+```
+
+**Root cause:** Without `edc.control.endpoint` explicitly configured, the connector
+defaults to a `localhost`-based callback URL (e.g., `http://localhost:8083/control`).
+In Docker, `localhost` resolves to the container itself — so when the Data Plane
+tries to signal transfer completion back to the Control Plane, the HTTP request goes
+to the DP container's own loopback interface, which has nothing listening on port 8083.
+The result is a connection refused → `HTTP Status = 0`.
+
+This affects all four containers (both CPs and both DPs) because both the Control Plane
+and Data Plane need to know each other's control endpoint for bidirectional signaling:
+- **DP → CP**: Transfer completion callbacks (STARTED → COMPLETED)
+- **CP → DP**: Transfer lifecycle commands (suspend, resume, terminate)
+
+**Fix:** Added `edc.control.endpoint` to all four properties files using Docker
+container hostnames:
+
+```properties
+# provider-cp.properties
+edc.control.endpoint=http://provider-cp:8083/control
+
+# provider-dp.properties
+edc.control.endpoint=http://provider-dp:8084/api/control
+
+# consumer-cp.properties
+edc.control.endpoint=http://consumer-cp:8083/control
+
+# consumer-dp.properties
+edc.control.endpoint=http://consumer-dp:8084/api/control
+```
+
+**Side effect fixed:** With callbacks now working, finite PUSH transfers (like our
+test asset) transition to COMPLETED immediately after data delivery. This meant the
+Postman collection's Folder 12 (Transfer Lifecycle — suspend/resume) could no longer
+operate on the PUSH transfer (you can't suspend a COMPLETED transfer). The fix was to
+switch Folder 12's suspend/resume operations to use the PULL transfer ID instead, since
+PULL transfers remain in STARTED state indefinitely (waiting for consumer to fetch data).
+
+**Files changed:**
+- `deployment/local/config/provider-cp.properties` — Added `edc.control.endpoint`
+- `deployment/local/config/provider-dp.properties` — Added `edc.control.endpoint`
+- `deployment/local/config/consumer-cp.properties` — Added `edc.control.endpoint`
+- `deployment/local/config/consumer-dp.properties` — Added `edc.control.endpoint`
+- `deployment/local/postman/EDC_Management_API_DCP.postman_collection.json` — Folder 12 switched from `pushTransferId` to `transferId` (PULL)
