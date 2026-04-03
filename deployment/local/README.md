@@ -228,7 +228,7 @@ provider verifies → then pushes → governed data exchange.
 | **Who receives data?** | Consumer's client application | Any HTTP endpoint the consumer provides (REST API, data ingestion service, webhook, etc.) |
 | **Consumer Data Plane needed?** | No (client calls provider DP directly) | **No** (only an HTTP endpoint that can receive POST requests) |
 | **Provider Data Plane needed?** | Yes (serves data via public API) | Yes (fetches from source + POSTs to consumer's endpoint) |
-| **Transfer lifecycle** | STARTED → consumer polls EDR → fetches when ready | STARTED → provider pushes immediately |
+| **Transfer lifecycle** | STARTED → consumer polls EDR → fetches when ready | STARTED → provider pushes → COMPLETED (finite data) |
 | **Use case** | On-demand data retrieval | Event-driven delivery, notifications, data pipelines |
 
 > **Non-finite (streaming) PUSH**: For continuous data feeds, the consumer initiates a non-finite
@@ -284,8 +284,15 @@ sequenceDiagram
     ProviderDP->>DataSource: Fetch data
     DataSource-->>ProviderDP: Data
     ProviderDP->>ConsumerEndpoint: POST data to consumer endpoint
-    Note over ConsumerCP: Transfer state → STARTED
+    ProviderDP->>ProviderCP: Callback: transfer COMPLETED
+    Note over ConsumerCP: Transfer state → STARTED → COMPLETED (finite data)
 ```
+
+> **Data Plane ↔ Control Plane signaling**: After the Data Plane finishes pushing data, it
+> sends a callback to the Control Plane to transition the transfer to COMPLETED. This requires
+> `edc.control.endpoint` to be set correctly in both CP and DP properties — in Docker, it must
+> use the container hostname (e.g., `http://provider-cp:8083/control`), not `localhost`.
+> See [Troubleshooting](#troubleshooting) if transfers stay stuck at STARTED.
 
 ---
 
@@ -653,6 +660,7 @@ curl -s http://localhost:8581/api/management/bpn-directory \
 | Negotiation TERMINATED | Policy action format wrong | Use `{"@id": "odrl:use"}` not `"use"` |
 | 401 on DSP endpoint | SI token audience mismatch | Verify `edc.participant.id` = full DID on CPs |
 | Transfer stuck at REQUESTED | Data plane not reachable | Check `edc.hostname` on DP config |
+| PUSH transfer stuck at STARTED | Missing or wrong `edc.control.endpoint` | DP can't callback to CP. Must use Docker hostname: `http://provider-cp:8083/control` (not `localhost`). Logs show `Failed to send callback request: HTTP Status = 0` |
 | EDR token invalid | Transfer proxy key format | Must be EC P-256 JWK in Vault |
 | `IRI_CONFUSED_WITH_PREFIX` | Compact IRI in leftOperand | Use full IRI: `https://w3id.org/catenax/2025/9/policy/...` |
 
