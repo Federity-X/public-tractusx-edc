@@ -556,6 +556,13 @@ tx.edc.iam.iatp.bdrs.cache.validity=600
 # Public API base URL uses Docker hostname
 edc.dataplane.api.public.baseurl=http://provider-dp:8081/api/public/v2/data
 
+# Control endpoint — advertised to other components for signaling callbacks
+edc.control.endpoint=http://provider-dp:8084/api/control   # on DP
+edc.control.endpoint=http://provider-cp:8083/control        # on CP
+
+# Data Plane selector — DP registers itself with CP via this URL
+edc.dpf.selector.url=http://provider-cp:8083/control/v1/dataplanes
+
 # Transfer proxy keys: EC P-256 JWK generated at bootstrap
 edc.transfer.proxy.token.signer.privatekey.alias=provider-transfer-proxy-key
 edc.transfer.proxy.token.verifier.publickey.alias=provider-transfer-proxy-key
@@ -572,7 +579,17 @@ edc.dataplane.api.public.baseurl=https://dataplane.company.com/api/public/v2/dat
 
 # Token refresh endpoint — also externally reachable
 tx.edc.dataplane.token.refresh.endpoint=https://dataplane.company.com/api/public/token
+
+# Control endpoints — use Kubernetes Service DNS names (cluster-internal)
+edc.control.endpoint=http://controlplane:8083/control              # on CP
+edc.control.endpoint=http://dataplane:8084/api/control             # on DP
+edc.dpf.selector.url=http://controlplane:8083/control/v1/dataplanes  # on DP
 ```
+
+> **Why `edc.control.endpoint` matters**: Without this property, the connector defaults
+> to a `localhost`-based callback URL. In containerized environments, `localhost` resolves
+> to the container itself — causing Data Plane → Control Plane signaling callbacks (e.g.,
+> transfer completion notifications) to fail with `HTTP Status = 0`.
 
 **Transfer proxy key management:**
 - The EC P-256 key pair **must** be in Vault at the alias specified.
@@ -705,6 +722,8 @@ This table maps every local config shortcut to its production equivalent:
 | `edc.datasource.default.password` | `provider` | Vault-injected secret | CP, DP, IH |
 | `edc.dsp.callback.address` | `http://provider-cp:8084/api/v1/dsp` | `https://connector.company.com/api/v1/dsp` | CP |
 | `edc.dataplane.api.public.baseurl` | `http://provider-dp:8081/api/public/v2/data` | `https://dataplane.company.com/api/public/v2/data` | CP, DP |
+| `edc.control.endpoint` | `http://provider-cp:8083/control` (CP) / `http://provider-dp:8084/api/control` (DP) | `http://controlplane:8083/control` (CP) / `http://dataplane:8084/api/control` (DP) | CP, DP |
+| `edc.dpf.selector.url` | `http://provider-cp:8083/control/v1/dataplanes` | `http://controlplane:8083/control/v1/dataplanes` | DP |
 | `edc.participant.id` | `did:web:provider-ih:provider` | `did:web:identityhub.company.com:company` | CP |
 | `edc.iam.issuer.id` | `did:web:provider-ih:provider` | `did:web:identityhub.company.com:company` | CP, DP |
 | `edc.iam.sts.oauth.token.url` | `http://provider-ih:9292/api/sts/token` | `https://identityhub.company.com/api/sts/token` (or cluster-internal) | CP, DP |
