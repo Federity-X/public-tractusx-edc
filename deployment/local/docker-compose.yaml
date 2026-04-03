@@ -122,6 +122,8 @@ services:
     image: edc-dataplane:local
     container_name: provider-dp
     depends_on:
+      provider-cp:
+        condition: service_healthy
       provider-postgres:
         condition: service_healthy
       provider-vault:
@@ -228,6 +230,8 @@ services:
     image: edc-dataplane:local
     container_name: consumer-dp
     depends_on:
+      consumer-cp:
+        condition: service_healthy
       consumer-postgres:
         condition: service_healthy
       consumer-vault:

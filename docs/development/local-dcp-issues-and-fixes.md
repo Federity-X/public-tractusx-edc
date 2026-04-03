@@ -29,6 +29,7 @@ exact fix applied for each one.
 19. [EDC 0.15.1 Catalog Context Merged into Management](#19-edc-0151-catalog-context-merged-into-management)
 20. [IdentityHub 0.15.1 `participantcontextconfig` Datasource](#20-identityhub-0151-participantcontextconfig-datasource)
 21. [BDRS Image Healthcheck Reports Unhealthy (Wrong Endpoint)](#21-bdrs-image-healthcheck-reports-unhealthy)
+22. [Data Plane Self-Registration Race Condition](#22-data-plane-self-registration-race-condition)
 
 ---
 
@@ -806,6 +807,97 @@ edc.sql.store.participantcontextconfig.datasource=default
 **Files changed:**
 - `deployment/local/config/provider-ih.properties` — Added 4 lines for `participantcontextconfig`
 - `deployment/local/config/consumer-ih.properties` — Added 4 lines for `participantcontextconfig`
+
+---
+
+## 21. BDRS Image Healthcheck Reports Unhealthy (Wrong Endpoint)
+
+**Symptom:** After `docker compose up -d`, `docker ps` shows `bdrs-server` as `(unhealthy)`
+even though `docker logs bdrs-server` confirms "42 service extensions started" and
+"Runtime ready".
+
+**Root Cause:** The upstream `tractusx/bdrs-server:latest` image has a **built-in
+healthcheck** that runs `curl --fail http://localhost:8080/api/check/health`. However,
+this endpoint returns **404 Not Found** — it does not exist in the BDRS server runtime.
+
+The correct health endpoints are:
+- `/api/check/startup` → 200
+- `/api/check/liveness` → 200
+- `/api/check/readiness` → 200
+
+The docker-compose did not override the image's default healthcheck, so Docker kept
+reporting the container as unhealthy despite the runtime being fully functional.
+
+**Fix:** Added a `healthcheck` override to the BDRS service in `docker-compose.yaml`
+that uses the working `/api/check/liveness` endpoint:
+
+```yaml
+bdrs-server:
+  image: tractusx/bdrs-server:latest
+  ...
+  healthcheck:
+    test: ["CMD-SHELL", "curl --fail http://localhost:8080/api/check/liveness || exit 1"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+```
+
+**Files changed:**
+- `deployment/local/docker-compose.yaml` — Added `healthcheck` override to `bdrs-server` service
+
+---
+
+## 22. Data Plane Self-Registration Race Condition
+
+**Symptom:** On a completely fresh `docker compose up -d`, `consumer-dp` (and sometimes
+`provider-dp`) fails to start with:
+
+```
+EdcException: Cannot register data plane to the control plane:
+An unknown error happened, HTTP Status = 405.
+  URI: http://consumer-cp:8083/control/v1/dataplanes
+  STATUS: 405
+  MESSAGE: HTTP method POST is not supported by this URL
+```
+
+The data plane runtime exits fatally and Docker marks it as `unhealthy`.
+
+**Root Cause:** The data plane's `DataplaneSelfRegistrationExtension` POSTs to the
+control plane's `/control/v1/dataplanes` endpoint during startup. However, the
+docker-compose only had `depends_on` for postgres and vault — **not** on the control
+plane being healthy. In a cold start the data plane could boot and attempt registration
+before the control plane's Jetty server had bound its `/control` context, resulting in
+a 405 "Method Not Allowed" (Jetty's default response to an unregistered servlet path).
+
+**Fix:** Added `depends_on` on the control plane with `condition: service_healthy` to
+both data plane services:
+
+```yaml
+provider-dp:
+  depends_on:
+    provider-cp:
+      condition: service_healthy
+    provider-postgres:
+      condition: service_healthy
+    provider-vault:
+      condition: service_healthy
+
+consumer-dp:
+  depends_on:
+    consumer-cp:
+      condition: service_healthy
+    consumer-postgres:
+      condition: service_healthy
+    consumer-vault:
+      condition: service_healthy
+```
+
+This ensures data planes only start after their control plane is fully healthy and
+accepting requests on all web contexts.
+
+**Files changed:**
+- `deployment/local/docker-compose.yaml` — Added `provider-cp` / `consumer-cp`
+  dependencies to `provider-dp` / `consumer-dp` services
 
 ---
 
