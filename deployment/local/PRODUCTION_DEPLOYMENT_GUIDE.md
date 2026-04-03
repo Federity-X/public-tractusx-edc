@@ -453,7 +453,7 @@ The IH API key is the super-user key stored in Vault during bootstrap.
 
 | Property | Local | Production |
 |----------|-------|------------|
-| `tx.edc.did.service.client.type` | `identityhub` | `identityhub` or `dim` (depending on wallet backend) |
+| `tx.edc.did.service.client.type` | `identityhub` | `identityhub` or `div` (depending on wallet backend) |
 | `tx.edc.ih.identity.api.url` | `http://provider-ih:15151/api/identity` | `https://identityhub.company.com/api/identity` (HTTPS!) |
 | `tx.edc.ih.identity.api.key.alias` | `provider-ih-api-key` (super-user key) | Scoped API key with minimal permissions (not super-user) |
 | `tx.edc.ih.participant.context.id` | `provider` | Your organization's participant context ID |
@@ -463,7 +463,7 @@ The IH API key is the super-user key stored in Vault during bootstrap.
 **Key security considerations:**
 - The IH API key should **not** be the super-user key in production. Create a scoped API token with only the permissions needed to manage DID document service endpoints.
 - For **scaled connector deployments** (multiple replicas), disable `self.deregistration` — otherwise, the first pod to shut down removes the `DataService` entry while other pods are still running.
-- For **DIM wallet backends**, set `tx.edc.did.service.client.type=dim` and configure the DIM-specific properties (`tx.edc.iam.sts.dim.url`).
+- For **DIV wallet backends**, set `tx.edc.did.service.client.type=div` and configure the DIV-specific properties (`tx.edc.iam.sts.div.url`).
 
 ---
 

@@ -602,7 +602,7 @@ These don't expose API endpoints but modify runtime behavior:
 | `token-interceptor` | Token injection at HTTP client level |
 | `validators` | Blocks empty asset selectors in contract definitions |
 | `agreements-bpns` | Stores BPNL associations on negotiation events |
-| `dcp/` | W3C VC caching + DIM integration |
+| `dcp/` | W3C VC caching + DIV integration |
 
 ---
 
