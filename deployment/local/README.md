@@ -1,5 +1,19 @@
 # Local DCP Deployment — Tractus-X EDC Connectors
 
+> **⚠️ THIS BRANCH IS STALE — USE [`dcp-v2`](https://github.com/Federity-X/public-tractusx-edc/tree/dcp-v2) INSTEAD**
+>
+> The `dcp` branch is no longer maintained. All development has moved to **`dcp-v2`**, which includes:
+> - Production-quality v2 implementation of [issue #2678](https://github.com/eclipse-tractusx/tractusx-edc/issues/2678) (IdentityHub-backed `DidDocumentServiceClient` with type-selector)
+> - All bug fixes (Issues #21–#23: BDRS healthcheck, DP race condition, `edc.control.endpoint` callback fix)
+> - Updated Postman collection (65 requests, 0 failures)
+> - Complete documentation (production deployment guide, issues catalog with 23 entries)
+>
+> ```bash
+> git checkout dcp-v2
+> ```
+
+---
+
 Production-like local Docker deployment of **Tractus-X EDC connectors** with full
 **Decentralized Claims Protocol (DCP)** authentication, per-company Identity Hubs,
 Verifiable Credentials, and sovereign data exchange.
