@@ -112,7 +112,6 @@ services:
       - "19193:8081"    # management API
       - "19192:8083"    # control
       - "19194:8084"    # DSP protocol
-      - "19195:8085"    # catalog
     volumes:
       - ./config/provider-cp.properties:/app/configuration.properties:ro
     networks:
@@ -219,7 +218,6 @@ services:
       - "29193:8081"    # management API
       - "29192:8083"    # control
       - "29194:8084"    # DSP protocol
-      - "29195:8085"    # catalog
     volumes:
       - ./config/consumer-cp.properties:/app/configuration.properties:ro
     networks:
