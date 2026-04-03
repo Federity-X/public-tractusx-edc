@@ -280,6 +280,13 @@ services:
     ports:
       - "8580:8580"
       - "8581:8581"
+    # Override image healthcheck: the built-in check hits /api/check/health (404);
+    # the correct EDC health endpoint is /api/check/liveness.
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/api/check/liveness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - edc-net
 

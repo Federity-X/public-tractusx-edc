@@ -26,6 +26,9 @@ exact fix applied for each one.
 16. [BDRS Server Unhealthy — Missing Default Web Context](#16-bdrs-server-unhealthy)
 17. [PostgreSQL `json` vs `jsonb` Cast in DID Document Updates](#17-postgresql-json-vs-jsonb-cast)
 18. [Stale Issuer DB Volume on Fresh Restart](#18-stale-issuer-db-volume-on-fresh-restart)
+19. [EDC 0.15.1 Catalog Context Merged into Management](#19-edc-0151-catalog-context-merged-into-management)
+20. [IdentityHub 0.15.1 `participantcontextconfig` Datasource](#20-identityhub-0151-participantcontextconfig-datasource)
+21. [BDRS Image Healthcheck Reports Unhealthy (Wrong Endpoint)](#21-bdrs-image-healthcheck-reports-unhealthy)
 
 ---
 
@@ -706,3 +709,142 @@ docker compose down -v
 
 **Files changed:**
 - `deployment/local/README.md` — Updated "Clean up" section with warning about both stacks
+
+---
+
+## 19. EDC 0.15.1 Catalog Context Merged into Management
+
+**Problem:** After upgrading to EDC 0.15.1 (via PR#8 v2 rebase), both control planes
+crashed at startup with:
+
+```
+java.lang.IllegalArgumentException: No PortMapping for contextName 'catalog' found
+```
+
+**Root Cause:** Prior to EDC 0.15.1, the catalog API was a separate web context
+(`web.http.catalog.*` on port 8085). In 0.15.1, `CatalogApiExtension` was refactored to
+register under the `"management"` web context instead. The DSP catalog endpoints
+(`DspCatalogApiV08Extension`) register under the `"protocol"` context.
+
+With the old `web.http.catalog.port=8085` / `web.http.catalog.path=/api/v1/catalog`
+entries still present, the `WebServiceConfigurerImpl` tried to create a port mapping for
+a `"catalog"` context that no extension registered under, triggering the error.
+
+**Discovery:** Decompiled `CatalogApiExtension.class` from the 0.15.1 JARs — confirmed
+`@WebService(contextAlias = "management")` annotation on the REST controller.
+
+**Fix:** Removed all `web.http.catalog.*` properties from both CP config files, and
+removed the corresponding port 8085 mapping from docker-compose.yaml:
+
+```properties
+# REMOVED from provider-cp.properties and consumer-cp.properties:
+# web.http.catalog.port=8085
+# web.http.catalog.path=/api/v1/catalog
+# web.http.catalog.auth.type=tokenbased
+# web.http.catalog.auth.key=testkey
+```
+
+```yaml
+# REMOVED from docker-compose.yaml:
+# provider-cp:  - "19195:8085"  # catalog
+# consumer-cp:  - "29195:8085"  # catalog
+```
+
+Catalog endpoints are now accessed via the management port (8081 → host 19193/29193).
+
+**Files changed:**
+- `deployment/local/config/provider-cp.properties` — Removed `web.http.catalog.*` (4 lines)
+- `deployment/local/config/consumer-cp.properties` — Removed `web.http.catalog.*` (4 lines)
+- `deployment/local/docker-compose.yaml` — Removed port 8085 mappings for both CPs
+
+---
+
+## 20. IdentityHub 0.15.1 `participantcontextconfig` Datasource
+
+**Problem:** After upgrading to IdentityHub 0.15.1, both provider-ih and consumer-ih
+crashed at startup with:
+
+```
+ERROR: relation "edc_participant_context_config" does not exist
+```
+
+The Flyway migration for the `participantcontextconfig` store ran but could not find
+a configured datasource, causing the `ParticipantContextConfigMigrationExtension` to
+fail during schema creation.
+
+**Root Cause:** IdentityHub 0.15.1 added a new SQL store subsystem —
+`participantcontext-config-store-sql` — that persists participant context configuration
+in a dedicated table (`edc_participant_context_config`). This requires both:
+
+1. A named datasource: `edc.datasource.participantcontextconfig.url/user/password`
+2. A store mapping: `edc.sql.store.participantcontextconfig.datasource=default`
+
+These entries were present in the `issuerservice.properties` (which was updated as part
+of the IdentityHub repo changes) but were missing from `provider-ih.properties` and
+`consumer-ih.properties` (which live in the EDC repo and were written before 0.15.1).
+
+**Discovery:** Compared the working `issuerservice.properties` against the failing
+`provider-ih.properties` — diffed datasource entries to find the missing one.
+
+**Fix:** Added the `participantcontextconfig` datasource and store mapping to both
+IH config files:
+
+```properties
+# Added to provider-ih.properties
+edc.datasource.participantcontextconfig.url=jdbc:postgresql://provider-postgres:5432/provider
+edc.datasource.participantcontextconfig.user=provider
+edc.datasource.participantcontextconfig.password=provider
+edc.sql.store.participantcontextconfig.datasource=default
+
+# Added to consumer-ih.properties (with consumer credentials)
+edc.datasource.participantcontextconfig.url=jdbc:postgresql://consumer-postgres:5432/consumer
+edc.datasource.participantcontextconfig.user=consumer
+edc.datasource.participantcontextconfig.password=consumer
+edc.sql.store.participantcontextconfig.datasource=default
+```
+
+**Files changed:**
+- `deployment/local/config/provider-ih.properties` — Added 4 lines for `participantcontextconfig`
+- `deployment/local/config/consumer-ih.properties` — Added 4 lines for `participantcontextconfig`
+
+---
+
+## 21. BDRS Image Healthcheck Reports Unhealthy
+
+**Symptom:** `docker ps` shows `bdrs-server` as **(unhealthy)** despite the
+runtime starting normally (logs show "42 service extensions started" and
+"Runtime ready").
+
+**Root cause:** The upstream `tractusx/bdrs-server:latest` image has a built-in
+Docker `HEALTHCHECK` that probes `http://localhost:8080/api/check/health`. This
+endpoint returns **404 Not Found** — the image does not expose `/api/check/health`.
+
+The correct EDC health endpoints are:
+
+| Endpoint | Status |
+|----------|--------|
+| `/api/check/health` | 404 (broken) |
+| `/api/check/startup` | 200 |
+| `/api/check/liveness` | 200 |
+| `/api/check/readiness` | 200 |
+
+Because our `docker-compose.yaml` did **not** override the image healthcheck,
+Docker continuously probed the broken endpoint and marked the container unhealthy
+after 10 retries.
+
+**Fix:** Added an explicit `healthcheck` override in `docker-compose.yaml` for
+the `bdrs-server` service, targeting `/api/check/liveness` instead:
+
+```yaml
+  bdrs-server:
+    image: tractusx/bdrs-server:latest
+    # ... environment, ports ...
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/api/check/liveness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+```
+
+**Files changed:**
+- `deployment/local/docker-compose.yaml` — Added `healthcheck` block to `bdrs-server` service

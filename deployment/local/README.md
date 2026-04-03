@@ -32,6 +32,7 @@ Verifiable Credentials, and sovereign data exchange.
 - [API Taxonomy: Upstream EDC vs Tractus-X](#api-taxonomy-upstream-edc-vs-tractus-x)
 - [Troubleshooting](#troubleshooting)
 - [Known Issues & Fixes](#known-issues--fixes)
+- [Branch History — Why DCP v2](#branch-history--why-dcp-v2)
 - [Related Repositories](#related-repositories)
 
 ---
@@ -406,7 +407,6 @@ bash scripts/test-transfer.sh
 | provider-cp | 19192 | Control API |
 | provider-cp | 19193 | **Management API** (primary interaction endpoint) |
 | provider-cp | 19194 | DSP Protocol (connector-to-connector) |
-| provider-cp | 19195 | Catalog API |
 | provider-dp | 19196 | Default API (health check) |
 | provider-dp | 19197 | **Public API** (data transfer endpoint) |
 | provider-dp | 19198 | Control API |
@@ -426,7 +426,6 @@ bash scripts/test-transfer.sh
 | consumer-cp | 29192 | Control API |
 | consumer-cp | 29193 | **Management API** |
 | consumer-cp | 29194 | DSP Protocol |
-| consumer-cp | 29195 | Catalog API |
 | consumer-dp | 29196 | Default API (health check) |
 | consumer-dp | 29197 | **Public API** |
 | consumer-dp | 29198 | Control API |
@@ -490,7 +489,7 @@ postman/EDC_Management_API_DCP.postman_collection.json
 ```
 
 **Features:**
-- **16 folders**, **68 requests** covering the complete EDC Management API v3 + TX extensions
+- **16 folders**, **65 requests** covering the complete EDC Management API v3 + TX extensions
 - **65 assertions, 0 failures** — all endpoints return actual success responses
 - Auto-generated unique resource IDs (no conflicts between runs)
 - Variable chaining — offer IDs, agreement IDs, transfer IDs, EDR tokens auto-extracted
@@ -683,11 +682,77 @@ for a comprehensive catalog of all 14 issues encountered during setup and their 
 
 ---
 
+## Branch History — Why DCP v2
+
+This deployment lives on the **`dcp-v2`** branch. The name reflects the evolution of
+[issue #2678](https://github.com/eclipse-tractusx/tractusx-edc/issues/2678) —
+adding an IdentityHub-backed `DidDocumentServiceClient` so EDC connectors can register
+DID-document service endpoints through the IdentityHub Identity API instead of only the
+SAP DIV endpoint.
+
+### Background
+
+Deployments using **Decentralized Claims Protocol (DCP)** with IdentityHub as the wallet
+require the EDC connector to manage DID-document service entries via the IdentityHub
+Identity Admin API. The existing `did-document-service-div` module only supported SAP DIV.
+Issue #2678 required a second client implementation and a runtime-selectable mechanism so
+operators can choose between DIV and IdentityHub through configuration alone.
+
+### The original `dcp` branch (v1)
+
+The first `dcp` branch combined:
+- The full local Docker deployment (14 containers, bootstrap, test scripts, Postman collection)
+- A **v1** implementation of #2678 ([PR #7](https://github.com/Federity-X/public-tractusx-edc/pull/7))
+
+The v1 implementation was functional but had several quality issues identified during review.
+
+### PR #8 — The v2 implementation
+
+[PR #8](https://github.com/Federity-X/public-tractusx-edc/pull/8) rewrote the #2678
+implementation with the following improvements over v1:
+
+| Area | V1 (PR #7) | V2 (PR #8) |
+|---|---|---|
+| Result propagation | `Result.flatMap()` silently swallows failures | Explicit `result.succeeded()` — failures propagate correctly |
+| `RequestBody.create` | Deprecated `create(MediaType, String)` | Non-deprecated `create(String, MediaType)` |
+| `EdcHttpClient.execute()` | Single `FallbackFactory` arg | `List.of(retryWhenStatusIsNotIn(…))` — matches API signature |
+| `@Setting` annotation | Default `required=true` → `EdcInjectionException` at runtime | `required=false` with explicit null checks |
+| Unused fields | Raw `participantContextId` / `ownDid` stored but not used | Both Base64url-encoded at construction |
+| Self-registration diagnostics | `Optional.ifPresentOrElse(…)` | Explicit if/else with descriptive log messages |
+| Migration guide | Targeted wrong version pair | Corrected to `0.12.x → 0.13.x` |
+| Test coverage | 22 tests | 41 tests (19 client + 11 extension + 5 DIV guard + 6 self-registration) |
+| E2E fixtures | Minimal | `TractusxIatpParticipantBase` gains 3 IH builder methods |
+
+PR #8 also introduced proper input validation, a config-selector pattern
+(`tx.edc.did.service.client.type`), Helm chart template validation for required IdentityHub
+fields, and a decision record documenting the dual-`@Provides` design choice.
+
+### Why we adopted v2 → `dcp-v2`
+
+The `dcp-v2` branch was created by:
+1. Checking out PR #8's branch (`feature/2678-did-document-service-identityhub-v2`) as the base
+2. Cherry-picking all 14 deployment commits from the original `dcp` branch (Docker, bootstrap,
+   test scripts, Postman collection, properties, documentation)
+3. Applying DIM→DIV terminology fixes across 5 files
+4. Fixing two EDC 0.15.1 compatibility issues discovered during validation:
+   - Catalog context merged into management (removed stale port mapping)
+   - IdentityHub `participantcontextconfig` datasource configuration
+
+This approach gives us the **production-quality v2 implementation** of #2678 combined with
+the **complete local DCP deployment infrastructure**, all validated end-to-end (bootstrap
+16/16, E2E transfer pass, Newman 65 assertions / 0 failures).
+
+> **Breaking change from PR #8:** Existing DIV deployments must now explicitly set
+> `TX_EDC_DID_SERVICE_CLIENT_TYPE=div`. The IdentityHub client is entirely new and not a
+> breaking change itself.
+
+---
+
 ## Related Repositories
 
 | Repository | Branch | Purpose |
 |------------|--------|---------|
-| [tractusx-edc](https://github.com/Federity-X/public-tractusx-edc/tree/dcp) (this repo) | `dcp` | EDC Connectors + Data Planes + CX extensions |
+| [tractusx-edc](https://github.com/Federity-X/public-tractusx-edc/tree/dcp-v2) (this repo) | `dcp-v2` | EDC Connectors + Data Planes + CX extensions |
 | [public-tractusx-identityhub](https://github.com/Federity-X/public-tractusx-identityhub/tree/dcp-flow-local-deployment-with-upstream-0.15.1) | `dcp-flow-local-deployment-with-upstream-0.15.1` | Identity Hub + Issuer Service (DID, VC, STS) |
 | [MinimumViableDataspace](https://github.com/eclipse-edc/MinimumViableDataspace) | `main` | Reference architecture this deployment is modeled after |
 
@@ -717,5 +782,5 @@ deployment/local/
 │   ├── test-push-transfer.sh      ← E2E PUSH transfer test
 │   └── demo-management-api.sh     ← Comprehensive 20-operation API demo
 └── postman/
-    └── EDC_Management_API_DCP.postman_collection.json  ← 65-request dynamic collection (16 folders)
+    └── EDC_Management_API_DCP.postman_collection.json  ← 65 requests, 16 folders
 ```

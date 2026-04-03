@@ -861,5 +861,5 @@ postgresql:
 | Local Deployment README | [`deployment/local/README.md`](README.md) |
 | Issues & Fixes (14 issues) | [`docs/development/local-dcp-issues-and-fixes.md`](../../docs/development/local-dcp-issues-and-fixes.md) |
 | IdentityHub Repo | [Federity-X/public-tractusx-identityhub](https://github.com/Federity-X/public-tractusx-identityhub/tree/dcp-flow-local-deployment-with-upstream-0.15.1) |
-| EDC Repo | [Federity-X/public-tractusx-edc](https://github.com/Federity-X/public-tractusx-edc/tree/dcp) |
+| EDC Repo | [Federity-X/public-tractusx-edc](https://github.com/Federity-X/public-tractusx-edc/tree/dcp-v2) |
 | Wallet Integration Guide | [EDC_DCP_WALLET_INTEGRATION.md](https://github.com/Federity-X/public-tractusx-identityhub/tree/dcp-flow-local-deployment-with-upstream-0.15.1/docs/developers/EDC_DCP_WALLET_INTEGRATION.md) |
