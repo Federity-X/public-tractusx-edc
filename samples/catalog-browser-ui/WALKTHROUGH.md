@@ -2,6 +2,7 @@
 
 > **Audience:** Designers, product owners, and non-technical stakeholders  
 > **Jira:** [BE-170](https://dsaas-tvs.atlassian.net/browse/BE-170)  
+> **Branch:** [`BE-170/edc-admin-panel-ui-walkthrough`](https://github.com/Federity-X/public-tractusx-edc/tree/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui)  
 > **What this is:** 25 standalone HTML pages that together form a complete mockup of an Eclipse Dataspace Connector (EDC) management portal. Every page works in your browser — no server, no build step required.
 
 ---
@@ -21,16 +22,16 @@
 
 All pages use the **Tabler** design system with the Catena-X / Tractus-X color palette:
 
-| Token | Color | Usage |
-|---|---|---|
-| Primary | `#0054a6` (Catena-X blue) | Buttons, links, active states, focus rings |
-| Success | `#2fb344` (green) | Completed, active, valid |
-| Warning | `#f59f00` (amber) | Expiring, in-progress, provisioning |
-| Danger | `#d63384` (pink-red) | Failed, terminated, expired, delete |
-| Muted | `#64748b` (slate gray) | Labels, secondary text, timestamps |
-| Border | `#e6e7e9` | Table borders, dividers, card edges |
-| Background | `#f8fafc` | Page background, light fills |
-| Dark | `#1e293b` | Headings, body text |
+| Token      | Color                     | Usage                                      |
+| ---------- | ------------------------- | ------------------------------------------ |
+| Primary    | `#0054a6` (Catena-X blue) | Buttons, links, active states, focus rings |
+| Success    | `#2fb344` (green)         | Completed, active, valid                   |
+| Warning    | `#f59f00` (amber)         | Expiring, in-progress, provisioning        |
+| Danger     | `#d63384` (pink-red)      | Failed, terminated, expired, delete        |
+| Muted      | `#64748b` (slate gray)    | Labels, secondary text, timestamps         |
+| Border     | `#e6e7e9`                 | Table borders, dividers, card edges        |
+| Background | `#f8fafc`                 | Page background, light fills               |
+| Dark       | `#1e293b`                 | Headings, body text                        |
 
 **Font stack:** System fonts (`-apple-system`, `Segoe UI`, `Roboto`, etc.)
 
@@ -43,6 +44,7 @@ All pages use the **Tabler** design system with the Catena-X / Tractus-X color p
 The **home page** and navigation hub.
 
 **What you see:**
+
 - **Sidebar** on the left with icon links to every section (Assets, Policies, Contracts, Catalog, Negotiations, Agreements, Transfers, EDR Tokens, BPN Groups, Settings). Each icon shows a count badge.
 - **Health status bar** at the top showing Control Plane, Data Plane, Vault, IdentityHub, and BDRS Client with green/amber/red dots.
 - **8 stats cards** in a grid — one per module (e.g., "42 Assets", "18 Policies") with color-coded left borders.
@@ -351,71 +353,73 @@ index.html (Dashboard)
 
 ## Common UI Patterns
 
-| Pattern | Where Used | Description |
-|---|---|---|
-| **Stats cards** | Most list pages | Color-coded cards at the top showing key counts |
-| **Data table** | Assets, Policies, Negotiations, Agreements, Transfers, EDR, BPN | Sortable, searchable tables with pagination |
-| **Step wizard** | Create/Edit Asset, Create/Edit Policy, Initiate Transfer, Data Pull | Numbered circles with connecting lines; step content switches |
-| **Badges** | Everywhere | Colored pills for status, type, role (green/blue/amber/red/gray) |
-| **cURL cards** | Negotiations, Agreements, Transfers, EDR, BPN | Dark code block showing the real API call with a Copy button |
-| **Breadcrumbs** | All pages | "Dashboard > Section > Page" links at top for navigation context |
-| **Modals** | Agreements (retire), BPN (create/edit/delete) | Dark overlay with centered card, Cancel/Confirm buttons |
-| **Detail drawer** | EDR Management | Side panel sliding in from the right with full token details |
-| **Toast notifications** | EDR, BPN, Catalog | Bottom-right popup confirming an action (fades after a few seconds) |
-| **Auto-refresh** | Negotiations, Transfers | Checkbox that enables polling every 30 seconds |
-| **Split-screen** | Contract Builder | Form on left, live JSON preview on right |
-| **State machine** | Negotiation Details | Visual circles + connecting lines showing protocol states |
-| **Progress bars** | Transfer History | Fill bar colored by state (blue/green/red) |
-| **Token masking** | EDR, Settings | `•••••••` by default with reveal toggle |
+| Pattern                 | Where Used                                                          | Description                                                         |
+| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Stats cards**         | Most list pages                                                     | Color-coded cards at the top showing key counts                     |
+| **Data table**          | Assets, Policies, Negotiations, Agreements, Transfers, EDR, BPN     | Sortable, searchable tables with pagination                         |
+| **Step wizard**         | Create/Edit Asset, Create/Edit Policy, Initiate Transfer, Data Pull | Numbered circles with connecting lines; step content switches       |
+| **Badges**              | Everywhere                                                          | Colored pills for status, type, role (green/blue/amber/red/gray)    |
+| **cURL cards**          | Negotiations, Agreements, Transfers, EDR, BPN                       | Dark code block showing the real API call with a Copy button        |
+| **Breadcrumbs**         | All pages                                                           | "Dashboard > Section > Page" links at top for navigation context    |
+| **Modals**              | Agreements (retire), BPN (create/edit/delete)                       | Dark overlay with centered card, Cancel/Confirm buttons             |
+| **Detail drawer**       | EDR Management                                                      | Side panel sliding in from the right with full token details        |
+| **Toast notifications** | EDR, BPN, Catalog                                                   | Bottom-right popup confirming an action (fades after a few seconds) |
+| **Auto-refresh**        | Negotiations, Transfers                                             | Checkbox that enables polling every 30 seconds                      |
+| **Split-screen**        | Contract Builder                                                    | Form on left, live JSON preview on right                            |
+| **State machine**       | Negotiation Details                                                 | Visual circles + connecting lines showing protocol states           |
+| **Progress bars**       | Transfer History                                                    | Fill bar colored by state (blue/green/red)                          |
+| **Token masking**       | EDR, Settings                                                       | `•••••••` by default with reveal toggle                             |
 
 ---
 
 ## Glossary for Non-Technical Readers
 
-| Term | What It Means |
-|---|---|
-| **EDC** | Eclipse Dataspace Connector — the software that enables secure data sharing between organizations |
-| **Asset** | A piece of data or an API endpoint that can be shared with partners |
-| **Policy** | Rules that control who can access an asset and under what conditions |
-| **Contract Definition** | Combines an asset with policies to create an "offer" for the catalog |
-| **Catalog** | The marketplace where other connectors can discover your data offers |
-| **Negotiation** | The handshake process where two connectors agree on terms before sharing data |
-| **Agreement** | The finalized contract after a successful negotiation |
-| **Transfer** | The actual movement of data between connectors after an agreement is in place |
-| **EDR** | Endpoint Data Reference — the access token + URL needed to retrieve transferred data |
-| **BPN** | Business Partner Number — a unique ID for every organization in the Catena-X network |
-| **ODRL** | Open Digital Rights Language — the standard used to express policies |
-| **DID** | Decentralized Identifier — a self-owned identity like `did:web:example.com` |
-| **cURL** | A command-line tool for making API calls — shown in the mockups for developer reference |
+| Term                    | What It Means                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| **EDC**                 | Eclipse Dataspace Connector — the software that enables secure data sharing between organizations |
+| **Asset**               | A piece of data or an API endpoint that can be shared with partners                               |
+| **Policy**              | Rules that control who can access an asset and under what conditions                              |
+| **Contract Definition** | Combines an asset with policies to create an "offer" for the catalog                              |
+| **Catalog**             | The marketplace where other connectors can discover your data offers                              |
+| **Negotiation**         | The handshake process where two connectors agree on terms before sharing data                     |
+| **Agreement**           | The finalized contract after a successful negotiation                                             |
+| **Transfer**            | The actual movement of data between connectors after an agreement is in place                     |
+| **EDR**                 | Endpoint Data Reference — the access token + URL needed to retrieve transferred data              |
+| **BPN**                 | Business Partner Number — a unique ID for every organization in the Catena-X network              |
+| **ODRL**                | Open Digital Rights Language — the standard used to express policies                              |
+| **DID**                 | Decentralized Identifier — a self-owned identity like `did:web:example.com`                       |
+| **cURL**                | A command-line tool for making API calls — shown in the mockups for developer reference           |
 
 ---
 
 ## File Inventory
 
-| # | File | Page Title |
-|---|---|---|
-| 1 | `index.html` | Dashboard |
-| 2 | `assets-list.html` | Asset List |
-| 3 | `create-asset.html` | Create Asset |
-| 4 | `asset-details.html` | Asset Details |
-| 5 | `asset-edit.html` | Edit Asset |
-| 6 | `policies-list.html` | Policy List |
-| 7 | `create-policy.html` | Create Policy |
-| 8 | `policy-details.html` | Policy Details |
-| 9 | `policy-edit.html` | Edit Policy |
-| 10 | `contracts-dashboard.html` | Contract Definitions |
-| 11 | `contract-definition-builder.html` | Contract Builder |
-| 12 | `contract-definition-builder-1.html` | Contract Builder (v2) |
-| 13 | `catalog-browse.html` | Catalog Browse |
-| 14 | `contract-negotiation.html` | Contract Negotiation |
-| 15 | `negotiations-list.html` | Negotiations List |
-| 16 | `negotiation-details.html` | Negotiation Details |
-| 17 | `agreements-list.html` | Agreements List |
-| 18 | `contract-details.html` | Contract/Agreement Details |
-| 19 | `transfers-history.html` | Transfer History |
-| 20 | `transfer-details.html` | Transfer Details |
-| 21 | `initiate-transfer.html` | Initiate Transfer |
-| 22 | `edr-management.html` | EDR Token Management |
-| 23 | `data-pull-viewer.html` | Data Pull Viewer |
-| 24 | `bpn-groups.html` | BPN Group Management |
-| 25 | `connector-settings.html` | Connector Settings |
+> Click a filename to view it on GitHub.
+
+| #   | File                                 | Page Title                 |
+| --- | ------------------------------------ | -------------------------- |
+| 1   | [`index.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/index.html)                         | Dashboard                  |
+| 2   | [`assets-list.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/assets-list.html)                   | Asset List                 |
+| 3   | [`create-asset.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/create-asset.html)                  | Create Asset               |
+| 4   | [`asset-details.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/asset-details.html)                 | Asset Details              |
+| 5   | [`asset-edit.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/asset-edit.html)                    | Edit Asset                 |
+| 6   | [`policies-list.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/policies-list.html)                 | Policy List                |
+| 7   | [`create-policy.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/create-policy.html)                 | Create Policy              |
+| 8   | [`policy-details.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/policy-details.html)                | Policy Details             |
+| 9   | [`policy-edit.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/policy-edit.html)                   | Edit Policy                |
+| 10  | [`contracts-dashboard.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/contracts-dashboard.html)           | Contract Definitions       |
+| 11  | [`contract-definition-builder.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/contract-definition-builder.html)   | Contract Builder           |
+| 12  | [`contract-definition-builder-1.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/contract-definition-builder-1.html) | Contract Builder (v2)      |
+| 13  | [`catalog-browse.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/catalog-browse.html)                | Catalog Browse             |
+| 14  | [`contract-negotiation.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/contract-negotiation.html)          | Contract Negotiation       |
+| 15  | [`negotiations-list.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/negotiations-list.html)             | Negotiations List          |
+| 16  | [`negotiation-details.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/negotiation-details.html)           | Negotiation Details        |
+| 17  | [`agreements-list.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/agreements-list.html)               | Agreements List            |
+| 18  | [`contract-details.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/contract-details.html)              | Contract/Agreement Details |
+| 19  | [`transfers-history.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/transfers-history.html)             | Transfer History           |
+| 20  | [`transfer-details.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/transfer-details.html)              | Transfer Details           |
+| 21  | [`initiate-transfer.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/initiate-transfer.html)             | Initiate Transfer          |
+| 22  | [`edr-management.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/edr-management.html)                | EDR Token Management       |
+| 23  | [`data-pull-viewer.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/data-pull-viewer.html)              | Data Pull Viewer           |
+| 24  | [`bpn-groups.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/bpn-groups.html)                   | BPN Group Management       |
+| 25  | [`connector-settings.html`](https://github.com/Federity-X/public-tractusx-edc/blob/BE-170/edc-admin-panel-ui-walkthrough/samples/catalog-browser-ui/connector-settings.html)            | Connector Settings         |
