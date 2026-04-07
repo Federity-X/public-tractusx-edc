@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Asset - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size);
+            line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color);
+            background-color: var(--tblr-body-bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .subtitle {
+            color: var(--tblr-muted);
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: var(--tblr-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: var(--tblr-muted);
+            margin: 0 0.5rem;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--tblr-border-color);
+            background: var(--tblr-light);
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--tblr-dark);
+            font-size: 0.875rem;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: var(--tblr-danger);
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--tblr-body-color);
+            background-color: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: var(--tblr-primary);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(var(--tblr-primary-rgb), 0.25);
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            padding-right: 2.25rem;
+        }
+
+        .form-text {
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--tblr-muted);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+
+        .btn-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+            border-color: #004494;
+        }
+
+        .btn-secondary {
+            color: white;
+            background-color: var(--tblr-secondary);
+            border-color: var(--tblr-secondary);
+        }
+
+        .btn-outline-primary {
+            color: var(--tblr-primary);
+            background-color: transparent;
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-outline-primary:hover {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .btn-outline-secondary {
+            color: var(--tblr-secondary);
+            background-color: transparent;
+            border-color: var(--tblr-secondary);
+        }
+
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+        }
+
+        .alert-info {
+            color: #055160;
+            background-color: #cff4fc;
+            border-color: #b8daff;
+        }
+
+        .alert-success {
+            color: #0a3622;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+
+        .alert-danger {
+            color: #58151c;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
+        }
+
+        .alert-warning {
+            color: #664d03;
+            background-color: #fff3cd;
+            border-color: #ffecb5;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -0.75rem;
+            margin-left: -0.75rem;
+        }
+
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--tblr-body-color);
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.5rem 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid var(--tblr-border-color);
+        }
+
+        .table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid var(--tblr-border-color);
+            font-weight: 600;
+            color: var(--tblr-dark);
+            background-color: var(--tblr-light);
+        }
+
+        .text-muted {
+            color: var(--tblr-muted) !important;
+        }
+
+        .text-small {
+            font-size: 0.75rem;
+        }
+
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-2 { margin-bottom: 0.5rem !important; }
+        .mb-3 { margin-bottom: 1rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+        .ms-2 { margin-left: 0.5rem !important; }
+
+        .d-flex { display: flex !important; }
+        .d-none { display: none !important; }
+        .align-items-center { align-items: center !important; }
+        .justify-content-between { justify-content: space-between !important; }
+        .gap-2 { gap: 0.5rem !important; }
+
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .properties-table {
+            margin-top: 1rem;
+        }
+
+        .property-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: var(--tblr-light);
+            border-radius: 0.375rem;
+        }
+
+        .property-key {
+            flex: 1;
+            margin-right: 0.5rem;
+        }
+
+        .property-value {
+            flex: 2;
+            margin-right: 0.5rem;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step::before {
+            content: attr(data-step);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid var(--tblr-border-color);
+            border-radius: 50%;
+            background: white;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .step.active::before {
+            border-color: var(--tblr-primary);
+            background-color: var(--tblr-primary);
+            color: white;
+        }
+
+        .step.completed::before {
+            border-color: var(--tblr-success);
+            background-color: var(--tblr-success);
+            color: white;
+            content: "✓";
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 75%;
+            right: -25%;
+            height: 2px;
+            background: var(--tblr-border-color);
+            z-index: 1;
+        }
+
+        .step.completed:not(:last-child)::after {
+            background: var(--tblr-success);
+        }
+
+        .step-label {
+            margin-top: 2.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--tblr-muted);
+        }
+
+        .step.active .step-label {
+            color: var(--tblr-primary);
+        }
+
+        .step.completed .step-label {
+            color: var(--tblr-success);
+        }
+
+        @media (max-width: 768px) {
+            .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            .step-indicator {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .step::after {
+                display: none;
+            }
+            
+            .property-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .property-key,
+            .property-value {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">Dashboard</a>
+                <span>/</span>
+                <a href="assets-list.html">Assets</a>
+                <span>/</span>
+                <span>Create Asset</span>
+            </div>
+            <h1>Create New Asset</h1>
+            <div class="subtitle">Define and configure a new data asset for your EDC connector</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Progress Indicator -->
+        <div class="step-indicator">
+            <div class="step active" data-step="1" id="step-1">
+                <div class="step-label">Basic Information</div>
+            </div>
+            <div class="step" data-step="2" id="step-2">
+                <div class="step-label">Properties</div>
+            </div>
+            <div class="step" data-step="3" id="step-3">
+                <div class="step-label">Data Address</div>
+            </div>
+            <div class="step" data-step="4" id="step-4">
+                <div class="step-label">Review & Create</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Basic Information -->
+        <div class="card" id="basic-info-step">
+            <div class="card-header">
+                <h3 class="card-title">Step 1: Basic Asset Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Asset Basics:</strong> Define the fundamental properties that identify and describe your asset.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Asset ID</label>
+                            <input type="text" class="form-control" id="assetId" 
+                                   placeholder="e.g., asset.quality.data.v1">
+                            <div class="form-text">Unique identifier for this asset. Use dot notation (e.g., company.type.version)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Asset Name</label>
+                            <input type="text" class="form-control" id="assetName" 
+                                   placeholder="e.g., Quality Data Asset">
+                            <div class="form-text">Human-readable name for the asset</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Description</label>
+                    <textarea class="form-control" id="assetDescription" rows="3" 
+                              placeholder="Describe what this asset contains and its intended use..."></textarea>
+                    <div class="form-text">Detailed description of the asset's content and purpose</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label required">Content Type</label>
+                            <select class="form-control form-select" id="contentType">
+                                <option value="">Select content type</option>
+                                <option value="application/json">JSON (application/json)</option>
+                                <option value="application/xml">XML (application/xml)</option>
+                                <option value="text/csv">CSV (text/csv)</option>
+                                <option value="application/parquet">Parquet (application/parquet)</option>
+                                <option value="application/octet-stream">Binary (application/octet-stream)</option>
+                                <option value="text/plain">Text (text/plain)</option>
+                                <option value="custom">Custom Content Type</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Custom Content Type</label>
+                            <input type="text" class="form-control" id="customContentType" 
+                                   placeholder="e.g., application/x-automotive-data" disabled>
+                            <div class="form-text">Specify custom MIME type if "Custom" is selected</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Version</label>
+                            <input type="text" class="form-control" id="assetVersion" 
+                                   placeholder="e.g., 1.0.0" value="1.0.0">
+                            <div class="form-text">Asset version using semantic versioning</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-control form-select" id="assetCategory">
+                                <option value="">Select category</option>
+                                <option value="quality-data">Quality Data</option>
+                                <option value="production-data">Production Data</option>
+                                <option value="supply-chain">Supply Chain</option>
+                                <option value="financial-data">Financial Data</option>
+                                <option value="customer-data">Customer Data</option>
+                                <option value="sensor-data">Sensor Data</option>
+                                <option value="analytics">Analytics</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" onclick="proceedToProperties()">
+                        Next: Configure Properties
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Properties -->
+        <div class="card d-none" id="properties-step">
+            <div class="card-header">
+                <h3 class="card-title">Step 2: Asset Properties</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Custom Properties:</strong> Add key-value pairs to provide additional metadata about your asset.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Publisher</label>
+                            <input type="text" class="form-control" id="publisher" 
+                                   placeholder="e.g., SmartParts Industries">
+                            <div class="form-text">Organization publishing this asset</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Language</label>
+                            <select class="form-control form-select" id="language">
+                                <option value="en">English</option>
+                                <option value="de">German</option>
+                                <option value="fr">French</option>
+                                <option value="es">Spanish</option>
+                                <option value="it">Italian</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Keywords</label>
+                            <input type="text" class="form-control" id="keywords" 
+                                   placeholder="quality, automotive, metrics">
+                            <div class="form-text">Comma-separated keywords for discovery</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Data Classification</label>
+                            <select class="form-control form-select" id="dataClassification">
+                                <option value="public">Public</option>
+                                <option value="internal">Internal</option>
+                                <option value="confidential">Confidential</option>
+                                <option value="restricted">Restricted</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Custom Properties</h5>
+                <div class="properties-table">
+                    <div class="property-row">
+                        <input type="text" class="form-control property-key" placeholder="Property Key">
+                        <input type="text" class="form-control property-value" placeholder="Property Value">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="removeProperty(this)">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addProperty()">
+                    + Add Property
+                </button>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-secondary" onclick="backToBasicInfo()">
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary ms-2" onclick="proceedToDataAddress()">
+                        Next: Data Address
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Data Address -->
+        <div class="card d-none" id="data-address-step">
+            <div class="card-header">
+                <h3 class="card-title">Step 3: Data Address Configuration</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Data Location:</strong> Specify where and how the actual data can be accessed.
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Data Source Type</label>
+                    <select class="form-control form-select" id="dataSourceType" onchange="updateDataSourceFields()">
+                        <option value="">Select data source type</option>
+                        <option value="HttpData">HTTP/REST API</option>
+                        <option value="S3">Amazon S3</option>
+                        <option value="AzureStorage">Azure Blob Storage</option>
+                        <option value="Database">Database</option>
+                        <option value="FileSystem">File System</option>
+                        <option value="Kafka">Apache Kafka</option>
+                    </select>
+                </div>
+
+                <!-- HTTP Data Source Fields -->
+                <div id="http-fields" class="d-none">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label required">Base URL</label>
+                                <input type="url" class="form-control" id="httpBaseUrl" 
+                                       placeholder="https://api.example.com/data">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">HTTP Method</label>
+                                <select class="form-control form-select" id="httpMethod">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Authentication Type</label>
+                        <select class="form-control form-select" id="httpAuthType">
+                            <option value="none">None</option>
+                            <option value="basic">Basic Authentication</option>
+                            <option value="bearer">Bearer Token</option>
+                            <option value="api-key">API Key</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- S3 Data Source Fields -->
+                <div id="s3-fields" class="d-none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Bucket Name</label>
+                                <input type="text" class="form-control" id="s3Bucket" 
+                                       placeholder="my-data-bucket">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Object Key</label>
+                                <input type="text" class="form-control" id="s3Key" 
+                                       placeholder="data/quality-metrics.json">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">AWS Region</label>
+                        <input type="text" class="form-control" id="s3Region" 
+                               placeholder="us-east-1" value="us-east-1">
+                    </div>
+                </div>
+
+                <!-- Azure Storage Fields -->
+                <div id="azure-fields" class="d-none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Account Name</label>
+                                <input type="text" class="form-control" id="azureAccount" 
+                                       placeholder="mystorageaccount">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Container Name</label>
+                                <input type="text" class="form-control" id="azureContainer" 
+                                       placeholder="data-container">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Blob Name</label>
+                        <input type="text" class="form-control" id="azureBlob" 
+                               placeholder="quality-data/metrics.json">
+                    </div>
+                </div>
+
+                <!-- Database Fields -->
+                <div id="database-fields" class="d-none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Database Type</label>
+                                <select class="form-control form-select" id="dbType">
+                                    <option value="postgresql">PostgreSQL</option>
+                                    <option value="mysql">MySQL</option>
+                                    <option value="mssql">SQL Server</option>
+                                    <option value="oracle">Oracle</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Host</label>
+                                <input type="text" class="form-control" id="dbHost" 
+                                       placeholder="localhost:5432">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Database Name</label>
+                                <input type="text" class="form-control" id="dbName" 
+                                       placeholder="quality_db">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Table/Query</label>
+                                <input type="text" class="form-control" id="dbTable" 
+                                       placeholder="quality_metrics">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-secondary" onclick="backToProperties()">
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary ms-2" onclick="proceedToReview()">
+                        Next: Review & Create
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Review & Create -->
+        <div class="card d-none" id="review-step">
+            <div class="card-header">
+                <h3 class="card-title">Step 4: Review & Create Asset</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Review:</strong> Please review all asset details before creating. Once created, some properties cannot be easily modified.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Basic Information</h5>
+                        <table class="table">
+                            <tr>
+                                <td><strong>Asset ID:</strong></td>
+                                <td id="review-asset-id">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td id="review-asset-name">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td id="review-version">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Content Type:</strong></td>
+                                <td id="review-content-type">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Category:</strong></td>
+                                <td id="review-category">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Data Source</h5>
+                        <table class="table">
+                            <tr>
+                                <td><strong>Type:</strong></td>
+                                <td id="review-data-source">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td id="review-data-location">-</td>
+                            </tr>
+                        </table>
+                        
+                        <h5 class="mt-3">Properties</h5>
+                        <div id="review-properties">
+                            <!-- Properties will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Generated Asset JSON</h5>
+                <div class="code-block" id="asset-json-preview">
+                    <!-- JSON preview will be populated here -->
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-secondary" onclick="backToDataAddress()">
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary ms-2" onclick="createAsset()">
+                        Create Asset
+                    </button>
+                    <button type="button" class="btn btn-outline-primary ms-2" onclick="generateCurl()">
+                        Generate cURL
+                    </button>
+                </div>
+
+                <div id="curl-output" class="mt-3 d-none">
+                    <h5>cURL Command:</h5>
+                    <div class="code-block" id="curl-code"></div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="copyCurl()">
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Creation Success -->
+        <div class="card d-none" id="success-step">
+            <div class="card-header">
+                <h3 class="card-title">Asset Created Successfully!</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <strong>Success!</strong> Your asset has been created and is now available in your EDC connector.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Asset Details</h5>
+                        <table class="table">
+                            <tr>
+                                <td><strong>Asset ID:</strong></td>
+                                <td id="success-asset-id">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created:</strong></td>
+                                <td id="success-created">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td><span class="badge badge-success">ACTIVE</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Next Steps</h5>
+                        <div class="d-flex flex-column gap-2">
+                            <button type="button" class="btn btn-primary" onclick="createContractDefinition()">
+                                Create Contract Definition
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="viewAssetDetails()">
+                                View Asset Details
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="createAnotherAsset()">
+                                Create Another Asset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let assetData = {};
+
+        // Environment configurations
+        const environments = {
+            consumer: {
+                baseUrl: 'https://dataconsumer-1-controlplane.c.dsaas.tvsdevops.co.uk',
+                apiKey: 'TEST3'
+            },
+            provider: {
+                baseUrl: 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk',
+                apiKey: 'TEST2'
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up content type change handler
+            document.getElementById('contentType').addEventListener('change', function() {
+                const customField = document.getElementById('customContentType');
+                customField.disabled = this.value !== 'custom';
+                if (this.value !== 'custom') {
+                    customField.value = '';
+                }
+            });
+        });
+
+        function updateStepIndicator() {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step-${i}`);
+                step.classList.remove('active', 'completed');
+                
+                if (i < currentStep) {
+                    step.classList.add('completed');
+                } else if (i === currentStep) {
+                    step.classList.add('active');
+                }
+            }
+        }
+
+        function proceedToProperties() {
+            if (!validateBasicInfo()) return;
+            
+            currentStep = 2;
+            updateStepIndicator();
+            document.getElementById('basic-info-step').classList.add('d-none');
+            document.getElementById('properties-step').classList.remove('d-none');
+        }
+
+        function validateBasicInfo() {
+            const assetId = document.getElementById('assetId').value;
+            const assetName = document.getElementById('assetName').value;
+            const description = document.getElementById('assetDescription').value;
+            const contentType = document.getElementById('contentType').value;
+
+            if (!assetId || !assetName || !description || !contentType) {
+                alert('Please fill in all required fields (marked with *)');
+                return false;
+            }
+
+            return true;
+        }
+
+        function backToBasicInfo() {
+            currentStep = 1;
+            updateStepIndicator();
+            document.getElementById('properties-step').classList.add('d-none');
+            document.getElementById('basic-info-step').classList.remove('d-none');
+        }
+
+        function proceedToDataAddress() {
+            currentStep = 3;
+            updateStepIndicator();
+            document.getElementById('properties-step').classList.add('d-none');
+            document.getElementById('data-address-step').classList.remove('d-none');
+        }
+
+        function backToProperties() {
+            currentStep = 2;
+            updateStepIndicator();
+            document.getElementById('data-address-step').classList.add('d-none');
+            document.getElementById('properties-step').classList.remove('d-none');
+        }
+
+        function proceedToReview() {
+            if (!validateDataAddress()) return;
+            
+            currentStep = 4;
+            updateStepIndicator();
+            document.getElementById('data-address-step').classList.add('d-none');
+            document.getElementById('review-step').classList.remove('d-none');
+            
+            populateReview();
+        }
+
+        function validateDataAddress() {
+            const dataSourceType = document.getElementById('dataSourceType').value;
+            if (!dataSourceType) {
+                alert('Please select a data source type');
+                return false;
+            }
+
+            // Validate specific fields based on source type
+            if (dataSourceType === 'HttpData') {
+                const baseUrl = document.getElementById('httpBaseUrl').value;
+                if (!baseUrl) {
+                    alert('Please enter the base URL for HTTP data source');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function backToDataAddress() {
+            currentStep = 3;
+            updateStepIndicator();
+            document.getElementById('review-step').classList.add('d-none');
+            document.getElementById('data-address-step').classList.remove('d-none');
+        }
+
+        function populateReview() {
+            // Basic information
+            document.getElementById('review-asset-id').textContent = document.getElementById('assetId').value;
+            document.getElementById('review-asset-name').textContent = document.getElementById('assetName').value;
+            document.getElementById('review-version').textContent = document.getElementById('assetVersion').value || '1.0.0';
+            
+            const contentType = document.getElementById('contentType').value === 'custom' 
+                ? document.getElementById('customContentType').value 
+                : document.getElementById('contentType').value;
+            document.getElementById('review-content-type').textContent = contentType;
+            document.getElementById('review-category').textContent = document.getElementById('assetCategory').value || 'Not specified';
+
+            // Data source
+            const dataSourceType = document.getElementById('dataSourceType').value;
+            document.getElementById('review-data-source').textContent = dataSourceType;
+            
+            let dataLocation = '';
+            if (dataSourceType === 'HttpData') {
+                dataLocation = document.getElementById('httpBaseUrl').value;
+            } else if (dataSourceType === 'S3') {
+                dataLocation = `s3://${document.getElementById('s3Bucket').value}/${document.getElementById('s3Key').value}`;
+            }
+            document.getElementById('review-data-location').textContent = dataLocation;
+
+            // Properties
+            const propertiesDiv = document.getElementById('review-properties');
+            propertiesDiv.innerHTML = '';
+            
+            const propertyRows = document.querySelectorAll('.property-row');
+            propertyRows.forEach(row => {
+                const key = row.querySelector('.property-key').value;
+                const value = row.querySelector('.property-value').value;
+                if (key && value) {
+                    const propDiv = document.createElement('div');
+                    propDiv.innerHTML = `<strong>${key}:</strong> ${value}`;
+                    propertiesDiv.appendChild(propDiv);
+                }
+            });
+
+            // Generate JSON preview
+            generateAssetJson();
+        }
+
+        function generateAssetJson() {
+            assetData = {
+                "@context": {
+                    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+                },
+                "@type": "Asset",
+                "@id": document.getElementById('assetId').value,
+                properties: {
+                    name: document.getElementById('assetName').value,
+                    description: document.getElementById('assetDescription').value,
+                    contenttype: document.getElementById('contentType').value === 'custom' 
+                        ? document.getElementById('customContentType').value 
+                        : document.getElementById('contentType').value,
+                    version: document.getElementById('assetVersion').value || '1.0.0'
+                }
+            };
+
+            // Add optional properties
+            const publisher = document.getElementById('publisher').value;
+            if (publisher) assetData.properties.publisher = publisher;
+            
+            const language = document.getElementById('language').value;
+            if (language) assetData.properties.language = language;
+            
+            const keywords = document.getElementById('keywords').value;
+            if (keywords) assetData.properties.keywords = keywords;
+            
+            const category = document.getElementById('assetCategory').value;
+            if (category) assetData.properties.category = category;
+            
+            const classification = document.getElementById('dataClassification').value;
+            if (classification) assetData.properties['data-classification'] = classification;
+
+            // Add custom properties
+            const propertyRows = document.querySelectorAll('.property-row');
+            propertyRows.forEach(row => {
+                const key = row.querySelector('.property-key').value;
+                const value = row.querySelector('.property-value').value;
+                if (key && value) {
+                    assetData.properties[key] = value;
+                }
+            });
+
+            // Add data address
+            const dataSourceType = document.getElementById('dataSourceType').value;
+            assetData.dataAddress = {
+                "@type": "DataAddress",
+                type: dataSourceType
+            };
+
+            if (dataSourceType === 'HttpData') {
+                assetData.dataAddress.baseUrl = document.getElementById('httpBaseUrl').value;
+                assetData.dataAddress.method = document.getElementById('httpMethod').value;
+                const authType = document.getElementById('httpAuthType').value;
+                if (authType !== 'none') {
+                    assetData.dataAddress.authType = authType;
+                }
+            } else if (dataSourceType === 'S3') {
+                assetData.dataAddress.bucketName = document.getElementById('s3Bucket').value;
+                assetData.dataAddress.keyName = document.getElementById('s3Key').value;
+                assetData.dataAddress.region = document.getElementById('s3Region').value;
+            }
+
+            document.getElementById('asset-json-preview').textContent = JSON.stringify(assetData, null, 2);
+        }
+
+        function addProperty() {
+            const propertiesTable = document.querySelector('.properties-table');
+            const newRow = document.createElement('div');
+            newRow.className = 'property-row';
+            newRow.innerHTML = `
+                <input type="text" class="form-control property-key" placeholder="Property Key">
+                <input type="text" class="form-control property-value" placeholder="Property Value">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="removeProperty(this)">Remove</button>
+            `;
+            propertiesTable.appendChild(newRow);
+        }
+
+        function removeProperty(button) {
+            button.parentElement.remove();
+        }
+
+        function updateDataSourceFields() {
+            const sourceType = document.getElementById('dataSourceType').value;
+            
+            // Hide all fields
+            document.getElementById('http-fields').classList.add('d-none');
+            document.getElementById('s3-fields').classList.add('d-none');
+            document.getElementById('azure-fields').classList.add('d-none');
+            document.getElementById('database-fields').classList.add('d-none');
+            
+            // Show relevant fields
+            if (sourceType === 'HttpData') {
+                document.getElementById('http-fields').classList.remove('d-none');
+            } else if (sourceType === 'S3') {
+                document.getElementById('s3-fields').classList.remove('d-none');
+            } else if (sourceType === 'AzureStorage') {
+                document.getElementById('azure-fields').classList.remove('d-none');
+            } else if (sourceType === 'Database') {
+                document.getElementById('database-fields').classList.remove('d-none');
+            }
+        }
+
+        function createAsset() {
+            if (confirm('Create this asset? This will register the asset in your EDC connector.')) {
+                // Simulate asset creation
+                setTimeout(() => {
+                    document.getElementById('review-step').classList.add('d-none');
+                    document.getElementById('success-step').classList.remove('d-none');
+                    
+                    document.getElementById('success-asset-id').textContent = assetData['@id'];
+                    document.getElementById('success-created').textContent = new Date().toLocaleString();
+                }, 1000);
+            }
+        }
+
+        function generateCurl() {
+            const curlOutput = document.getElementById('curl-output');
+            const curlCode = document.getElementById('curl-code');
+            
+            // Use provider environment for asset creation
+            const curlCommand = `curl -X POST \\
+  "${environments.provider.baseUrl}/management/v3/assets" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Api-Key: ${environments.provider.apiKey}" \\
+  -d '${JSON.stringify(assetData, null, 2)}'`;
+            
+            curlCode.textContent = curlCommand;
+            curlOutput.classList.remove('d-none');
+        }
+
+        function copyCurl() {
+            const curlCode = document.getElementById('curl-code');
+            navigator.clipboard.writeText(curlCode.textContent).then(() => {
+                alert('cURL command copied to clipboard!');
+            });
+        }
+
+        function createContractDefinition() {
+            window.location.href = 'contract-definition-builder.html?assetId=' + encodeURIComponent(assetData['@id']);
+        }
+
+        function viewAssetDetails() {
+            alert('Asset details view would open here with complete asset information and management options.');
+        }
+
+        function createAnotherAsset() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>

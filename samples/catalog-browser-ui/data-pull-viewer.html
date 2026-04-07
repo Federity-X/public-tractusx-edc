@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pull Viewer - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size); line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color); background: var(--tblr-body-bg);
+        }
+        .header {
+            background: white; border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header h1 { font-size: 1.5rem; font-weight: 600; color: var(--tblr-dark); }
+        .breadcrumb { font-size: 0.8125rem; color: var(--tblr-muted); }
+        .breadcrumb a { color: var(--tblr-primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .btn {
+            padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem;
+            font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-primary { background: var(--tblr-primary); color: white; }
+        .btn-primary:hover { background: #004494; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-success { background: var(--tblr-success); color: white; }
+        .btn-success:hover { background: #27a03d; }
+        .btn-danger { background: var(--tblr-danger); color: white; }
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .card { background: white; border: 1px solid var(--tblr-border-color); border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
+        .card-header {
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--tblr-border-color);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-title { font-weight: 600; font-size: 1rem; }
+        .card-body { padding: 1.5rem; }
+        .form-control {
+            width: 100%; padding: 0.4375rem 0.75rem; border: 1px solid var(--tblr-border-color);
+            border-radius: 6px; font-size: 0.8125rem; background: white; color: var(--tblr-body-color);
+        }
+        .form-control:focus { outline: none; border-color: var(--tblr-primary); box-shadow: 0 0 0 3px rgba(var(--tblr-primary-rgb),0.1); }
+        select.form-control { appearance: auto; }
+        .mono { font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.8125rem; }
+        .filter-group label {
+            display: block; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.4px; color: var(--tblr-muted); margin-bottom: 0.25rem;
+        }
+
+        /* Step indicators */
+        .steps { display: flex; gap: 0; margin-bottom: 2rem; }
+        .step {
+            flex: 1; text-align: center; padding: 0.75rem 1rem; position: relative;
+            border-bottom: 3px solid var(--tblr-border-color); color: var(--tblr-muted);
+            transition: all 0.3s;
+        }
+        .step.active { border-bottom-color: var(--tblr-primary); color: var(--tblr-primary); font-weight: 600; }
+        .step.done { border-bottom-color: var(--tblr-success); color: var(--tblr-success); }
+        .step-num {
+            display: inline-flex; width: 24px; height: 24px; border-radius: 50%;
+            align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;
+            background: var(--tblr-border-color); color: white; margin-right: 0.5rem;
+        }
+        .step.active .step-num { background: var(--tblr-primary); }
+        .step.done .step-num { background: var(--tblr-success); }
+        .step-label { font-size: 0.8125rem; }
+
+        /* Endpoint info display */
+        .endpoint-info {
+            background: #f1f5f9; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem;
+        }
+        .endpoint-row { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+        .endpoint-row:last-child { margin-bottom: 0; }
+        .endpoint-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--tblr-muted); width: 120px; flex-shrink: 0; }
+        .endpoint-value { font-family: monospace; font-size: 0.8125rem; word-break: break-all; }
+
+        /* Token display */
+        .token-box {
+            background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px;
+            font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.75rem;
+            word-break: break-all; position: relative; max-height: 120px; overflow-y: auto;
+        }
+        .token-actions { position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; }
+        .token-actions button {
+            background: #334155; border: 1px solid #475569; color: #94a3b8; cursor: pointer;
+            padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.6875rem;
+        }
+        .token-actions button:hover { background: #475569; color: white; }
+
+        /* Response area */
+        .response-area {
+            background: #1e293b; border-radius: 8px; min-height: 200px; padding: 1rem;
+            overflow: auto; max-height: 500px;
+        }
+        .response-area pre {
+            color: #e2e8f0; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.75rem; white-space: pre-wrap; word-break: break-all;
+        }
+        .response-meta { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
+        .response-meta-item { font-size: 0.8125rem; }
+        .response-meta-label { font-weight: 600; color: var(--tblr-muted); }
+
+        .badge {
+            display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+            font-size: 0.6875rem; font-weight: 600;
+        }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fce4ec; color: #9a1b5b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-warning { background: #fff8e1; color: #b45309; }
+
+        /* History */
+        .history-item {
+            border: 1px solid var(--tblr-border-color-light); border-radius: 6px;
+            padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: flex;
+            justify-content: space-between; align-items: center; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .history-item:hover { background: #f8fafc; }
+        .history-left { display: flex; align-items: center; gap: 0.75rem; }
+
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; padding: 0.75rem 1.25rem;
+            background: var(--tblr-dark); color: white; border-radius: 8px; font-size: 0.8125rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); opacity: 0; transform: translateY(10px);
+            transition: all 0.3s; z-index: 999; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <div class="breadcrumb"><a href="index.html">Dashboard</a> / <a href="edr-management.html">EDR Management</a> / Data Pull Viewer</div>
+                <h1>📡 Data Pull Viewer</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Steps -->
+        <div class="steps">
+            <div class="step active" id="step1"><span class="step-num">1</span><span class="step-label">Select EDR</span></div>
+            <div class="step" id="step2"><span class="step-num">2</span><span class="step-label">Review Endpoint</span></div>
+            <div class="step" id="step3"><span class="step-num">3</span><span class="step-label">Execute & View Response</span></div>
+        </div>
+
+        <!-- Step 1: Select EDR -->
+        <div id="panel1">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Select an EDR Token</span></div>
+                <div class="card-body">
+                    <div class="filter-group" style="margin-bottom:1rem;">
+                        <label>Transfer Process</label>
+                        <select class="form-control" id="edrSelect" onchange="onEdrSelected()">
+                            <option value="">-- Choose a transfer process --</option>
+                        </select>
+                    </div>
+                    <div id="edrPreview" class="hidden">
+                        <div class="endpoint-info">
+                            <div class="endpoint-row"><div class="endpoint-label">Transfer ID</div><div class="endpoint-value" id="prevTpId"></div></div>
+                            <div class="endpoint-row"><div class="endpoint-label">Agreement</div><div class="endpoint-value" id="prevAgrId"></div></div>
+                            <div class="endpoint-row"><div class="endpoint-label">Asset</div><div class="endpoint-value" id="prevAsset"></div></div>
+                            <div class="endpoint-row"><div class="endpoint-label">Status</div><div id="prevStatus"></div></div>
+                        </div>
+                        <button class="btn btn-primary" onclick="goToStep2()">Continue with this EDR →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Review Endpoint -->
+        <div id="panel2" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Endpoint & Authorization</span>
+                    <button class="btn btn-sm btn-secondary" onclick="goToStep1()">← Back</button>
+                </div>
+                <div class="card-body">
+                    <div class="endpoint-info" style="margin-bottom:1.25rem;">
+                        <div class="endpoint-row"><div class="endpoint-label">Endpoint URL</div><div class="endpoint-value" id="endpointUrl"></div></div>
+                        <div class="endpoint-row"><div class="endpoint-label">Auth Type</div><div class="endpoint-value" id="authType"></div></div>
+                        <div class="endpoint-row"><div class="endpoint-label">Content Type</div><div class="endpoint-value">application/json</div></div>
+                    </div>
+
+                    <div class="filter-group" style="margin-bottom:1rem;">
+                        <label>Authorization Token (Bearer)</label>
+                        <div class="token-box" id="tokenBox">
+                            <div class="token-actions">
+                                <button onclick="toggleToken()">👁️</button>
+                                <button onclick="copyToken()">📋</button>
+                            </div>
+                            <span id="tokenDisplay"></span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:0.75rem;">
+                        <button class="btn btn-success" onclick="executeRequest()">▶ Execute GET Request</button>
+                        <button class="btn btn-secondary" onclick="copyCurl()">📋 Copy as cURL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Response -->
+        <div id="panel3" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Response</span>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-sm btn-primary" onclick="executeRequest()">🔄 Re-run</button>
+                        <button class="btn btn-sm btn-secondary" onclick="goToStep2()">← Back</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="response-meta" id="responseMeta">
+                        <div class="response-meta-item"><span class="response-meta-label">Status: </span><span id="respStatus"></span></div>
+                        <div class="response-meta-item"><span class="response-meta-label">Time: </span><span id="respTime"></span></div>
+                        <div class="response-meta-item"><span class="response-meta-label">Size: </span><span id="respSize"></span></div>
+                    </div>
+                    <div class="response-area"><pre id="responseBody"></pre></div>
+                </div>
+            </div>
+
+            <!-- Request History -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">Request History</span></div>
+                <div class="card-body" id="historyBody">
+                    <div style="text-align:center;color:var(--tblr-muted);padding:1rem;">No requests yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        var MOCK_EDRS = [
+            { tpId: 'tp-a1b2c3d4-5678-90ab-cdef-111111111111', agrId: 'agr-11111111-1111-1111-1111-111111111111', asset: 'urn:cx:asset:material:battery-cell-chemistry:v2.0', provider: 'BPNL00000003AZQP', status: 'VALID', endpoint: 'https://connector.catena-x.net/public/api/v1/data/battery-cell-chemistry', token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb25uZWN0b3IuY2F0ZW5hLXgubmV0Iiwic3ViIjoiQlBOTDAwMDAwMDAzU0VMRiIsImF1ZCI6IkJQTkwwMDAwMDAwM0FaUVAiLCJleHAiOjE3MzUxMjM0NTYsImNpZCI6ImFnci0xMTExMTExMS0xMTExIiwiZGF0IjoiYmF0dGVyeS1jZWxsLWNoZW1pc3RyeSJ9.mock_signature_value_1234567890' },
+            { tpId: 'tp-e5f6a7b8-1234-56cd-ef78-222222222222', agrId: 'agr-22222222-2222-2222-2222-222222222222', asset: 'urn:cx:asset:pcf:product-carbon-footprint:v3.0', provider: 'BPNL00000003CRHK', status: 'VALID', endpoint: 'https://connector.catena-x.net/public/api/v1/data/pcf-exchange', token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb25uZWN0b3IuY2F0ZW5hLXgubmV0Iiwic3ViIjoiQlBOTDAwMDAwMDAzU0VMRiIsImF1ZCI6IkJQTkwwMDAwMDAwM0NSSEsiLCJleHAiOjE3MzUyMzQ1NjcsImNpZCI6ImFnci0yMjIyMjIyMi0yMjIyIiwiZGF0IjoicGNmLWV4Y2hhbmdlIn0.mock_signature_pcf_0987654321' },
+            { tpId: 'tp-c9d0e1f2-3456-78ab-cdef-333333333333', agrId: 'agr-33333333-3333-3333-3333-333333333333', asset: 'urn:cx:asset:quality:parts-quality-alert:v1.0', provider: 'BPNL00000003MNOP', status: 'EXPIRING', endpoint: 'https://connector.catena-x.net/public/api/v1/data/quality-alert', token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb25uZWN0b3IuY2F0ZW5hLXgubmV0Iiwic3ViIjoiQlBOTDAwMDAwMDAzU0VMRiIsImF1ZCI6IkJQTkwwMDAwMDAwM01OT1AiLCJleHAiOjE3MzUwMTIzNDUsImNpZCI6ImFnci0zMzMzMzMzMy0zMzMzIiwiZGF0IjoicXVhbGl0eS1hbGVydCJ9.mock_signature_quality_555' },
+            { tpId: 'tp-a4b5c6d7-8901-23ef-ghij-444444444444', agrId: 'agr-44444444-4444-4444-4444-444444444444', asset: 'urn:cx:asset:traceability:serial-part:v3.0', provider: 'BPNL00000003HIJK', status: 'EXPIRED', endpoint: 'https://connector.catena-x.net/public/api/v1/data/serial-part', token: 'eyJhbGciOiJSUzI1NiJ9.EXPIRED_TOKEN' }
+        ];
+
+        var MOCK_RESPONSES = {
+            'tp-a1b2c3d4-5678-90ab-cdef-111111111111': {
+                status: 200,
+                body: {
+                    "cellChemistry": "NMC811",
+                    "cathodeActiveMaterial": "LiNi0.8Mn0.1Co0.1O2",
+                    "anodeMaterial": "Graphite",
+                    "electrolyteComposition": "LiPF6 in EC/DMC",
+                    "nominalVoltage": "3.7V",
+                    "capacity": "94Ah",
+                    "energyDensity": "265 Wh/kg",
+                    "cycleLife": 1500,
+                    "manufacturer": "ACME Battery Corp",
+                    "certifications": ["UN38.3", "IEC62660"],
+                    "lastUpdated": "2025-01-10T14:30:00Z"
+                }
+            },
+            'tp-e5f6a7b8-1234-56cd-ef78-222222222222': {
+                status: 200,
+                body: {
+                    "productCarbonFootprint": {
+                        "declaredUnit": "kilogram",
+                        "unitaryProductAmount": 1.0,
+                        "pcfExcludingBiogenic": 2.56,
+                        "pcfIncludingBiogenic": 2.31,
+                        "fossilGhgEmissions": 1.89,
+                        "biogenicCarbonEmissionsOtherThanCO2": 0.12,
+                        "referencePeriodStart": "2024-01-01",
+                        "referencePeriodEnd": "2024-12-31",
+                        "geographyCountry": "DE",
+                        "boundaryProcessesDescription": "Cradle-to-gate"
+                    },
+                    "companyName": "Catena-X Partner GmbH",
+                    "specVersion": "3.0.0",
+                    "status": "Active"
+                }
+            },
+            'tp-c9d0e1f2-3456-78ab-cdef-333333333333': {
+                status: 200,
+                body: {
+                    "qualityAlert": {
+                        "alertId": "QA-2025-00142",
+                        "severity": "CRITICAL",
+                        "affectedParts": ["SER-001-ABC", "SER-002-DEF"],
+                        "description": "Potential thermal runaway risk in batch B2024-Q4",
+                        "createdAt": "2025-01-08T09:15:00Z",
+                        "status": "OPEN"
+                    }
+                }
+            },
+            'tp-a4b5c6d7-8901-23ef-ghij-444444444444': {
+                status: 401,
+                body: { "error": "Token expired", "message": "The EDR token has expired. Please refresh the token via the EDR cache API." }
+            }
+        };
+
+        var tokenRevealed = false;
+        var selectedEdr = null;
+        var requestHistory = [];
+
+        function init() {
+            populateSelect();
+            var params = new URLSearchParams(window.location.search);
+            var tp = params.get('tp');
+            if (tp) {
+                document.getElementById('edrSelect').value = tp;
+                onEdrSelected();
+            }
+        }
+
+        function populateSelect() {
+            var sel = document.getElementById('edrSelect');
+            MOCK_EDRS.forEach(function(edr) {
+                var opt = document.createElement('option');
+                opt.value = edr.tpId;
+                opt.textContent = edr.tpId.substring(0, 28) + '... (' + edr.asset.split(':').pop() + ')';
+                sel.appendChild(opt);
+            });
+        }
+
+        function onEdrSelected() {
+            var tpId = document.getElementById('edrSelect').value;
+            if (!tpId) { document.getElementById('edrPreview').classList.add('hidden'); return; }
+            selectedEdr = MOCK_EDRS.find(function(e) { return e.tpId === tpId; });
+            if (!selectedEdr) return;
+            document.getElementById('prevTpId').textContent = selectedEdr.tpId;
+            document.getElementById('prevAgrId').textContent = selectedEdr.agrId;
+            document.getElementById('prevAsset').textContent = selectedEdr.asset;
+            var statusColors = { VALID: 'success', EXPIRING: 'warning', EXPIRED: 'danger' };
+            document.getElementById('prevStatus').innerHTML = '<span class="badge badge-' + (statusColors[selectedEdr.status] || 'info') + '">' + selectedEdr.status + '</span>';
+            document.getElementById('edrPreview').classList.remove('hidden');
+        }
+
+        function goToStep1() { setStep(1); }
+        function goToStep2() {
+            if (!selectedEdr) { showToast('Select an EDR first'); return; }
+            setStep(2);
+            document.getElementById('endpointUrl').textContent = selectedEdr.endpoint;
+            document.getElementById('authType').textContent = 'Bearer Token (from EDR DataAddress)';
+            tokenRevealed = false;
+            document.getElementById('tokenDisplay').textContent = maskToken(selectedEdr.token);
+        }
+
+        function setStep(n) {
+            ['step1','step2','step3'].forEach(function(id, i) {
+                var el = document.getElementById(id);
+                el.classList.remove('active','done');
+                if (i + 1 < n) el.classList.add('done');
+                if (i + 1 === n) el.classList.add('active');
+            });
+            document.getElementById('panel1').classList.toggle('hidden', n !== 1);
+            document.getElementById('panel2').classList.toggle('hidden', n !== 2);
+            document.getElementById('panel3').classList.toggle('hidden', n !== 3);
+        }
+
+        function maskToken(token) { return token.substring(0, 20) + '...' + token.substring(token.length - 10); }
+
+        function toggleToken() {
+            tokenRevealed = !tokenRevealed;
+            document.getElementById('tokenDisplay').textContent = tokenRevealed ? selectedEdr.token : maskToken(selectedEdr.token);
+        }
+
+        function copyToken() {
+            navigator.clipboard.writeText(selectedEdr.token);
+            showToast('Token copied');
+        }
+
+        function copyCurl() {
+            var cmd = 'curl -X GET "' + selectedEdr.endpoint + '" \\\n' +
+                '  -H "Authorization: Bearer ' + selectedEdr.token.substring(0, 30) + '..."';
+            navigator.clipboard.writeText(cmd);
+            showToast('cURL copied');
+        }
+
+        function executeRequest() {
+            if (!selectedEdr) return;
+            setStep(3);
+            var resp = MOCK_RESPONSES[selectedEdr.tpId];
+            var latency = Math.floor(Math.random() * 200) + 50;
+
+            // Simulate loading
+            document.getElementById('responseBody').textContent = 'Sending GET ' + selectedEdr.endpoint + ' ...\n\nWaiting for response...';
+            document.getElementById('respStatus').innerHTML = '<span class="badge badge-info">Pending...</span>';
+            document.getElementById('respTime').textContent = '-';
+            document.getElementById('respSize').textContent = '-';
+
+            setTimeout(function() {
+                var bodyStr = JSON.stringify(resp.body, null, 2);
+                document.getElementById('responseBody').textContent = bodyStr;
+                var isOk = resp.status >= 200 && resp.status < 300;
+                document.getElementById('respStatus').innerHTML = '<span class="badge badge-' + (isOk ? 'success' : 'danger') + '">' + resp.status + ' ' + (isOk ? 'OK' : 'Unauthorized') + '</span>';
+                document.getElementById('respTime').textContent = latency + 'ms';
+                document.getElementById('respSize').textContent = (bodyStr.length / 1024).toFixed(1) + ' KB';
+
+                // Add to history
+                requestHistory.unshift({
+                    time: new Date().toLocaleTimeString(),
+                    status: resp.status,
+                    asset: selectedEdr.asset.split(':').pop(),
+                    latency: latency
+                });
+                renderHistory();
+            }, latency);
+        }
+
+        function renderHistory() {
+            var html = '';
+            requestHistory.forEach(function(h) {
+                var isOk = h.status >= 200 && h.status < 300;
+                html += '<div class="history-item">' +
+                    '<div class="history-left"><span class="badge badge-' + (isOk ? 'success' : 'danger') + '">' + h.status + '</span>' +
+                    '<span style="font-size:0.8125rem;">' + h.asset + '</span></div>' +
+                    '<div style="font-size:0.75rem;color:var(--tblr-muted);">' + h.time + ' &middot; ' + h.latency + 'ms</div></div>';
+            });
+            document.getElementById('historyBody').innerHTML = html || '<div style="text-align:center;color:var(--tblr-muted);padding:1rem;">No requests yet</div>';
+        }
+
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Negotiations - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size); line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color); background: var(--tblr-body-bg);
+        }
+        .header {
+            background: white; border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header h1 { font-size: 1.5rem; font-weight: 600; color: var(--tblr-dark); }
+        .breadcrumb { font-size: 0.8125rem; color: var(--tblr-muted); }
+        .breadcrumb a { color: var(--tblr-primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+        .btn {
+            padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem;
+            font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-primary { background: var(--tblr-primary); color: white; }
+        .btn-primary:hover { background: #004494; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 2rem; }
+        .auto-refresh { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--tblr-muted); cursor: pointer; }
+        .auto-refresh input { cursor: pointer; }
+
+        /* Stats */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white; border-radius: 8px; padding: 1.25rem 1.5rem;
+            border: 1px solid var(--tblr-border-color); border-left: 4px solid;
+        }
+        .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; }
+        .stat-card .stat-label { font-size: 0.75rem; color: var(--tblr-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px; }
+        .stat-total { border-left-color: var(--tblr-primary); } .stat-total .stat-value { color: var(--tblr-primary); }
+        .stat-requested { border-left-color: var(--tblr-warning); } .stat-requested .stat-value { color: var(--tblr-warning); }
+        .stat-agreed { border-left-color: var(--tblr-info); } .stat-agreed .stat-value { color: var(--tblr-info); }
+        .stat-finalized { border-left-color: var(--tblr-success); } .stat-finalized .stat-value { color: var(--tblr-success); }
+        .stat-terminated { border-left-color: var(--tblr-danger); } .stat-terminated .stat-value { color: var(--tblr-danger); }
+
+        /* Filters */
+        .filters-card {
+            background: white; border: 1px solid var(--tblr-border-color); border-radius: 8px;
+            padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+        }
+        .filters-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .filters-header span { font-weight: 600; font-size: 0.875rem; }
+        .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.75rem; align-items: end; }
+        .filter-group label { display: block; font-size: 0.6875rem; font-weight: 600; color: var(--tblr-muted); text-transform: uppercase; margin-bottom: 0.25rem; }
+        .form-control, .form-select {
+            width: 100%; padding: 0.4375rem 0.75rem; border: 1px solid var(--tblr-border-color);
+            border-radius: 6px; font-size: 0.8125rem; background: white; color: var(--tblr-body-color);
+        }
+        .form-control:focus, .form-select:focus { outline: none; border-color: var(--tblr-primary); box-shadow: 0 0 0 3px rgba(var(--tblr-primary-rgb),0.1); }
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+
+        /* Table */
+        .card {
+            background: white; border: 1px solid var(--tblr-border-color); border-radius: 8px; overflow: hidden;
+        }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            padding: 0.75rem 1rem; text-align: left; font-size: 0.6875rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px; color: var(--tblr-muted);
+            background: #f8fafc; border-bottom: 2px solid var(--tblr-border-color); cursor: pointer;
+        }
+        th:hover { background: #f1f5f9; }
+        td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--tblr-border-color-light); font-size: 0.8125rem; }
+        tr:hover { background: #f8fafc; }
+        .id-cell { font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.75rem; color: var(--tblr-primary); }
+        .id-cell a { color: var(--tblr-primary); text-decoration: none; }
+        .id-cell a:hover { text-decoration: underline; }
+
+        /* Badges */
+        .badge {
+            display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+            font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .badge-initial { background: #f1f5f9; color: #475569; }
+        .badge-requesting { background: #fef3c7; color: #92400e; }
+        .badge-requested { background: #fef3c7; color: #92400e; }
+        .badge-agreeing { background: #dbeafe; color: #1e40af; }
+        .badge-agreed { background: #dbeafe; color: #1e40af; }
+        .badge-verified { background: #e0f2fe; color: #075985; }
+        .badge-finalized { background: #dcfce7; color: #166534; }
+        .badge-terminated { background: #fee2e2; color: #991b1b; }
+        .badge-provider { background: #ede9fe; color: #6d28d9; }
+        .badge-consumer { background: #fff7ed; color: #9a3412; }
+
+        /* Actions */
+        .actions { display: flex; gap: 0.25rem; }
+        .icon-btn {
+            padding: 0.375rem; background: none; border: none; cursor: pointer;
+            border-radius: 4px; font-size: 0.875rem; transition: background 0.15s;
+        }
+        .icon-btn:hover { background: #f1f5f9; }
+        .icon-btn.danger:hover { background: #fee2e2; }
+
+        /* Pagination */
+        .pagination {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.75rem 1rem; border-top: 1px solid var(--tblr-border-color);
+        }
+        .pagination-info { font-size: 0.8125rem; color: var(--tblr-muted); }
+        .pagination-controls { display: flex; align-items: center; gap: 0.5rem; }
+        .page-btn {
+            padding: 0.375rem 0.75rem; border: 1px solid var(--tblr-border-color);
+            border-radius: 4px; background: white; cursor: pointer; font-size: 0.8125rem;
+        }
+        .page-btn:hover { background: #f1f5f9; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: var(--tblr-primary); color: white; border-color: var(--tblr-primary); }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; padding: 0.75rem 1.25rem;
+            background: var(--tblr-dark); color: white; border-radius: 8px; font-size: 0.8125rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); opacity: 0; transform: translateY(10px);
+            transition: all 0.3s; z-index: 999; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* cURL card */
+        .curl-card {
+            background: #1e293b; border-radius: 8px; margin-top: 1.5rem; overflow: hidden;
+        }
+        .curl-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.625rem 1rem; background: #334155; font-size: 0.75rem; color: #94a3b8;
+        }
+        .curl-card-header button { background: none; border: 1px solid #475569; color: #94a3b8; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.6875rem; }
+        .curl-card-header button:hover { background: #475569; color: white; }
+        .curl-body { padding: 1rem; overflow-x: auto; }
+        .curl-body pre { color: #e2e8f0; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all; }
+
+        @media (max-width: 768px) {
+            .filters-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <div class="breadcrumb"><a href="index.html">Dashboard</a> / Contract Negotiations</div>
+                <h1>🤝 Contract Negotiations</h1>
+            </div>
+        </div>
+        <div class="header-actions">
+            <label class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()"> Auto-refresh (30s)
+            </label>
+            <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+            <button class="btn btn-primary" onclick="window.location.href='contract-negotiation.html'">🤝 Start Negotiation</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card stat-total"><div class="stat-value" id="totalCount">24</div><div class="stat-label">Total</div></div>
+            <div class="stat-card stat-requested"><div class="stat-value" id="requestedCount">3</div><div class="stat-label">Requesting</div></div>
+            <div class="stat-card stat-agreed"><div class="stat-value" id="agreedCount">5</div><div class="stat-label">Agreed</div></div>
+            <div class="stat-card stat-finalized"><div class="stat-value" id="finalizedCount">14</div><div class="stat-label">Finalized</div></div>
+            <div class="stat-card stat-terminated"><div class="stat-value" id="terminatedCount">2</div><div class="stat-label">Terminated</div></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-card">
+            <div class="filters-header">
+                <span>Filters</span>
+                <button class="btn btn-sm btn-secondary" onclick="clearFilters()">Clear All</button>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by ID, counterparty, asset..." oninput="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>State</label>
+                    <select class="form-select" id="stateFilter" onchange="applyFilters()">
+                        <option value="">All States</option>
+                        <option value="REQUESTING">Requesting</option>
+                        <option value="REQUESTED">Requested</option>
+                        <option value="AGREEING">Agreeing</option>
+                        <option value="AGREED">Agreed</option>
+                        <option value="VERIFIED">Verified</option>
+                        <option value="FINALIZED">Finalized</option>
+                        <option value="TERMINATED">Terminated</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Role</label>
+                    <select class="form-select" id="roleFilter" onchange="applyFilters()">
+                        <option value="">All Roles</option>
+                        <option value="PROVIDER">Provider</option>
+                        <option value="CONSUMER">Consumer</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <select class="form-select" id="dateFilter" onchange="applyFilters()">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-sm btn-secondary" onclick="exportNegotiations()">📥 Export</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('id')">Negotiation ID</th>
+                            <th onclick="sortTable('state')">State</th>
+                            <th onclick="sortTable('role')">Role</th>
+                            <th onclick="sortTable('counterparty')">Counterparty</th>
+                            <th onclick="sortTable('protocol')">Protocol</th>
+                            <th onclick="sortTable('createdAt')">Created</th>
+                            <th onclick="sortTable('updatedAt')">Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="pagination-info">
+                    Showing <strong id="showStart">1</strong> to <strong id="showEnd">10</strong> of <strong id="showTotal">24</strong>
+                </div>
+                <div class="pagination-controls">
+                    <select class="form-select" style="width:auto;" onchange="changePerPage(this.value)">
+                        <option value="10">10 per page</option>
+                        <option value="25" selected>25 per page</option>
+                        <option value="50">50 per page</option>
+                    </select>
+                    <button class="page-btn" id="prevBtn" onclick="prevPage()" disabled>&larr; Previous</button>
+                    <span id="pageNumbers"></span>
+                    <button class="page-btn" id="nextBtn" onclick="nextPage()">Next &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- cURL Preview -->
+        <div class="curl-card">
+            <div class="curl-card-header">
+                <span>cURL — List Contract Negotiations</span>
+                <button onclick="copyCurl()">📋 Copy</button>
+            </div>
+            <div class="curl-body">
+                <pre id="curlPreview"></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Mock data
+        var MOCK_NEGOTIATIONS = [
+            { id: 'neg-a1b2c3d4-e5f6-7890-abcd-ef1234567890', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:battery-passport:v2.0', agreementId: 'agr-001-battery', createdAt: '2026-04-07T08:15:00Z', updatedAt: '2026-04-07T08:16:45Z' },
+            { id: 'neg-b2c3d4e5-f6a7-8901-bcde-f12345678901', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003CRHK', counterpartyAddress: 'https://provider-b.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:pcf-gearbox:v1.0', agreementId: 'agr-002-pcf', createdAt: '2026-04-07T07:30:00Z', updatedAt: '2026-04-07T07:32:12Z' },
+            { id: 'neg-c3d4e5f6-a7b8-9012-cdef-123456789012', state: 'REQUESTING', role: 'CONSUMER', counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:quality-data:v3.0', agreementId: null, createdAt: '2026-04-07T10:00:00Z', updatedAt: '2026-04-07T10:00:15Z' },
+            { id: 'neg-d4e5f6a7-b8c9-0123-defa-234567890123', state: 'AGREED', role: 'PROVIDER', counterpartyId: 'BPNL00000003XYZW', counterpartyAddress: 'https://consumer-x.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:dtr-registry:v2.0', agreementId: null, createdAt: '2026-04-06T14:20:00Z', updatedAt: '2026-04-06T14:22:30Z' },
+            { id: 'neg-e5f6a7b8-c9d0-1234-efab-345678901234', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003MNOP', counterpartyAddress: 'https://provider-m.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:part-type:v1.0', agreementId: 'agr-003-part', createdAt: '2026-04-06T11:00:00Z', updatedAt: '2026-04-06T11:03:00Z' },
+            { id: 'neg-f6a7b8c9-d0e1-2345-fabc-456789012345', state: 'TERMINATED', role: 'CONSUMER', counterpartyId: 'BPNL00000003QRST', counterpartyAddress: 'https://provider-q.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:bom-lifecycle:v2.0', agreementId: null, createdAt: '2026-04-05T16:10:00Z', updatedAt: '2026-04-05T16:12:00Z', errorDetail: 'Policy evaluation failed: Membership constraint not satisfied' },
+            { id: 'neg-a7b8c9d0-e1f2-3456-abcd-567890123456', state: 'AGREED', role: 'CONSUMER', counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:esr-certificate:v1.0', agreementId: null, createdAt: '2026-04-07T09:45:00Z', updatedAt: '2026-04-07T09:47:00Z' },
+            { id: 'neg-b8c9d0e1-f2a3-4567-bcde-678901234567', state: 'FINALIZED', role: 'PROVIDER', counterpartyId: 'BPNL00000003UVWX', counterpartyAddress: 'https://consumer-u.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:material-flow:v1.0', agreementId: 'agr-004-mflow', createdAt: '2026-04-05T09:00:00Z', updatedAt: '2026-04-05T09:04:00Z' },
+            { id: 'neg-c9d0e1f2-a3b4-5678-cdef-789012345678', state: 'REQUESTING', role: 'CONSUMER', counterpartyId: 'BPNL00000003CRHK', counterpartyAddress: 'https://provider-b.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:traceability:v3.0', agreementId: null, createdAt: '2026-04-07T10:30:00Z', updatedAt: '2026-04-07T10:30:10Z' },
+            { id: 'neg-d0e1f2a3-b4c5-6789-defa-890123456789', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003MNOP', counterpartyAddress: 'https://provider-m.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:demand-forecast:v2.0', agreementId: 'agr-005-demand', createdAt: '2026-04-04T13:00:00Z', updatedAt: '2026-04-04T13:02:30Z' },
+            { id: 'neg-e1f2a3b4-c5d6-7890-efab-901234567890', state: 'VERIFIED', role: 'PROVIDER', counterpartyId: 'BPNL00000003HIJK', counterpartyAddress: 'https://consumer-h.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:singleLevelBom:v3.0', agreementId: null, createdAt: '2026-04-07T06:00:00Z', updatedAt: '2026-04-07T06:02:00Z' },
+            { id: 'neg-f2a3b4c5-d6e7-8901-fabc-012345678901', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:serial-part:v3.0', agreementId: 'agr-006-serial', createdAt: '2026-04-03T10:00:00Z', updatedAt: '2026-04-03T10:03:15Z' },
+            { id: 'neg-a3b4c5d6-e7f8-9012-abcd-123456789abc', state: 'FINALIZED', role: 'PROVIDER', counterpartyId: 'BPNL00000003LMNO', counterpartyAddress: 'https://consumer-l.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:vehicle-product-desc:v1.0', agreementId: 'agr-007-vpd', createdAt: '2026-04-02T15:00:00Z', updatedAt: '2026-04-02T15:01:50Z' },
+            { id: 'neg-b4c5d6e7-f8a9-0123-bcde-234567890bcd', state: 'TERMINATED', role: 'PROVIDER', counterpartyId: 'BPNL00000003WXYZ', counterpartyAddress: 'https://consumer-w.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:notification:v2.0', agreementId: null, createdAt: '2026-04-01T12:00:00Z', updatedAt: '2026-04-01T12:05:00Z', errorDetail: 'Counterparty rejected: contractOffer mismatch' },
+            { id: 'neg-c5d6e7f8-a9b0-1234-cdef-3456789abcde', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003CRHK', counterpartyAddress: 'https://provider-b.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:country-risk:v1.0', agreementId: 'agr-008-risk', createdAt: '2026-04-01T09:30:00Z', updatedAt: '2026-04-01T09:33:00Z' },
+            { id: 'neg-d6e7f8a9-b0c1-2345-defa-456789abcdef', state: 'AGREED', role: 'CONSUMER', counterpartyId: 'BPNL00000003MNOP', counterpartyAddress: 'https://provider-m.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:iot-sensor-data:v1.0', agreementId: null, createdAt: '2026-04-07T05:00:00Z', updatedAt: '2026-04-07T05:01:30Z' },
+            { id: 'neg-e7f8a9b0-c1d2-3456-efab-56789abcdef0', state: 'REQUESTING', role: 'CONSUMER', counterpartyId: 'BPNL00000003UVWX', counterpartyAddress: 'https://provider-u.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:pcf-motor:v2.0', agreementId: null, createdAt: '2026-04-07T10:45:00Z', updatedAt: '2026-04-07T10:45:05Z' },
+            { id: 'neg-f8a9b0c1-d2e3-4567-fabc-6789abcdef01', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003HIJK', counterpartyAddress: 'https://provider-h.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:digital-twin:v4.0', agreementId: 'agr-009-twin', createdAt: '2026-03-30T11:00:00Z', updatedAt: '2026-03-30T11:02:00Z' },
+            { id: 'neg-a9b0c1d2-e3f4-5678-abcd-789abcdef012', state: 'FINALIZED', role: 'PROVIDER', counterpartyId: 'BPNL00000003QRST', counterpartyAddress: 'https://consumer-q.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:marketplace:v1.0', agreementId: 'agr-010-mkt', createdAt: '2026-03-29T08:00:00Z', updatedAt: '2026-03-29T08:01:00Z' },
+            { id: 'neg-b0c1d2e3-f4a5-6789-bcde-89abcdef0123', state: 'AGREED', role: 'PROVIDER', counterpartyId: 'BPNL00000003LMNO', counterpartyAddress: 'https://consumer-l.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:certificate-mgmt:v1.0', agreementId: null, createdAt: '2026-04-07T04:00:00Z', updatedAt: '2026-04-07T04:01:00Z' },
+            { id: 'neg-c1d2e3f4-a5b6-7890-cdef-9abcdef01234', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:pcf-motor:v1.0', agreementId: 'agr-011-pcfm', createdAt: '2026-03-28T10:00:00Z', updatedAt: '2026-03-28T10:02:00Z' },
+            { id: 'neg-d2e3f4a5-b6c7-8901-defa-abcdef012345', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003CRHK', counterpartyAddress: 'https://provider-b.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:return-order:v1.0', agreementId: 'agr-012-return', createdAt: '2026-03-27T14:00:00Z', updatedAt: '2026-03-27T14:03:00Z' },
+            { id: 'neg-e3f4a5b6-c7d8-9012-efab-bcdef0123456', state: 'FINALIZED', role: 'PROVIDER', counterpartyId: 'BPNL00000003WXYZ', counterpartyAddress: 'https://consumer-w.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:shop-floor:v2.0', agreementId: 'agr-013-shop', createdAt: '2026-03-26T09:00:00Z', updatedAt: '2026-03-26T09:01:30Z' },
+            { id: 'neg-f4a5b6c7-d8e9-0123-fabc-cdef01234567', state: 'FINALIZED', role: 'CONSUMER', counterpartyId: 'BPNL00000003MNOP', counterpartyAddress: 'https://provider-m.catena-x.net/api/v1/dsp', protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:material-traceability:v1.0', agreementId: 'agr-014-trace', createdAt: '2026-03-25T07:00:00Z', updatedAt: '2026-03-25T07:02:00Z' }
+        ];
+
+        var currentPage = 1, perPage = 25, sortField = 'createdAt', sortDir = 'desc';
+        var filteredData = [];
+        var refreshInterval = null;
+
+        function init() {
+            applyFilters();
+            updateCurl();
+        }
+
+        function applyFilters() {
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var state = document.getElementById('stateFilter').value;
+            var role = document.getElementById('roleFilter').value;
+
+            filteredData = MOCK_NEGOTIATIONS.filter(function(n) {
+                if (search && !(n.id.toLowerCase().includes(search) || n.counterpartyId.toLowerCase().includes(search) || n.assetId.toLowerCase().includes(search))) return false;
+                if (state && n.state !== state) return false;
+                if (role && n.role !== role) return false;
+                return true;
+            });
+
+            sortData();
+            currentPage = 1;
+            renderTable();
+            updateStats();
+        }
+
+        function sortData() {
+            filteredData.sort(function(a, b) {
+                var va = a[sortField] || '', vb = b[sortField] || '';
+                var cmp = va < vb ? -1 : va > vb ? 1 : 0;
+                return sortDir === 'asc' ? cmp : -cmp;
+            });
+        }
+
+        function sortTable(field) {
+            if (sortField === field) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+            else { sortField = field; sortDir = 'asc'; }
+            sortData();
+            renderTable();
+        }
+
+        function renderTable() {
+            var start = (currentPage - 1) * perPage;
+            var end = Math.min(start + perPage, filteredData.length);
+            var rows = '';
+            for (var i = start; i < end; i++) {
+                var n = filteredData[i];
+                var shortId = n.id.substring(0, 20) + '...';
+                var stateClass = 'badge-' + n.state.toLowerCase();
+                var roleClass = 'badge-' + n.role.toLowerCase();
+                var created = new Date(n.createdAt).toLocaleString();
+                var updated = new Date(n.updatedAt).toLocaleString();
+                rows += '<tr>' +
+                    '<td class="id-cell"><a href="negotiation-details.html?id=' + encodeURIComponent(n.id) + '" title="' + n.id + '">' + shortId + '</a></td>' +
+                    '<td><span class="badge ' + stateClass + '">' + n.state + '</span></td>' +
+                    '<td><span class="badge ' + roleClass + '">' + n.role + '</span></td>' +
+                    '<td title="' + n.counterpartyAddress + '">' + n.counterpartyId + '</td>' +
+                    '<td>' + n.protocol + '</td>' +
+                    '<td>' + created + '</td>' +
+                    '<td>' + updated + '</td>' +
+                    '<td class="actions">' +
+                        '<button class="icon-btn" onclick="viewNegotiation(\'' + n.id + '\')" title="View Details">👁️</button>' +
+                        (n.agreementId ? '<button class="icon-btn" onclick="viewAgreement(\'' + n.agreementId + '\')" title="View Agreement">✅</button>' : '') +
+                        '<button class="icon-btn" onclick="copyId(\'' + n.id + '\')" title="Copy ID">📋</button>' +
+                    '</td>' +
+                    '</tr>';
+            }
+            document.getElementById('tableBody').innerHTML = rows;
+            document.getElementById('showStart').textContent = filteredData.length ? start + 1 : 0;
+            document.getElementById('showEnd').textContent = end;
+            document.getElementById('showTotal').textContent = filteredData.length;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = end >= filteredData.length;
+        }
+
+        function updateStats() {
+            var counts = { total: 0, requesting: 0, agreed: 0, finalized: 0, terminated: 0 };
+            MOCK_NEGOTIATIONS.forEach(function(n) {
+                counts.total++;
+                if (n.state === 'REQUESTING' || n.state === 'REQUESTED') counts.requesting++;
+                else if (n.state === 'AGREED' || n.state === 'AGREEING' || n.state === 'VERIFIED') counts.agreed++;
+                else if (n.state === 'FINALIZED') counts.finalized++;
+                else if (n.state === 'TERMINATED') counts.terminated++;
+            });
+            document.getElementById('totalCount').textContent = counts.total;
+            document.getElementById('requestedCount').textContent = counts.requesting;
+            document.getElementById('agreedCount').textContent = counts.agreed;
+            document.getElementById('finalizedCount').textContent = counts.finalized;
+            document.getElementById('terminatedCount').textContent = counts.terminated;
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('stateFilter').value = '';
+            document.getElementById('roleFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            applyFilters();
+        }
+
+        function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+        function nextPage() { var maxPage = Math.ceil(filteredData.length / perPage); if (currentPage < maxPage) { currentPage++; renderTable(); } }
+        function changePerPage(val) { perPage = parseInt(val); currentPage = 1; renderTable(); }
+
+        function viewNegotiation(id) { window.location.href = 'negotiation-details.html?id=' + encodeURIComponent(id); }
+        function viewAgreement(id) { window.location.href = 'contract-details.html?id=' + encodeURIComponent(id); }
+        function copyId(id) { navigator.clipboard.writeText(id); showToast('Negotiation ID copied'); }
+        function refreshData() { showToast('Data refreshed'); applyFilters(); }
+        function exportNegotiations() { showToast('Export started (24 negotiations)'); }
+
+        function toggleAutoRefresh() {
+            if (document.getElementById('autoRefresh').checked) {
+                refreshInterval = setInterval(function() { refreshData(); }, 30000);
+                showToast('Auto-refresh enabled (30s)');
+            } else {
+                clearInterval(refreshInterval);
+                showToast('Auto-refresh disabled');
+            }
+        }
+
+        function updateCurl() {
+            var curl = 'curl -X POST "https://consumer-controlplane.catena-x.net/management/v3/contractnegotiations/request" \\\n' +
+                '  -H "Content-Type: application/json" \\\n' +
+                '  -H "X-Api-Key: {{API_KEY}}" \\\n' +
+                '  -d \'{\n' +
+                '    "@context": { "@vocab": "https://w3id.org/edc/v0.0.1/ns/" },\n' +
+                '    "@type": "QuerySpec",\n' +
+                '    "offset": 0,\n' +
+                '    "limit": 50,\n' +
+                '    "sortOrder": "DESC",\n' +
+                '    "sortField": "createdAt"\n' +
+                '  }\'';
+            document.getElementById('curlPreview').textContent = curl;
+        }
+
+        function copyCurl() {
+            navigator.clipboard.writeText(document.getElementById('curlPreview').textContent);
+            showToast('cURL command copied');
+        }
+
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

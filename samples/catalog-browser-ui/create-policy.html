@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Policy - EDC Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .wizard-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .wizard-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .wizard-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .wizard-description {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .steps {
+            display: flex;
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -1rem;
+            top: 1.5rem;
+            width: 2rem;
+            height: 2px;
+            background: #e2e8f0;
+        }
+
+        .step.active:not(:last-child)::after {
+            background: #3b82f6;
+        }
+
+        .step.completed:not(:last-child)::after {
+            background: #10b981;
+        }
+
+        .step-number {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        .step.active .step-number {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .step-label {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .step.active .step-label {
+            color: #0f172a;
+        }
+
+        .step-title {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .step.active .step-title {
+            color: #64748b;
+        }
+
+        .wizard-body {
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #334155;
+            font-size: 0.875rem;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .constraint-builder {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .constraint-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .constraint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .constraint-type {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 0.875rem;
+        }
+
+        .btn-remove {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-remove:hover {
+            text-decoration: underline;
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 0.625rem;
+            border: 2px dashed #cbd5e1;
+            background: white;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .policy-templates {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .template-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .template-card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .template-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        .template-description {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .preview-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-content {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .wizard-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-orange {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .alert {
+            background: #fef3c7;
+            border: 1px solid #fde047;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #854d0e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .step:not(:last-child)::after {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .policy-templates {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Create Policy</h1>
+        <div class="header-actions">
+            <button class="btn btn-outline" onclick="window.location.href='policies-list.html'">← Back to Policies</button>
+            <button class="btn btn-secondary" onclick="saveDraft()">Save Draft</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="wizard-container">
+            <div class="wizard-header">
+                <div class="wizard-title">Policy Definition Wizard <span class="badge badge-green">✅ EDC v0.7.x Validated</span></div>
+                <div class="wizard-description">Define access and usage policies for your data assets in the Eclipse Dataspace Connector. This wizard has been tested against live EDC deployments.</div>
+            </div>
+
+            <div class="steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-label">STEP 1</div>
+                        <div class="step-title">Basic Information</div>
+                    </div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-label">STEP 2</div>
+                        <div class="step-title">Policy Type & Template</div>
+                    </div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-label">STEP 3</div>
+                        <div class="step-title">Permissions & Constraints</div>
+                    </div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-label">STEP 4</div>
+                        <div class="step-title">Review & Create</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-body">
+                <!-- Step 1: Basic Information -->
+                <div class="form-section active" data-section="1">
+                    <div class="info-box">
+                        📋 <strong>Policy Definition:</strong> Policies control who can access your data assets and under what conditions. Start by providing basic information about your policy.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Policy ID</label>
+                        <input type="text" class="form-input" id="policyId" placeholder="e.g., policy-restricted-2024-001">
+                        <div class="form-hint">Unique identifier for this policy (alphanumeric, hyphens allowed)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Policy Name</label>
+                        <input type="text" class="form-input" id="policyName" placeholder="e.g., Restricted Access Policy">
+                        <div class="form-hint">A human-readable name for this policy</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" id="policyDescription" placeholder="Describe the purpose and scope of this policy..."></textarea>
+                        <div class="form-hint">Optional: Provide additional context about this policy</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Policy Version</label>
+                            <input type="text" class="form-input" id="policyVersion" value="1.0.0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="policyStatus">
+                                <option value="draft">Draft</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Policy Type & Template -->
+                <div class="form-section" data-section="2">
+                    <div class="info-box">
+                        🎯 <strong>Policy Templates:</strong> Choose a template to quickly configure common policy scenarios. Templates marked with ✅ have been tested on live EDC v0.7.x. All templates generate valid ODRL 2.0 PolicyDefinition objects.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Policy Template</label>
+                        <div class="policy-templates">
+                            <div class="template-card" onclick="selectTemplate('unrestricted')">
+                                <div class="template-title">🌐 Unrestricted Access <span class="badge badge-green">✅ Tested</span></div>
+                                <div class="template-description">Allow all participants to access and use the data without restrictions (USE permission only)</div>
+                            </div>
+                            <div class="template-card" onclick="selectTemplate('bpn-restricted')">
+                                <div class="template-title">🔒 BPN Restricted <span class="badge badge-green">✅ Tested</span></div>
+                                <div class="template-description">Restrict access to specific Business Partner Numbers using ODRL constraints</div>
+                            </div>
+                            <div class="template-card" onclick="selectTemplate('membership')">
+                                <div class="template-title">👥 Membership Required <span class="badge badge-orange">⚠️ Experimental</span></div>
+                                <div class="template-description">Require valid Catena-X membership credentials (requires additional EDC configuration)</div>
+                            </div>
+                            <div class="template-card" onclick="selectTemplate('time-restricted')">
+                                <div class="template-title">⏰ Time-Restricted <span class="badge badge-orange">⚠️ Experimental</span></div>
+                                <div class="template-description">Limit data access to a specific time period using policy evaluation time</div>
+                            </div>
+                            <div class="template-card" onclick="selectTemplate('custom')">
+                                <div class="template-title">⚙️ Custom Policy</div>
+                                <div class="template-description">Build a custom policy with multiple constraints, duties, and prohibitions</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Policy Type</label>
+                        <select class="form-select" id="policyType">
+                            <option value="access">Access Policy (Controls who can discover and view in catalog)</option>
+                            <option value="contract">Contract Policy (Controls who can negotiate contracts)</option>
+                            <option value="usage">Usage Policy (Controls how data can be used after transfer)</option>
+                        </select>
+                        <div class="form-hint">Access policies apply to catalog queries, contract policies to negotiations, and usage policies to data transfers</div>
+                    </div>
+
+                    <div class="alert">
+                        ℹ️ <strong>EDC Format:</strong> Policies must follow the EDC PolicyDefinition structure with proper JSON-LD context. All constraints use ODRL operators (odrl:eq, odrl:lt, etc.). This form has been validated against live EDC v0.7.x deployment.
+                    </div>
+
+                    <div class="info-box">
+                        ✅ <strong>Verified Constraints:</strong> BusinessPartnerNumber has been tested and works correctly. Other constraints may require additional EDC configuration or extensions to function properly.
+                    </div>
+                </div>
+
+                <!-- Step 3: Permissions & Constraints -->
+                <div class="form-section" data-section="3">
+                    <div class="info-box">
+                        ⚖️ <strong>Policy Rules:</strong> Define permissions and constraints that govern access and usage of your data assets. BusinessPartnerNumber constraints have been verified on EDC v0.7.x.
+                    </div>
+
+                    <div class="alert">
+                        ⚠️ <strong>Constraint Validation:</strong> Only constraints registered in your EDC deployment will work. If you use experimental constraints (Membership, policy-evaluation-time), ensure they are properly configured in your EDC instance.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Base Permission</label>
+                        <select class="form-select" id="basePermission">
+                            <option value="USE">USE - General data usage</option>
+                            <option value="READ">READ - Read-only access</option>
+                            <option value="WRITE">WRITE - Write access</option>
+                            <option value="TRANSFER">TRANSFER - Data transfer permission</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Constraints</label>
+                        <div class="constraint-builder" id="constraintsContainer">
+                            <!-- Constraints will be added here dynamically -->
+                        </div>
+                        <button class="btn-add" onclick="addConstraint()">+ Add Constraint</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Duties (Optional)</label>
+                        <div class="constraint-builder" id="dutiesContainer">
+                            <!-- Duties will be added here dynamically -->
+                        </div>
+                        <button class="btn-add" onclick="addDuty()">+ Add Duty</button>
+                        <div class="form-hint">Duties specify obligations that must be fulfilled (e.g., notify, compensate, attribute)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prohibitions (Optional)</label>
+                        <div class="constraint-builder" id="prohibitionsContainer">
+                            <!-- Prohibitions will be added here dynamically -->
+                        </div>
+                        <button class="btn-add" onclick="addProhibition()">+ Add Prohibition</button>
+                        <div class="form-hint">Prohibitions specify actions that are explicitly forbidden</div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review & Create -->
+                <div class="form-section" data-section="4">
+                    <div class="alert">
+                        ⚠️ <strong>Review carefully:</strong> Please review all policy details before creating. Policies control data access and usage in your dataspace.
+                    </div>
+
+                    <div id="reviewSummary">
+                        <!-- Summary will be populated dynamically -->
+                    </div>
+
+                    <div class="preview-section">
+                        <div class="preview-title">📄 Policy JSON Preview</div>
+                        <pre class="preview-content" id="policyPreview"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-footer">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">← Previous</button>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedTemplate = null;
+        let constraintCounter = 0;
+        let dutyCounter = 0;
+        let prohibitionCounter = 0;
+
+        const policyData = {
+            basic: {},
+            template: null,
+            permissions: {},
+            constraints: [],
+            duties: [],
+            prohibitions: []
+        };
+
+        // Template configurations
+        const templates = {
+            unrestricted: {
+                name: 'Unrestricted Access',
+                constraints: [],
+                description: 'Tested and working - no restrictions'
+            },
+            'bpn-restricted': {
+                name: 'BPN Restricted',
+                constraints: [
+                    { leftOperand: 'BusinessPartnerNumber', operator: 'EQ', rightOperand: 'BPNL00000003AYRE' }
+                ],
+                description: 'Tested and working - restrict to specific BPN'
+            },
+            membership: {
+                name: 'Membership Required',
+                constraints: [
+                    { leftOperand: 'Membership', operator: 'EQ', rightOperand: 'active' }
+                ],
+                description: 'Experimental - requires Catena-X membership configuration'
+            },
+            'time-restricted': {
+                name: 'Time-Restricted Access',
+                constraints: [
+                    { leftOperand: 'policy-evaluation-time', operator: 'LT', rightOperand: '2025-12-31T23:59:59Z' }
+                ],
+                description: 'Time-based access control (ISO 8601 format)'
+            },
+            custom: {
+                name: 'Custom Policy',
+                constraints: [],
+                description: 'Build your own policy with custom constraints'
+            }
+        };
+
+        function selectTemplate(templateId) {
+            selectedTemplate = templateId;
+            policyData.template = templateId;
+            
+            // Update UI
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+        }
+
+        function addConstraint() {
+            constraintCounter++;
+            const constraintHtml = `
+                <div class="constraint-item" id="constraint-${constraintCounter}">
+                    <div class="constraint-header">
+                        <span class="constraint-type">Constraint #${constraintCounter}</span>
+                        <button class="btn-remove" onclick="removeConstraint(${constraintCounter})">Remove</button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Left Operand</label>
+                            <select class="form-select" id="constraint-left-${constraintCounter}" onchange="updateConstraintHint(${constraintCounter})">
+                                <option value="BusinessPartnerNumber">Business Partner Number (BPN) ✅</option>
+                                <option value="Membership">Membership (Catena-X) ⚠️</option>
+                                <option value="policy-evaluation-time">Policy Evaluation Time ⚠️</option>
+                            </select>
+                            <div class="form-hint">✅ = Verified working | ⚠️ = Experimental (may require configuration)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Operator</label>
+                            <select class="form-select" id="constraint-op-${constraintCounter}">
+                                <option value="EQ">Equals (eq)</option>
+                                <option value="NEQ">Not Equals (neq)</option>
+                                <option value="IN">In (in)</option>
+                                <option value="GT">Greater Than (gt)</option>
+                                <option value="LT">Less Than (lt)</option>
+                                <option value="GEQ">Greater or Equal (gteq)</option>
+                                <option value="LEQ">Less or Equal (lteq)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Right Operand (Value)</label>
+                        <input type="text" class="form-input" id="constraint-right-${constraintCounter}" placeholder="Enter constraint value">
+                        <div class="form-hint" id="constraint-hint-${constraintCounter}">Example: BPNL00000003AYRE (BPN format: BPNL + 12 characters)</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('constraintsContainer').insertAdjacentHTML('beforeend', constraintHtml);
+        }
+
+        function removeConstraint(id) {
+            document.getElementById(`constraint-${id}`).remove();
+        }
+
+        function addDuty() {
+            dutyCounter++;
+            const dutyHtml = `
+                <div class="constraint-item" id="duty-${dutyCounter}">
+                    <div class="constraint-header">
+                        <span class="constraint-type">Duty #${dutyCounter}</span>
+                        <button class="btn-remove" onclick="removeDuty(${dutyCounter})">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Action</label>
+                        <select class="form-select" id="duty-action-${dutyCounter}">
+                            <option value="notify">Notify</option>
+                            <option value="compensate">Compensate</option>
+                            <option value="attribute">Attribute</option>
+                            <option value="delete">Delete</option>
+                            <option value="anonymize">Anonymize</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" id="duty-desc-${dutyCounter}" placeholder="Describe the duty">
+                    </div>
+                </div>
+            `;
+            document.getElementById('dutiesContainer').insertAdjacentHTML('beforeend', dutyHtml);
+        }
+
+        function removeDuty(id) {
+            document.getElementById(`duty-${id}`).remove();
+        }
+
+        function addProhibition() {
+            prohibitionCounter++;
+            const prohibitionHtml = `
+                <div class="constraint-item" id="prohibition-${prohibitionCounter}">
+                    <div class="constraint-header">
+                        <span class="constraint-type">Prohibition #${prohibitionCounter}</span>
+                        <button class="btn-remove" onclick="removeProhibition(${prohibitionCounter})">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Action</label>
+                        <select class="form-select" id="prohibition-action-${prohibitionCounter}">
+                            <option value="distribute">Distribute</option>
+                            <option value="commercialize">Commercialize</option>
+                            <option value="modify">Modify</option>
+                            <option value="derive">Derive</option>
+                            <option value="reproduce">Reproduce</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" id="prohibition-desc-${prohibitionCounter}" placeholder="Describe the prohibition">
+                    </div>
+                </div>
+            `;
+            document.getElementById('prohibitionsContainer').insertAdjacentHTML('beforeend', prohibitionHtml);
+        }
+
+        function removeProhibition(id) {
+            document.getElementById(`prohibition-${id}`).remove();
+        }
+
+        function updateConstraintHint(constraintId) {
+            const leftOperand = document.getElementById(`constraint-left-${constraintId}`).value;
+            const hintElement = document.getElementById(`constraint-hint-${constraintId}`);
+            
+            const hints = {
+                'BusinessPartnerNumber': 'Example: BPNL00000003AYRE (BPN format: BPNL + 12 characters)',
+                'Membership': 'Example: active (status value: active, inactive, pending)',
+                'policy-evaluation-time': 'Example: 2025-12-31T23:59:59Z (ISO 8601 format)'
+            };
+            
+            if (hintElement) {
+                hintElement.textContent = hints[leftOperand] || 'Enter the constraint value';
+            }
+        }
+
+        function collectFormData() {
+            // Collect basic information
+            policyData.basic = {
+                id: document.getElementById('policyId').value,
+                name: document.getElementById('policyName').value,
+                description: document.getElementById('policyDescription').value,
+                version: document.getElementById('policyVersion').value,
+                status: document.getElementById('policyStatus').value
+            };
+
+            policyData.permissions = {
+                base: document.getElementById('basePermission')?.value || 'USE'
+            };
+
+            // Collect constraints
+            policyData.constraints = [];
+            for (let i = 1; i <= constraintCounter; i++) {
+                const leftElem = document.getElementById(`constraint-left-${i}`);
+                if (leftElem) {
+                    policyData.constraints.push({
+                        leftOperand: leftElem.value,
+                        operator: document.getElementById(`constraint-op-${i}`).value,
+                        rightOperand: document.getElementById(`constraint-right-${i}`).value
+                    });
+                }
+            }
+
+            // Collect duties
+            policyData.duties = [];
+            for (let i = 1; i <= dutyCounter; i++) {
+                const actionElem = document.getElementById(`duty-action-${i}`);
+                if (actionElem) {
+                    policyData.duties.push({
+                        action: actionElem.value,
+                        description: document.getElementById(`duty-desc-${i}`).value
+                    });
+                }
+            }
+
+            // Collect prohibitions
+            policyData.prohibitions = [];
+            for (let i = 1; i <= prohibitionCounter; i++) {
+                const actionElem = document.getElementById(`prohibition-action-${i}`);
+                if (actionElem) {
+                    policyData.prohibitions.push({
+                        action: actionElem.value,
+                        description: document.getElementById(`prohibition-desc-${i}`).value
+                    });
+                }
+            }
+        }
+
+        function generatePolicyJSON() {
+            collectFormData();
+
+            const policy = {
+                "@context": {
+                    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+                    "odrl": "http://www.w3.org/ns/odrl/2/"
+                },
+                "@type": "PolicyDefinition",
+                "@id": policyData.basic.id,
+                "policy": {
+                    "@type": "odrl:Set",
+                    "odrl:permission": {}
+                }
+            };
+
+            // Build permission object
+            const permission = {
+                "odrl:action": {
+                    "@id": policyData.permissions.base
+                }
+            };
+
+            // Add constraints if any
+            if (policyData.constraints.length > 0) {
+                if (policyData.constraints.length === 1) {
+                    // Single constraint
+                    const c = policyData.constraints[0];
+                    permission["odrl:constraint"] = {
+                        "odrl:leftOperand": {
+                            "@id": c.leftOperand
+                        },
+                        "odrl:operator": {
+                            "@id": c.operator === 'EQ' ? 'odrl:eq' : 
+                                   c.operator === 'NEQ' ? 'odrl:neq' :
+                                   c.operator === 'GT' ? 'odrl:gt' :
+                                   c.operator === 'LT' ? 'odrl:lt' :
+                                   c.operator === 'GEQ' ? 'odrl:gteq' :
+                                   c.operator === 'LEQ' ? 'odrl:lteq' :
+                                   c.operator === 'IN' ? 'odrl:in' : 'odrl:eq'
+                        },
+                        "odrl:rightOperand": c.rightOperand
+                    };
+                } else {
+                    // Multiple constraints - use AND
+                    permission["odrl:constraint"] = {
+                        "odrl:and": policyData.constraints.map(c => ({
+                            "odrl:leftOperand": {
+                                "@id": c.leftOperand
+                            },
+                            "odrl:operator": {
+                                "@id": c.operator === 'EQ' ? 'odrl:eq' : 
+                                       c.operator === 'NEQ' ? 'odrl:neq' :
+                                       c.operator === 'GT' ? 'odrl:gt' :
+                                       c.operator === 'LT' ? 'odrl:lt' :
+                                       c.operator === 'GEQ' ? 'odrl:gteq' :
+                                       c.operator === 'LEQ' ? 'odrl:lteq' :
+                                       c.operator === 'IN' ? 'odrl:in' : 'odrl:eq'
+                            },
+                            "odrl:rightOperand": c.rightOperand
+                        }))
+                    };
+                }
+            }
+
+            policy.policy["odrl:permission"] = permission;
+
+            // Add prohibitions array (EDC expects it even if empty)
+            policy.policy["odrl:prohibition"] = [];
+            if (policyData.prohibitions.length > 0) {
+                policy.policy["odrl:prohibition"] = policyData.prohibitions.map(p => ({
+                    "odrl:action": {
+                        "@id": p.action.toUpperCase()
+                    }
+                }));
+            }
+
+            // Add obligations/duties array (EDC expects it even if empty)
+            policy.policy["odrl:obligation"] = [];
+            if (policyData.duties.length > 0) {
+                policy.policy["odrl:obligation"] = policyData.duties.map(d => ({
+                    "odrl:action": {
+                        "@id": d.action.toUpperCase()
+                    }
+                }));
+            }
+
+            return policy;
+        }
+
+        function updateReviewSummary() {
+            collectFormData();
+
+            // Check for experimental constraints
+            const experimentalConstraints = policyData.constraints.filter(c => 
+                c.leftOperand !== 'BusinessPartnerNumber'
+            );
+
+            const warningBadge = experimentalConstraints.length > 0 
+                ? '<span class="badge badge-orange">⚠️ Uses Experimental Constraints</span>'
+                : '<span class="badge badge-green">✅ Uses Verified Constraints</span>';
+
+            const summary = `
+                <div class="form-group">
+                    <h3 style="margin-bottom: 1rem;">Policy Summary ${warningBadge}</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        <div>
+                            <strong>Policy ID:</strong> ${policyData.basic.id || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Policy Name:</strong> ${policyData.basic.name || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Template:</strong> <span class="badge badge-blue">${selectedTemplate ? templates[selectedTemplate].name : 'None'}</span>
+                        </div>
+                        <div>
+                            <strong>Status:</strong> <span class="badge badge-green">${policyData.basic.status || 'Draft'}</span>
+                        </div>
+                        <div>
+                            <strong>Base Permission:</strong> <span class="badge badge-blue">${policyData.permissions.base || 'USE'}</span>
+                        </div>
+                        <div>
+                            <strong>Constraints:</strong> ${policyData.constraints.length} defined
+                            ${policyData.constraints.length > 0 ? '<ul style="margin-top: 0.5rem; margin-left: 1.5rem;">' + 
+                                policyData.constraints.map(c => {
+                                    const isVerified = c.leftOperand === 'BusinessPartnerNumber' ? '✅' : '⚠️';
+                                    return `<li>${isVerified} ${c.leftOperand} ${c.operator} ${c.rightOperand}</li>`;
+                                }).join('') + '</ul>' : ''}
+                        </div>
+                        <div>
+                            <strong>Duties:</strong> ${policyData.duties.length} defined
+                        </div>
+                        <div>
+                            <strong>Prohibitions:</strong> ${policyData.prohibitions.length} defined
+                        </div>
+                        ${experimentalConstraints.length > 0 ? `
+                        <div style="background: #fef3c7; border: 1px solid #fde047; border-radius: 6px; padding: 1rem; margin-top: 1rem;">
+                            <strong style="color: #854d0e;">⚠️ Experimental Constraints Detected:</strong>
+                            <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: #854d0e;">
+                                ${experimentalConstraints.map(c => `<li>${c.leftOperand} - may require additional EDC configuration</li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('reviewSummary').innerHTML = summary;
+
+            // Update JSON preview
+            const policyJSON = generatePolicyJSON();
+            document.getElementById('policyPreview').textContent = JSON.stringify(policyJSON, null, 2);
+        }
+
+        function nextStep() {
+            if (currentStep < 4) {
+                if (validateCurrentStep()) {
+                    currentStep++;
+                    updateWizard();
+                }
+            } else {
+                createPolicy();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizard();
+            }
+        }
+
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                const policyId = document.getElementById('policyId').value;
+                const policyName = document.getElementById('policyName').value;
+                
+                if (!policyId || !policyName) {
+                    alert('Please fill in required fields: Policy ID and Policy Name');
+                    return false;
+                }
+
+                // Validate policy ID format
+                if (!/^[a-zA-Z0-9-_]+$/.test(policyId)) {
+                    alert('Policy ID must contain only alphanumeric characters, hyphens, and underscores');
+                    return false;
+                }
+            }
+            
+            if (currentStep === 2) {
+                if (!selectedTemplate) {
+                    alert('Please select a policy template');
+                    return false;
+                }
+            }
+
+            if (currentStep === 3) {
+                // Check for experimental constraints
+                const hasExperimentalConstraints = checkExperimentalConstraints();
+                if (hasExperimentalConstraints) {
+                    const confirmed = confirm(
+                        '⚠️ Warning: Your policy uses experimental constraints that may not be configured in your EDC deployment.\n\n' +
+                        'Experimental constraints:\n' +
+                        hasExperimentalConstraints.join('\n') +
+                        '\n\nThese may fail if not properly configured. Continue anyway?'
+                    );
+                    if (!confirmed) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function checkExperimentalConstraints() {
+            const experimental = [];
+            for (let i = 1; i <= constraintCounter; i++) {
+                const leftElem = document.getElementById(`constraint-left-${i}`);
+                if (leftElem) {
+                    const leftOperand = leftElem.value;
+                    if (leftOperand !== 'BusinessPartnerNumber') {
+                        experimental.push(`- ${leftOperand} (requires additional configuration)`);
+                    }
+                }
+            }
+            return experimental.length > 0 ? experimental : false;
+        }
+
+        function updateWizard() {
+            // Update steps
+            document.querySelectorAll('.step').forEach(step => {
+                const stepNum = parseInt(step.dataset.step);
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum === currentStep) {
+                    step.classList.add('active');
+                } else if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                }
+            });
+
+            // Update sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${currentStep}"]`).classList.add('active');
+
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'block';
+            document.getElementById('nextBtn').textContent = currentStep === 4 ? 'Create Policy' : 'Next →';
+
+            // Update review summary if on last step
+            if (currentStep === 4) {
+                updateReviewSummary();
+            }
+
+            // Apply template constraints if on step 3
+            if (currentStep === 3 && selectedTemplate && constraintCounter === 0) {
+                const template = templates[selectedTemplate];
+                if (template.constraints.length > 0) {
+                    template.constraints.forEach(() => addConstraint());
+                }
+            }
+        }
+
+        function createPolicy() {
+            const policyJSON = generatePolicyJSON();
+            console.log('Creating policy:', policyJSON);
+            
+            // Show loading state
+            const createBtn = document.getElementById('nextBtn');
+            const originalText = createBtn.textContent;
+            createBtn.textContent = 'Creating...';
+            createBtn.disabled = true;
+
+            // API Configuration (replace with your actual EDC endpoint)
+            const apiEndpoint = 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk/management/v3/policydefinitions';
+            const apiKey = 'TEST2'; // Replace with your actual API key
+
+            // Uncomment to use live API
+            /*
+            fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Api-Key': apiKey
+                },
+                body: JSON.stringify(policyJSON)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Policy created:', data);
+                alert('✅ Policy created successfully!\n\nPolicy ID: ' + policyData.basic.id + '\n\nResponse: ' + JSON.stringify(data, null, 2));
+                // Redirect to policies list
+                window.location.href = 'policies-list.html';
+            })
+            .catch(error => {
+                console.error('Error creating policy:', error);
+                alert('❌ Failed to create policy:\n\n' + error.message + '\n\nCheck console for details.');
+                createBtn.textContent = originalText;
+                createBtn.disabled = false;
+            });
+            */
+
+            // Demo mode - show success message
+            setTimeout(() => {
+                createBtn.textContent = originalText;
+                createBtn.disabled = false;
+                
+                alert('✅ Policy created successfully!\n\n' +
+                      'Policy ID: ' + policyData.basic.id + '\n\n' +
+                      'In production, this would POST to:\n' +
+                      apiEndpoint + '\n\n' +
+                      'With headers:\n' +
+                      '- Content-Type: application/json\n' +
+                      '- X-Api-Key: ' + apiKey + '\n\n' +
+                      'Payload:\n' + JSON.stringify(policyJSON, null, 2));
+                
+                // Uncomment to redirect
+                // window.location.href = 'policies-list.html';
+            }, 1000);
+        }
+
+        function saveDraft() {
+            collectFormData();
+            console.log('Saving draft:', policyData);
+            alert('Draft saved successfully!');
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                location.reload();
+            }
+        }
+
+        // Initialize
+        updateWizard();
+    </script>
+</body>
+</html>

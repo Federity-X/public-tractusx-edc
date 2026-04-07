@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Details - EDC Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #f1f5f9;
+            color: #3b82f6;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+
+        .btn-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn-warning:hover {
+            background: #fde68a;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .transfer-header {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .transfer-title {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-family: 'Courier New', monospace;
+            color: #0f172a;
+            word-break: break-all;
+        }
+
+        .transfer-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            font-size: 0.875rem;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-started {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-requested {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .badge-provisioned {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-provisioning {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .badge-terminated {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-suspended {
+            background: #fce7f3;
+            color: #831843;
+        }
+
+        .badge-initial {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-pull {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-push {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tabs {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: #3b82f6;
+            background: white;
+        }
+
+        .tab-btn.active {
+            color: #3b82f6;
+            background: white;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.25rem;
+        }
+
+        .info-card-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card-content {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .info-card-content code {
+            background: white;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            font-size: 0.813rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.375rem;
+            top: 0.25rem;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .timeline-item.completed::before {
+            background: #10b981;
+            box-shadow: 0 0 0 2px #10b981;
+        }
+
+        .timeline-item.current::before {
+            background: #3b82f6;
+            box-shadow: 0 0 0 2px #3b82f6;
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-item.pending::before {
+            background: #f1f5f9;
+            box-shadow: 0 0 0 2px #e2e8f0;
+        }
+
+        .timeline-item.failed::before {
+            background: #ef4444;
+            box-shadow: 0 0 0 2px #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .timeline-time {
+            font-size: 0.813rem;
+            color: #64748b;
+        }
+
+        .timeline-description {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .alert {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .property-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .property-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        .property-label {
+            font-weight: 500;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .property-value {
+            font-family: 'Courier New', monospace;
+            color: #0f172a;
+            font-size: 0.875rem;
+            word-break: break-all;
+            text-align: right;
+            max-width: 60%;
+        }
+
+        .progress-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .progress-percentage {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            transition: width 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .progress-bar.completed {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .progress-bar.failed {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .error-details {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-title {
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error-message {
+            font-size: 0.875rem;
+            color: #7f1d1d;
+            margin-bottom: 1rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .transfer-header {
+                padding: 1.5rem;
+            }
+
+            .transfer-title {
+                font-size: 1.25rem;
+            }
+
+            .transfer-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-nav {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 0.75rem 1rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .property-item {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .property-value {
+                text-align: left;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="transfers-history.html" class="back-btn">← Back to Transfers</a>
+            <h1>🚀 Transfer Details</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+            <button class="btn btn-secondary" onclick="exportTransfer()">📥 Export</button>
+            <button class="btn btn-warning" onclick="suspendTransfer()" id="suspendBtn" style="display: none;">⏸️ Suspend</button>
+            <button class="btn btn-danger" onclick="terminateTransfer()" id="terminateBtn" style="display: none;">⏹️ Terminate</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <div>Loading transfer details...</div>
+        </div>
+
+        <div id="transferContent" style="display: none;">
+            <!-- Transfer Header -->
+            <div class="transfer-header">
+                <div class="transfer-title" id="transferId"></div>
+                <div class="transfer-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">State</div>
+                        <div class="meta-value" id="transferState"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Type</div>
+                        <div class="meta-value" id="transferType"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Asset ID</div>
+                        <div class="meta-value" id="assetId"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Consumer BPN</div>
+                        <div class="meta-value" id="consumerBpn"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Started</div>
+                        <div class="meta-value" id="createdDate"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Duration</div>
+                        <div class="meta-value" id="duration"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+                    <button class="tab-btn" onclick="switchTab('timeline')">📈 State Timeline</button>
+                    <button class="tab-btn" onclick="switchTab('agreement')">📄 Contract Agreement</button>
+                    <button class="tab-btn" onclick="switchTab('destination')">🎯 Data Destination</button>
+                    <button class="tab-btn" onclick="switchTab('callbacks')">🔔 Callbacks</button>
+                    <button class="tab-btn" onclick="switchTab('json')">📄 JSON View</button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="overview-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Transfer Overview</h3>
+
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <div class="progress-title">Transfer Progress</div>
+                            <div class="progress-percentage" id="progressPercentage">0%</div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-steps">
+                            <span>INITIAL</span>
+                            <span>PROVISIONING</span>
+                            <span>PROVISIONED</span>
+                            <span>REQUESTED</span>
+                            <span>STARTED</span>
+                            <span>COMPLETED</span>
+                        </div>
+                    </div>
+
+                    <div id="errorSection" style="display: none;">
+                        <!-- Error details will be inserted here -->
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-card-title">📦 Asset Information</div>
+                            <div class="info-card-content" id="overview-asset"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">📝 Contract Agreement</div>
+                            <div class="info-card-content" id="overview-agreement"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">🎯 Transfer Type</div>
+                            <div class="info-card-content" id="overview-type"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">👥 Consumer Information</div>
+                            <div class="info-card-content" id="overview-consumer"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert">
+                        ℹ️ <strong>Transfer Process:</strong> Data transfers follow a state machine from INITIAL through PROVISIONING, REQUESTED, STARTED, and finally COMPLETED. Errors at any stage will move the transfer to TERMINATED or SUSPENDED state.
+                    </div>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div class="tab-content" id="timeline-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">State Timeline</h3>
+
+                    <div class="alert">
+                        📈 <strong>State Transitions:</strong> This timeline shows the progression of the transfer process through different states.
+                    </div>
+
+                    <div class="timeline" id="timelineContainer">
+                        <!-- Timeline items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Agreement Tab -->
+                <div class="tab-content" id="agreement-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Contract Agreement Details</h3>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-card-title">📋 Agreement ID</div>
+                            <div class="info-card-content" id="agreementId"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">📦 Asset ID</div>
+                            <div class="info-card-content" id="agreementAssetId"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">👤 Consumer ID</div>
+                            <div class="info-card-content" id="agreementConsumerId"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">📅 Agreement Date</div>
+                            <div class="info-card-content" id="agreementDate"></div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 2rem 0 1rem; font-size: 1rem; color: #64748b;">Policy Terms</h4>
+                    <div id="policyTerms" class="info-card">
+                        <div class="info-card-content">Loading policy information...</div>
+                    </div>
+
+                    <div class="alert" style="margin-top: 1.5rem;">
+                        📄 <strong>Contract Agreement:</strong> The agreement specifies the terms under which data can be transferred, including usage policies and access restrictions.
+                    </div>
+                </div>
+
+                <!-- Destination Tab -->
+                <div class="tab-content" id="destination-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Data Destination Configuration</h3>
+
+                    <div class="property-list" id="destinationProperties">
+                        <!-- Destination properties will be inserted here -->
+                    </div>
+
+                    <div class="alert" style="margin-top: 1.5rem;">
+                        🎯 <strong>Data Destination:</strong> Specifies where the data should be transferred and how the consumer can access it.
+                    </div>
+                </div>
+
+                <!-- Callbacks Tab -->
+                <div class="tab-content" id="callbacks-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Callback Addresses</h3>
+
+                    <div id="callbacksList" class="property-list">
+                        <!-- Callbacks will be inserted here -->
+                    </div>
+
+                    <div class="alert" style="margin-top: 1.5rem;">
+                        🔔 <strong>Callbacks:</strong> Webhook endpoints that receive notifications about transfer state changes.
+                    </div>
+                </div>
+
+                <!-- JSON Tab -->
+                <div class="tab-content" id="json-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Transfer Process JSON</h3>
+
+                    <div class="alert">
+                        📄 <strong>Raw Data:</strong> Complete transfer process object as returned by the EDC Management API.
+                    </div>
+
+                    <pre class="code-block" id="jsonContent"></pre>
+
+                    <button class="btn btn-secondary" onclick="copyJSON()" style="margin-top: 1rem;">📋 Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTransfer = null;
+        let activeTab = 'overview';
+
+        // API Configuration
+        const apiEndpoint = 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk/management/v3/transferprocesses';
+        const apiKey = 'TEST2';
+
+        // Get transfer ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const transferId = urlParams.get('id') || 'transfer-process-1001'; // Default for preview
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTransfer();
+        });
+
+        function loadTransfer() {
+            // For demo/testing with sample data
+            setTimeout(() => {
+                currentTransfer = generateSampleTransfer(transferId);
+                displayTransfer();
+            }, 500);
+
+            // Uncomment to use live API
+            /*
+            fetch(apiEndpoint + '/' + transferId, {
+                method: 'GET',
+                headers: {
+                    'X-Api-Key': apiKey
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Transfer not found');
+                return response.json();
+            })
+            .then(data => {
+                currentTransfer = transformTransfer(data);
+                displayTransfer();
+            })
+            .catch(error => {
+                console.error('Error loading transfer:', error);
+                document.getElementById('loadingState').innerHTML = 
+                    '<div style="color: #dc2626;">Failed to load transfer. Please check your connection and try again.</div>' +
+                    '<button class="btn btn-primary" style="margin-top: 1rem;" onclick="window.location.href=\'transfers-history.html\'">← Back to Transfers</button>';
+            });
+            */
+        }
+
+        function transformTransfer(transferData) {
+            return {
+                id: transferData['@id'],
+                state: transferData.state,
+                type: transferData.type || 'PULL',
+                assetId: transferData.assetId,
+                consumerBpn: transferData.counterPartyAddress || 'Unknown',
+                agreementId: transferData.contractId,
+                createdAt: transferData.createdAt || Date.now(),
+                stateTimestamp: transferData.stateTimestamp || Date.now(),
+                errorDetail: transferData.errorDetail,
+                dataDestination: transferData.dataDestination || {},
+                callbackAddresses: transferData.callbackAddresses || [],
+                raw: transferData
+            };
+        }
+
+        function generateSampleTransfer(id) {
+            const states = ['COMPLETED', 'STARTED', 'REQUESTED', 'PROVISIONED', 'PROVISIONING', 'TERMINATED', 'SUSPENDED'];
+            const state = states[Math.floor(Math.random() * states.length)];
+            const createdAt = Date.now() - Math.random() * 5 * 60 * 60 * 1000;
+            const stateTimestamp = createdAt + Math.random() * 2 * 60 * 60 * 1000;
+
+            return {
+                id: id,
+                state: state,
+                type: Math.random() > 0.5 ? 'PULL' : 'PUSH',
+                assetId: 'asset-engine-data-001',
+                consumerBpn: 'BPNL00000003CRHK',
+                agreementId: 'agreement-12345-abcdef',
+                createdAt: createdAt,
+                stateTimestamp: stateTimestamp,
+                errorDetail: ['TERMINATED', 'SUSPENDED'].includes(state) ? 'Connection timeout after 3 retry attempts' : null,
+                dataDestination: {
+                    type: 'HttpData',
+                    baseUrl: 'https://consumer-dataplane.example.com/api/receive',
+                    properties: {
+                        authorization: 'Bearer ***',
+                        contentType: 'application/json'
+                    }
+                },
+                callbackAddresses: [
+                    {
+                        uri: 'https://consumer-controlplane.example.com/callback/transfer',
+                        events: ['transfer.process.started', 'transfer.process.completed']
+                    }
+                ],
+                raw: {
+                    '@id': id,
+                    '@type': 'TransferProcess',
+                    state: state,
+                    type: Math.random() > 0.5 ? 'PULL' : 'PUSH',
+                    assetId: 'asset-engine-data-001',
+                    contractId: 'agreement-12345-abcdef',
+                    createdAt: createdAt,
+                    stateTimestamp: stateTimestamp
+                }
+            };
+        }
+
+        function displayTransfer() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('transferContent').style.display = 'block';
+
+            // Header
+            document.getElementById('transferId').textContent = currentTransfer.id;
+            document.getElementById('transferState').innerHTML = `<span class="badge badge-${currentTransfer.state.toLowerCase()}">${currentTransfer.state}</span>`;
+            document.getElementById('transferType').innerHTML = `<span class="badge badge-${currentTransfer.type.toLowerCase()}">${currentTransfer.type}</span>`;
+            document.getElementById('assetId').innerHTML = `<code>${currentTransfer.assetId}</code>`;
+            document.getElementById('consumerBpn').innerHTML = `<code>${currentTransfer.consumerBpn}</code>`;
+            document.getElementById('createdDate').textContent = new Date(currentTransfer.createdAt).toLocaleString();
+            document.getElementById('duration').textContent = calculateDuration(currentTransfer.createdAt, currentTransfer.stateTimestamp);
+
+            // Show action buttons based on state
+            if (['STARTED', 'REQUESTED', 'PROVISIONED', 'PROVISIONING'].includes(currentTransfer.state)) {
+                document.getElementById('suspendBtn').style.display = 'inline-flex';
+                document.getElementById('terminateBtn').style.display = 'inline-flex';
+            }
+
+            // Overview Tab
+            displayOverview();
+
+            // Timeline Tab
+            displayTimeline();
+
+            // Agreement Tab
+            displayAgreement();
+
+            // Destination Tab
+            displayDestination();
+
+            // Callbacks Tab
+            displayCallbacks();
+
+            // JSON Tab
+            document.getElementById('jsonContent').textContent = JSON.stringify(currentTransfer.raw, null, 2);
+        }
+
+        function displayOverview() {
+            // Progress
+            const progress = getTransferProgress(currentTransfer.state);
+            document.getElementById('progressPercentage').textContent = progress + '%';
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            const progressBar = document.getElementById('progressBar');
+            progressBar.className = 'progress-bar';
+            if (currentTransfer.state === 'COMPLETED') {
+                progressBar.classList.add('completed');
+            } else if (['TERMINATED', 'SUSPENDED'].includes(currentTransfer.state)) {
+                progressBar.classList.add('failed');
+            }
+
+            // Error section
+            if (currentTransfer.errorDetail) {
+                document.getElementById('errorSection').style.display = 'block';
+                document.getElementById('errorSection').innerHTML = `
+                    <div class="error-details">
+                        <div class="error-title">⚠️ Error Details</div>
+                        <div class="error-message">${currentTransfer.errorDetail}</div>
+                        <div class="error-actions">
+                            <button class="btn btn-secondary" onclick="viewLogs()">View Full Logs</button>
+                            <button class="btn btn-primary" onclick="retryTransfer()">🔄 Retry Transfer</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Info cards
+            document.getElementById('overview-asset').innerHTML = `
+                Asset ID: <code>${currentTransfer.assetId}</code><br>
+                <span style="color: #64748b;">The data asset being transferred</span>
+            `;
+
+            document.getElementById('overview-agreement').innerHTML = `
+                Agreement ID: <code>${currentTransfer.agreementId}</code><br>
+                <span style="color: #64748b;">Contract agreement governing this transfer</span>
+            `;
+
+            document.getElementById('overview-type').innerHTML = `
+                Transfer Type: <strong>${currentTransfer.type}</strong><br>
+                <span style="color: #64748b;">${currentTransfer.type === 'PULL' ? 'Consumer pulls data from provider' : 'Provider pushes data to consumer'}</span>
+            `;
+
+            document.getElementById('overview-consumer').innerHTML = `
+                BPN: <code>${currentTransfer.consumerBpn}</code><br>
+                <span style="color: #64748b;">Consumer organization identifier</span>
+            `;
+        }
+
+        function displayTimeline() {
+            const stateSequence = [
+                { state: 'INITIAL', desc: 'Transfer process initialized' },
+                { state: 'PROVISIONING', desc: 'Provisioning resources for data transfer' },
+                { state: 'PROVISIONED', desc: 'Resources successfully provisioned' },
+                { state: 'REQUESTED', desc: 'Transfer request sent to consumer' },
+                { state: 'STARTED', desc: 'Data transfer in progress' },
+                { state: 'COMPLETED', desc: 'Transfer successfully completed' }
+            ];
+
+            const currentStateIndex = stateSequence.findIndex(s => s.state === currentTransfer.state);
+            const isFailed = ['TERMINATED', 'SUSPENDED'].includes(currentTransfer.state);
+
+            let timelineHtml = '';
+            stateSequence.forEach((item, index) => {
+                let itemClass = 'pending';
+                let timeDisplay = '';
+
+                if (isFailed && index === currentStateIndex) {
+                    itemClass = 'failed';
+                    timeDisplay = new Date(currentTransfer.stateTimestamp).toLocaleString();
+                } else if (index < currentStateIndex || (index === currentStateIndex && currentTransfer.state === 'COMPLETED')) {
+                    itemClass = 'completed';
+                    if (index === currentStateIndex) {
+                        timeDisplay = new Date(currentTransfer.stateTimestamp).toLocaleString();
+                    }
+                } else if (index === currentStateIndex) {
+                    itemClass = 'current';
+                    timeDisplay = new Date(currentTransfer.stateTimestamp).toLocaleString();
+                }
+
+                timelineHtml += `
+                    <div class="timeline-item ${itemClass}">
+                        <div class="timeline-header">
+                            <div class="timeline-title">${item.state}</div>
+                            ${timeDisplay ? `<div class="timeline-time">${timeDisplay}</div>` : ''}
+                        </div>
+                        <div class="timeline-description">${item.desc}</div>
+                    </div>
+                `;
+            });
+
+            if (isFailed) {
+                timelineHtml += `
+                    <div class="timeline-item failed">
+                        <div class="timeline-header">
+                            <div class="timeline-title">${currentTransfer.state}</div>
+                            <div class="timeline-time">${new Date(currentTransfer.stateTimestamp).toLocaleString()}</div>
+                        </div>
+                        <div class="timeline-description" style="color: #991b1b;">
+                            Transfer ${currentTransfer.state.toLowerCase()}: ${currentTransfer.errorDetail || 'Unknown error'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('timelineContainer').innerHTML = timelineHtml;
+        }
+
+        function displayAgreement() {
+            document.getElementById('agreementId').innerHTML = `<code>${currentTransfer.agreementId}</code>`;
+            document.getElementById('agreementAssetId').innerHTML = `<code>${currentTransfer.assetId}</code>`;
+            document.getElementById('agreementConsumerId').innerHTML = `<code>${currentTransfer.consumerBpn}</code>`;
+            document.getElementById('agreementDate').textContent = new Date(currentTransfer.createdAt).toLocaleString();
+
+            document.getElementById('policyTerms').innerHTML = `
+                <div class="info-card-content">
+                    <strong>Permission:</strong> USE<br>
+                    <strong>Constraints:</strong> BusinessPartnerNumber must equal ${currentTransfer.consumerBpn}<br>
+                    <strong>Obligations:</strong> None<br>
+                    <strong>Prohibitions:</strong> None
+                </div>
+            `;
+        }
+
+        function displayDestination() {
+            const dest = currentTransfer.dataDestination;
+            let html = '';
+
+            if (dest && Object.keys(dest).length > 0) {
+                html += `
+                    <div class="property-item">
+                        <div class="property-label">Type</div>
+                        <div class="property-value">${dest.type || 'N/A'}</div>
+                    </div>
+                `;
+
+                if (dest.baseUrl) {
+                    html += `
+                        <div class="property-item">
+                            <div class="property-label">Base URL</div>
+                            <div class="property-value">${dest.baseUrl}</div>
+                        </div>
+                    `;
+                }
+
+                if (dest.properties) {
+                    Object.entries(dest.properties).forEach(([key, value]) => {
+                        html += `
+                            <div class="property-item">
+                                <div class="property-label">${key}</div>
+                                <div class="property-value">${value}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } else {
+                html = '<div class="alert">No data destination configured</div>';
+            }
+
+            document.getElementById('destinationProperties').innerHTML = html;
+        }
+
+        function displayCallbacks() {
+            const callbacks = currentTransfer.callbackAddresses;
+            let html = '';
+
+            if (callbacks && callbacks.length > 0) {
+                callbacks.forEach((callback, index) => {
+                    html += `
+                        <div class="property-item">
+                            <div class="property-label">Callback ${index + 1}</div>
+                            <div class="property-value">
+                                ${callback.uri}<br>
+                                <span style="font-size: 0.75rem; color: #64748b;">
+                                    Events: ${callback.events ? callback.events.join(', ') : 'All'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<div class="alert">No callback addresses configured</div>';
+            }
+
+            document.getElementById('callbacksList').innerHTML = html;
+        }
+
+        function calculateDuration(startTime, endTime) {
+            const diffMs = endTime - startTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
+            if (diffHours > 0) return `${diffHours}h ${diffMins % 60}m`;
+            if (diffMins > 0) return `${diffMins}m`;
+            return '< 1m';
+        }
+
+        function getTransferProgress(state) {
+            const progressMap = {
+                'INITIAL': 5,
+                'PROVISIONING': 20,
+                'PROVISIONED': 40,
+                'REQUESTED': 60,
+                'STARTED': 80,
+                'COMPLETED': 100,
+                'TERMINATED': 0,
+                'SUSPENDED': 0
+            };
+            return progressMap[state] || 0;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            activeTab = tabName;
+        }
+
+        function refreshData() {
+            location.reload();
+        }
+
+        function exportTransfer() {
+            const json = JSON.stringify(currentTransfer.raw, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentTransfer.id + '.json';
+            a.click();
+        }
+
+        function suspendTransfer() {
+            if (confirm('Suspend transfer: ' + currentTransfer.id + '?\n\nThe transfer can be resumed later.')) {
+                alert('Suspend functionality would call: POST ' + apiEndpoint + '/' + currentTransfer.id + '/suspend');
+            }
+        }
+
+        function terminateTransfer() {
+            if (confirm('Terminate transfer: ' + currentTransfer.id + '?\n\nThis action cannot be undone.')) {
+                alert('Terminate functionality would call: POST ' + apiEndpoint + '/' + currentTransfer.id + '/terminate');
+            }
+        }
+
+        function retryTransfer() {
+            alert('Retry functionality would create a new transfer with the same parameters.');
+        }
+
+        function viewLogs() {
+            alert('View logs functionality would display detailed system logs for this transfer.');
+        }
+
+        function copyJSON() {
+            const text = document.getElementById('jsonContent').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ JSON copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Negotiation - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size);
+            line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color);
+            background-color: var(--tblr-body-bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .subtitle {
+            color: var(--tblr-muted);
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--tblr-border-color);
+            background: var(--tblr-light);
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--tblr-dark);
+            font-size: 0.875rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--tblr-body-color);
+            background-color: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: var(--tblr-primary);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(var(--tblr-primary-rgb), 0.25);
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            padding-right: 2.25rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+
+        .btn-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+            border-color: #004494;
+        }
+
+        .btn-secondary {
+            color: white;
+            background-color: var(--tblr-secondary);
+            border-color: var(--tblr-secondary);
+        }
+
+        .btn-outline-primary {
+            color: var(--tblr-primary);
+            background-color: transparent;
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-outline-primary:hover {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+        }
+
+        .alert-info {
+            color: #055160;
+            background-color: #cff4fc;
+            border-color: #b8daff;
+        }
+
+        .alert-success {
+            color: #0a3622;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+
+        .alert-danger {
+            color: #58151c;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -0.75rem;
+            margin-left: -0.75rem;
+        }
+
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--tblr-body-color);
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid var(--tblr-border-color);
+            text-align: left;
+        }
+
+        .table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid var(--tblr-border-color);
+            font-weight: 600;
+            color: var(--tblr-dark);
+            background-color: var(--tblr-light);
+        }
+
+        .table-sm th,
+        .table-sm td {
+            padding: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+        .badge-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .badge-success {
+            color: white;
+            background-color: var(--tblr-success);
+        }
+
+        .badge-warning {
+            color: white;
+            background-color: var(--tblr-warning);
+        }
+
+        .badge-danger {
+            color: white;
+            background-color: var(--tblr-danger);
+        }
+
+        .badge-secondary {
+            color: white;
+            background-color: var(--tblr-secondary);
+        }
+
+        .text-muted {
+            color: var(--tblr-muted) !important;
+        }
+
+        .text-small {
+            font-size: 0.75rem;
+        }
+
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-2 { margin-bottom: 0.5rem !important; }
+        .mb-3 { margin-bottom: 1rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+
+        .d-none { display: none !important; }
+        .d-block { display: block !important; }
+
+        #loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--tblr-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--tblr-border-color);
+            border-radius: 50%;
+            border-top-color: var(--tblr-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid var(--tblr-border-color);
+            border-radius: 50%;
+            background: white;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .step.active::before {
+            border-color: var(--tblr-primary);
+            background-color: var(--tblr-primary);
+        }
+
+        .step.completed::before {
+            border-color: var(--tblr-success);
+            background-color: var(--tblr-success);
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 75%;
+            right: -25%;
+            height: 2px;
+            background: var(--tblr-border-color);
+            z-index: 1;
+        }
+
+        .step.completed:not(:last-child)::after {
+            background: var(--tblr-success);
+        }
+
+        .step-label {
+            margin-top: 2.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--tblr-muted);
+        }
+
+        .step.active .step-label {
+            color: var(--tblr-primary);
+        }
+
+        .step.completed .step-label {
+            color: var(--tblr-success);
+        }
+
+        @media (max-width: 768px) {
+            .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            .step-indicator {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .step::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Contract Negotiation</h1>
+            <div class="subtitle">Initiate and manage contract negotiations in the EDC ecosystem</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step-1">
+                <div class="step-label">Provider Selection</div>
+            </div>
+            <div class="step" id="step-2">
+                <div class="step-label">Contract Terms</div>
+            </div>
+            <div class="step" id="step-3">
+                <div class="step-label">Negotiation</div>
+            </div>
+            <div class="step" id="step-4">
+                <div class="step-label">Status</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Provider Selection -->
+        <div class="card" id="provider-selection">
+            <div class="card-header">
+                <h3 class="card-title">Step 1: Select Provider and Asset</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">EDC Environment</label>
+                            <select class="form-control form-select" id="environment">
+                                <option value="consumer">Consumer (SmartParts Industries)</option>
+                                <option value="provider">Provider (Automotive Manufacturer)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="apiKey" value="TEST3" placeholder="Enter API key">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Provider Connector URL</label>
+                    <input type="url" class="form-control" id="providerUrl" 
+                           value="https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk" 
+                           placeholder="https://provider-controlplane.example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Asset ID</label>
+                    <input type="text" class="form-control" id="assetId" 
+                           placeholder="Enter asset ID to negotiate for">
+                    <small class="text-muted">The ID of the asset you want to request access to</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contract Offer ID</label>
+                    <input type="text" class="form-control" id="contractOfferId" 
+                           placeholder="Enter contract offer ID">
+                    <small class="text-muted">The specific contract offer ID from the catalog</small>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="proceedToTerms()">
+                    Next: Configure Terms
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="fetchCatalog()" style="margin-left: 0.5rem;">
+                    Browse Catalog
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Contract Terms -->
+        <div class="card d-none" id="contract-terms">
+            <div class="card-header">
+                <h3 class="card-title">Step 2: Configure Contract Terms</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Contract Validity Period</label>
+                            <select class="form-control form-select" id="validityPeriod">
+                                <option value="PT1H">1 Hour</option>
+                                <option value="P1D" selected>1 Day</option>
+                                <option value="P7D">7 Days</option>
+                                <option value="P30D">30 Days</option>
+                                <option value="P365D">1 Year</option>
+                                <option value="custom">Custom Duration</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Custom Duration (ISO 8601)</label>
+                            <input type="text" class="form-control" id="customDuration" 
+                                   placeholder="P1M (1 month), PT2H (2 hours)" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Usage Policy</label>
+                    <select class="form-control form-select" id="usagePolicy">
+                        <option value="business">Business Use Only</option>
+                        <option value="research">Research & Development</option>
+                        <option value="internal">Internal Use Only</option>
+                        <option value="unrestricted">Unrestricted Access</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Data Classification</label>
+                    <select class="form-control form-select" id="dataClassification">
+                        <option value="public">Public</option>
+                        <option value="internal">Internal</option>
+                        <option value="confidential" selected>Confidential</option>
+                        <option value="restricted">Restricted</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Additional Terms & Conditions</label>
+                    <textarea class="form-control" id="additionalTerms" rows="3" 
+                              placeholder="Any additional contractual terms or specific requirements..."></textarea>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="backToProvider()">
+                    Back
+                </button>
+                <button type="button" class="btn btn-primary" onclick="initiateNegotiation()" style="margin-left: 0.5rem;">
+                    Start Negotiation
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Negotiation Progress -->
+        <div class="card d-none" id="negotiation-progress">
+            <div class="card-header">
+                <h3 class="card-title">Step 3: Negotiation in Progress</h3>
+            </div>
+            <div class="card-body">
+                <div id="loading">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 1rem;">Initiating contract negotiation...</div>
+                </div>
+                
+                <div id="negotiation-details" class="d-none">
+                    <div class="alert alert-info">
+                        <strong>Negotiation Started:</strong> Your contract negotiation request has been submitted to the provider.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Negotiation ID:</strong></td>
+                                <td id="negotiationId">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Asset ID:</strong></td>
+                                <td id="displayAssetId">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Provider:</strong></td>
+                                <td id="displayProvider">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td><span id="negotiationStatus" class="badge badge-primary">REQUESTING</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created:</strong></td>
+                                <td id="createdAt">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-outline-primary" onclick="checkNegotiationStatus()" id="refreshBtn" disabled>
+                        Refresh Status
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="proceedToStatus()" id="proceedBtn" disabled style="margin-left: 0.5rem;">
+                        View Final Status
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Final Status -->
+        <div class="card d-none" id="final-status">
+            <div class="card-header">
+                <h3 class="card-title">Step 4: Negotiation Result</h3>
+            </div>
+            <div class="card-body">
+                <div id="status-result">
+                    <!-- Status content will be populated here -->
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-outline-primary" onclick="generateCurl()">
+                        Generate cURL Command
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="startNewNegotiation()" style="margin-left: 0.5rem;">
+                        Start New Negotiation
+                    </button>
+                </div>
+
+                <div id="curl-output" class="mt-3 d-none">
+                    <h5>cURL Command:</h5>
+                    <div class="code-block" id="curl-code"></div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="copyCurl()">
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Catalog Browser Modal (simplified for this example) -->
+        <div id="catalog-info" class="card d-none" style="margin-top: 1rem;">
+            <div class="card-header">
+                <h3 class="card-title">Available Assets</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Tip:</strong> Use the Provider Admin Collection to browse available assets and contract offers before starting a negotiation.
+                </div>
+                <div id="catalog-content">
+                    <!-- Catalog content would be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let negotiationId = '';
+        let currentEnvironment = 'consumer';
+
+        // Environment configurations
+        const environments = {
+            consumer: {
+                baseUrl: 'https://dataconsumer-1-controlplane.c.dsaas.tvsdevops.co.uk',
+                apiKey: 'TEST3',
+                name: 'SmartParts Industries'
+            },
+            provider: {
+                baseUrl: 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk',
+                apiKey: 'TEST2',
+                name: 'Automotive Manufacturer'
+            }
+        };
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEnvironment();
+            
+            document.getElementById('environment').addEventListener('change', updateEnvironment);
+            document.getElementById('validityPeriod').addEventListener('change', function() {
+                const customDuration = document.getElementById('customDuration');
+                customDuration.disabled = this.value !== 'custom';
+                if (this.value !== 'custom') {
+                    customDuration.value = '';
+                }
+            });
+        });
+
+        function updateEnvironment() {
+            const env = document.getElementById('environment').value;
+            currentEnvironment = env;
+            document.getElementById('apiKey').value = environments[env].apiKey;
+        }
+
+        function proceedToTerms() {
+            const assetId = document.getElementById('assetId').value;
+            const contractOfferId = document.getElementById('contractOfferId').value;
+            
+            if (!assetId || !contractOfferId) {
+                alert('Please enter both Asset ID and Contract Offer ID');
+                return;
+            }
+
+            currentStep = 2;
+            updateStepIndicator();
+            document.getElementById('provider-selection').classList.add('d-none');
+            document.getElementById('contract-terms').classList.remove('d-none');
+        }
+
+        function backToProvider() {
+            currentStep = 1;
+            updateStepIndicator();
+            document.getElementById('contract-terms').classList.add('d-none');
+            document.getElementById('provider-selection').classList.remove('d-none');
+        }
+
+        function initiateNegotiation() {
+            currentStep = 3;
+            updateStepIndicator();
+            document.getElementById('contract-terms').classList.add('d-none');
+            document.getElementById('negotiation-progress').classList.remove('d-none');
+            
+            // Show loading
+            document.getElementById('loading').classList.remove('d-none');
+            document.getElementById('negotiation-details').classList.add('d-none');
+            
+            // Simulate API call
+            setTimeout(() => {
+                submitNegotiation();
+            }, 2000);
+        }
+
+        function submitNegotiation() {
+            const assetId = document.getElementById('assetId').value;
+            const contractOfferId = document.getElementById('contractOfferId').value;
+            const providerUrl = document.getElementById('providerUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const validityPeriod = document.getElementById('validityPeriod').value === 'custom' 
+                ? document.getElementById('customDuration').value 
+                : document.getElementById('validityPeriod').value;
+
+            // Generate a mock negotiation ID
+            negotiationId = 'neg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            // Build negotiation request
+            const negotiationRequest = {
+                "@context": {
+                    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+                },
+                "@type": "NegotiationInitiateRequestDto",
+                "connectorAddress": providerUrl + "/protocol",
+                "protocol": "dataspace-protocol-http",
+                "connectorId": "provider-connector",
+                "providerId": "provider-connector",
+                "offer": {
+                    "offerId": contractOfferId,
+                    "assetId": assetId,
+                    "policy": {
+                        "@type": "Policy",
+                        "permission": [{
+                            "action": "use",
+                            "constraint": [{
+                                "leftOperand": "https://w3id.org/edc/v0.0.1/ns/inForceDate",
+                                "operator": "lt",
+                                "rightOperand": new Date(Date.now() + (validityPeriod === 'P1D' ? 86400000 : 3600000)).toISOString()
+                            }]
+                        }]
+                    }
+                }
+            };
+
+            // Hide loading and show details
+            document.getElementById('loading').classList.add('d-none');
+            document.getElementById('negotiation-details').classList.remove('d-none');
+            
+            // Populate negotiation details
+            document.getElementById('negotiationId').textContent = negotiationId;
+            document.getElementById('displayAssetId').textContent = assetId;
+            document.getElementById('displayProvider').textContent = providerUrl;
+            document.getElementById('createdAt').textContent = new Date().toLocaleString();
+            
+            // Enable buttons
+            document.getElementById('refreshBtn').disabled = false;
+            
+            // Auto-progress after a delay
+            setTimeout(() => {
+                document.getElementById('proceedBtn').disabled = false;
+                document.getElementById('negotiationStatus').textContent = 'CONFIRMED';
+                document.getElementById('negotiationStatus').className = 'badge badge-success';
+            }, 3000);
+        }
+
+        function checkNegotiationStatus() {
+            // Simulate status check
+            const statuses = ['REQUESTING', 'REQUESTED', 'AGREEING', 'AGREED', 'VERIFIED', 'FINALIZED'];
+            const currentStatusElement = document.getElementById('negotiationStatus');
+            const currentStatus = currentStatusElement.textContent;
+            const currentIndex = statuses.indexOf(currentStatus);
+            
+            if (currentIndex < statuses.length - 1) {
+                const nextStatus = statuses[currentIndex + 1];
+                currentStatusElement.textContent = nextStatus;
+                
+                if (nextStatus === 'FINALIZED') {
+                    currentStatusElement.className = 'badge badge-success';
+                    document.getElementById('proceedBtn').disabled = false;
+                } else if (nextStatus === 'VERIFIED') {
+                    currentStatusElement.className = 'badge badge-warning';
+                } else {
+                    currentStatusElement.className = 'badge badge-primary';
+                }
+            }
+        }
+
+        function proceedToStatus() {
+            currentStep = 4;
+            updateStepIndicator();
+            document.getElementById('negotiation-progress').classList.add('d-none');
+            document.getElementById('final-status').classList.remove('d-none');
+            
+            const status = document.getElementById('negotiationStatus').textContent;
+            const statusResult = document.getElementById('status-result');
+            
+            if (status === 'FINALIZED') {
+                statusResult.innerHTML = `
+                    <div class="alert alert-success">
+                        <h5 class="mb-2">✅ Negotiation Successful!</h5>
+                        <p class="mb-0">Your contract negotiation has been completed successfully. You can now proceed with data transfer.</p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Contract Agreement ID:</strong></td>
+                                <td>ca-${negotiationId}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Asset Access:</strong></td>
+                                <td><span class="badge badge-success">Granted</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Valid Until:</strong></td>
+                                <td>${new Date(Date.now() + 86400000).toLocaleString()}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Transfer Endpoint:</strong></td>
+                                <td>${environments[currentEnvironment].baseUrl}/api/v1/data/transfer</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+            } else {
+                statusResult.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h5 class="mb-2">⏳ Negotiation In Progress</h5>
+                        <p class="mb-0">Your contract negotiation is still being processed. Current status: <strong>${status}</strong></p>
+                    </div>
+                `;
+            }
+        }
+
+        function generateCurl() {
+            const curlOutput = document.getElementById('curl-output');
+            const curlCode = document.getElementById('curl-code');
+            
+            const curlCommand = `curl -X POST \\
+  "${environments[currentEnvironment].baseUrl}/management/v3/contractnegotiations" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Api-Key: ${environments[currentEnvironment].apiKey}" \\
+  -d '{
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    },
+    "@type": "NegotiationInitiateRequestDto",
+    "connectorAddress": "${document.getElementById('providerUrl').value}/protocol",
+    "protocol": "dataspace-protocol-http",
+    "connectorId": "provider-connector",
+    "providerId": "provider-connector",
+    "offer": {
+      "offerId": "${document.getElementById('contractOfferId').value}",
+      "assetId": "${document.getElementById('assetId').value}",
+      "policy": {
+        "@type": "Policy",
+        "permission": [{
+          "action": "use"
+        }]
+      }
+    }
+  }'`;
+            
+            curlCode.textContent = curlCommand;
+            curlOutput.classList.remove('d-none');
+        }
+
+        function copyCurl() {
+            const curlCode = document.getElementById('curl-code');
+            navigator.clipboard.writeText(curlCode.textContent).then(() => {
+                alert('cURL command copied to clipboard!');
+            });
+        }
+
+        function startNewNegotiation() {
+            // Reset the form
+            currentStep = 1;
+            negotiationId = '';
+            updateStepIndicator();
+            
+            // Hide all steps except the first
+            document.getElementById('final-status').classList.add('d-none');
+            document.getElementById('negotiation-progress').classList.add('d-none');
+            document.getElementById('contract-terms').classList.add('d-none');
+            document.getElementById('provider-selection').classList.remove('d-none');
+            
+            // Clear form fields
+            document.getElementById('assetId').value = '';
+            document.getElementById('contractOfferId').value = '';
+            document.getElementById('additionalTerms').value = '';
+            document.getElementById('curl-output').classList.add('d-none');
+        }
+
+        function fetchCatalog() {
+            const catalogInfo = document.getElementById('catalog-info');
+            catalogInfo.classList.remove('d-none');
+            
+            const catalogContent = document.getElementById('catalog-content');
+            catalogContent.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Asset ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Contract Offers</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>asset.quality.data</code></td>
+                                <td>Quality Data Asset</td>
+                                <td>Automotive quality metrics and analysis data</td>
+                                <td>2 offers available</td>
+                                <td><button class="btn btn-sm btn-outline-primary" onclick="selectAsset('asset.quality.data', 'offer-001')">Select</button></td>
+                            </tr>
+                            <tr>
+                                <td><code>asset.supply.chain</code></td>
+                                <td>Supply Chain Data</td>
+                                <td>Supplier network and logistics information</td>
+                                <td>1 offer available</td>
+                                <td><button class="btn btn-sm btn-outline-primary" onclick="selectAsset('asset.supply.chain', 'offer-002')">Select</button></td>
+                            </tr>
+                            <tr>
+                                <td><code>asset.production.metrics</code></td>
+                                <td>Production Metrics</td>
+                                <td>Manufacturing KPIs and performance data</td>
+                                <td>3 offers available</td>
+                                <td><button class="btn btn-sm btn-outline-primary" onclick="selectAsset('asset.production.metrics', 'offer-003')">Select</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted text-small mt-2">
+                    <strong>Note:</strong> This is a simplified catalog view. In a real implementation, 
+                    this would fetch data from the provider's catalog API.
+                </p>
+            `;
+        }
+
+        function selectAsset(assetId, offerId) {
+            document.getElementById('assetId').value = assetId;
+            document.getElementById('contractOfferId').value = offerId;
+            document.getElementById('catalog-info').classList.add('d-none');
+        }
+
+        function updateStepIndicator() {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step-${i}`);
+                step.classList.remove('active', 'completed');
+                
+                if (i < currentStep) {
+                    step.classList.add('completed');
+                } else if (i === currentStep) {
+                    step.classList.add('active');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

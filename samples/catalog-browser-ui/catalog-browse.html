@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalog Browse - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size);
+            line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color);
+            background-color: var(--tblr-body-bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .subtitle {
+            color: var(--tblr-muted);
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: var(--tblr-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: var(--tblr-muted);
+            margin: 0 0.5rem;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--tblr-border-color);
+            background: var(--tblr-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--tblr-dark);
+            font-size: 0.875rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--tblr-body-color);
+            background-color: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: var(--tblr-primary);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(var(--tblr-primary-rgb), 0.25);
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            padding-right: 2.25rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+
+        .btn-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+            border-color: #004494;
+        }
+
+        .btn-success {
+            color: white;
+            background-color: var(--tblr-success);
+            border-color: var(--tblr-success);
+        }
+
+        .btn-success:hover {
+            background-color: #279e3c;
+            border-color: #279e3c;
+        }
+
+        .btn-secondary {
+            color: white;
+            background-color: var(--tblr-secondary);
+            border-color: var(--tblr-secondary);
+        }
+
+        .btn-outline-primary {
+            color: var(--tblr-primary);
+            background-color: transparent;
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-outline-primary:hover {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .btn-outline-secondary {
+            color: var(--tblr-secondary);
+            background-color: transparent;
+            border-color: var(--tblr-secondary);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+        .badge-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .badge-success {
+            color: white;
+            background-color: var(--tblr-success);
+        }
+
+        .badge-warning {
+            color: white;
+            background-color: var(--tblr-warning);
+        }
+
+        .badge-danger {
+            color: white;
+            background-color: var(--tblr-danger);
+        }
+
+        .badge-secondary {
+            color: white;
+            background-color: var(--tblr-secondary);
+        }
+
+        .badge-info {
+            color: white;
+            background-color: var(--tblr-info);
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+        }
+
+        .alert-info {
+            color: #055160;
+            background-color: #cff4fc;
+            border-color: #b8daff;
+        }
+
+        .alert-success {
+            color: #0a3622;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -0.75rem;
+            margin-left: -0.75rem;
+        }
+
+        .col-md-4 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--tblr-body-color);
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid var(--tblr-border-color);
+        }
+
+        .table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid var(--tblr-border-color);
+            font-weight: 600;
+            color: var(--tblr-dark);
+            background-color: var(--tblr-light);
+            text-align: left;
+        }
+
+        .table-sm th,
+        .table-sm td {
+            padding: 0.5rem;
+        }
+
+        .text-muted {
+            color: var(--tblr-muted) !important;
+        }
+
+        .text-small {
+            font-size: 0.75rem;
+        }
+
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-2 { margin-bottom: 0.5rem !important; }
+        .mb-3 { margin-bottom: 1rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+        .ms-2 { margin-left: 0.5rem !important; }
+
+        .d-none { display: none !important; }
+        .d-flex { display: flex !important; }
+        .align-items-center { align-items: center !important; }
+        .justify-content-between { justify-content: space-between !important; }
+        .flex-wrap { flex-wrap: wrap !important; }
+        .gap-2 { gap: 0.5rem !important; }
+
+        .spinner-container {
+            text-align: center;
+            padding: 2rem;
+            color: var(--tblr-muted);
+            display: none;
+        }
+
+        .spinner-container.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--tblr-border-color);
+            border-radius: 50%;
+            border-top-color: var(--tblr-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-item .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--tblr-primary);
+        }
+
+        .stat-item .stat-label {
+            font-size: 0.75rem;
+            color: var(--tblr-muted);
+            margin-top: 0.125rem;
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar .search-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Catalog grid */
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Offer card */
+        .offer-card {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: box-shadow 0.15s ease-in-out, transform 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        .offer-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .offer-card-header {
+            padding: 1rem 1.25rem 0.75rem;
+            border-bottom: 1px solid var(--tblr-border-color-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .offer-card-header h3 {
+            margin: 0;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+            line-height: 1.3;
+        }
+
+        .offer-card-body {
+            padding: 0.75rem 1.25rem 1rem;
+        }
+
+        .offer-description {
+            font-size: 0.8125rem;
+            color: var(--tblr-muted);
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .offer-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--tblr-muted);
+            background: var(--tblr-light);
+            border: 1px solid var(--tblr-border-color-light);
+            border-radius: 0.25rem;
+            padding: 0.125rem 0.5rem;
+        }
+
+        .meta-tag svg { width: 12px; height: 12px; }
+
+        .policy-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-bottom: 0.875rem;
+        }
+
+        .policy-badge {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            padding: 0.1875rem 0.5rem;
+            border-radius: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .policy-badge svg { width: 12px; height: 12px; }
+
+        .policy-membership {
+            background: rgba(0, 84, 166, 0.1);
+            color: var(--tblr-primary);
+        }
+
+        .policy-framework {
+            background: rgba(47, 179, 68, 0.1);
+            color: var(--tblr-success);
+        }
+
+        .policy-bpn {
+            background: rgba(245, 159, 0, 0.15);
+            color: #b37a00;
+        }
+
+        .policy-purpose {
+            background: rgba(214, 51, 132, 0.1);
+            color: var(--tblr-danger);
+        }
+
+        .offer-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .provider-id-text {
+            font-size: 0.6875rem;
+            color: var(--tblr-muted);
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .type-badge {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            padding: 0.1875rem 0.5rem;
+            border-radius: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .type-rest { background: rgba(0, 84, 166, 0.1); color: var(--tblr-primary); }
+        .type-s3 { background: rgba(245, 159, 0, 0.15); color: #b37a00; }
+        .type-http { background: rgba(47, 179, 68, 0.1); color: var(--tblr-success); }
+        .type-azblob { background: rgba(214, 51, 132, 0.1); color: var(--tblr-danger); }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--tblr-muted);
+        }
+
+        .empty-state svg { margin-bottom: 0.75rem; }
+        .empty-state p { font-size: 0.9375rem; }
+
+        /* Modal overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 3.5rem 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-dialog {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            max-width: 720px;
+            width: 100%;
+            animation: slideDown 200ms ease;
+            overflow: hidden;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--tblr-border-color);
+            background: var(--tblr-light);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .modal-header .modal-asset-id {
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--tblr-muted);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--tblr-muted);
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background 0.15s ease-in-out;
+        }
+
+        .modal-close:hover { background: var(--tblr-border-color-light); }
+
+        .modal-body { padding: 1.5rem; }
+
+        .detail-section {
+            margin-bottom: 1.25rem;
+        }
+
+        .detail-section h4 {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--tblr-muted);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .detail-section p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--tblr-body-color);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .detail-kv {
+            background: var(--tblr-light);
+            border: 1px solid var(--tblr-border-color-light);
+            border-radius: 0.375rem;
+            padding: 0.625rem 0.875rem;
+        }
+
+        .detail-kv .k {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--tblr-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .detail-kv .v {
+            font-size: 0.875rem;
+            color: var(--tblr-body-color);
+            margin-top: 0.125rem;
+            word-break: break-all;
+        }
+
+        .policy-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .policy-table th {
+            text-align: left;
+            font-weight: 600;
+            color: var(--tblr-muted);
+            padding: 0.5rem 0.75rem;
+            border-bottom: 2px solid var(--tblr-border-color);
+            font-size: 0.75rem;
+        }
+
+        .policy-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--tblr-border-color-light);
+            vertical-align: top;
+        }
+
+        .policy-table tr:last-child td { border-bottom: none; }
+
+        code.constraint {
+            background: var(--tblr-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.1875rem;
+            font-size: 0.75rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 0.625rem;
+            justify-content: flex-end;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--tblr-border-color);
+            background: var(--tblr-light);
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: var(--tblr-dark);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeInUp 200ms ease;
+            transition: opacity 200ms ease;
+        }
+
+        .toast.success { background: var(--tblr-success); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .col-md-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            .catalog-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">Dashboard</a>
+                <span>/</span>
+                <span>Catalog Browse</span>
+            </div>
+            <h1>Catalog Browse</h1>
+            <div class="subtitle">Browse and discover data offers from provider connectors in the Catena-X dataspace</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Provider Selection -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Request Provider Catalog</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Provider DSP Endpoint</label>
+                            <input type="url" class="form-control" id="providerUrl"
+                                   value="https://provider-edc.catena-x.net/api/v1/dsp"
+                                   placeholder="https://provider-edc.example.com/api/v1/dsp">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Provider BPN</label>
+                            <input type="text" class="form-control" id="providerBpn"
+                                   value="BPNL00000003CRHK"
+                                   placeholder="BPNL...">
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 0.25rem;">
+                        <button type="button" class="btn btn-primary" onclick="fetchCatalog()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Request Catalog
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row d-none" id="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total Offers</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statRest">0</div>
+                <div class="stat-label">REST APIs</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statS3">0</div>
+                <div class="stat-label">S3 / Cloud</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statHttp">0</div>
+                <div class="stat-label">HTTP Data</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar d-none" id="filterBar">
+            <div class="search-input">
+                <input type="text" class="form-control" id="searchInput"
+                       placeholder="Filter offers by name, type, or policy..." oninput="filterOffers()">
+            </div>
+            <select class="form-control form-select" id="typeFilter" onchange="filterOffers()" style="width: auto; min-width: 150px;">
+                <option value="">All Types</option>
+                <option value="REST API">REST API</option>
+                <option value="S3">S3</option>
+                <option value="HTTP">HTTP</option>
+                <option value="AzureBlob">AzureBlob</option>
+            </select>
+        </div>
+
+        <!-- Loading -->
+        <div class="spinner-container" id="spinner">
+            <div class="spinner"></div>
+            <div style="margin-top: 1rem;">Requesting catalog from provider...</div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            <p>Enter a provider DSP endpoint and click <strong>Request Catalog</strong></p>
+        </div>
+
+        <!-- Catalog grid -->
+        <div class="catalog-grid" id="catalogGrid"></div>
+    </div>
+
+    <!-- Detail modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalTitle">-</h2>
+                    <div class="modal-asset-id" id="modalAssetId">-</div>
+                </div>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <h4>Description</h4>
+                    <p id="modalDesc">-</p>
+                </div>
+                <div class="detail-section">
+                    <h4>Asset Properties</h4>
+                    <div class="detail-grid" id="modalProps"></div>
+                </div>
+                <div class="detail-section">
+                    <h4>Usage Policies (ODRL)</h4>
+                    <table class="policy-table" id="modalPolicies">
+                        <thead>
+                            <tr><th>Type</th><th>Left Operand</th><th>Operator</th><th>Right Operand</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-primary btn-sm" onclick="copyOffer()">Copy Offer ID</button>
+                <button class="btn btn-success btn-sm" onclick="negotiate()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Initiate Negotiation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toasts"></div>
+
+    <script>
+        // Mock catalog data (simulates what the Management API returns)
+        var MOCK_CATALOG = [
+            {
+                id: "offer-a1b2c3",
+                assetId: "urn:uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                name: "Vehicle Part Catalog - 2026 Q1",
+                description: "Complete parts catalog for passenger vehicle components including BOMs, material specifications, and compliance certificates. Updated quarterly.",
+                type: "REST API",
+                contentType: "application/json",
+                version: "3.1.0",
+                keywords: ["parts", "BOM", "automotive", "catalog"],
+                creator: "Tier-1 Supplier AG",
+                providerBpn: "BPNL00000003CRHK",
+                created: "2026-01-15",
+                policies: [
+                    { type: "Permission", leftOperand: "cx-policy:Membership", operator: "eq", rightOperand: "active" },
+                    { type: "Permission", leftOperand: "cx-policy:FrameworkAgreement", operator: "eq", rightOperand: "traceability:1.0" },
+                    { type: "Constraint", leftOperand: "cx-policy:BusinessPartnerNumber", operator: "isAnyOf", rightOperand: "BPNL00000003AYRE, BPNL00000003CRHK" }
+                ]
+            },
+            {
+                id: "offer-d4e5f6",
+                assetId: "urn:uuid:d4e5f6a7-b8c9-0123-defg-hi4567890abc",
+                name: "Battery Passport - Cell Chemistry Data",
+                description: "Detailed cell chemistry composition data for EV battery modules, aligned with EU Battery Regulation. Includes recycled content ratios and carbon footprint per kWh.",
+                type: "S3",
+                contentType: "application/json",
+                version: "2.0.0",
+                keywords: ["battery", "passport", "sustainability"],
+                creator: "Battery Systems GmbH",
+                providerBpn: "BPNL00000003CRHK",
+                created: "2026-02-20",
+                policies: [
+                    { type: "Permission", leftOperand: "cx-policy:Membership", operator: "eq", rightOperand: "active" },
+                    { type: "Permission", leftOperand: "cx-policy:FrameworkAgreement", operator: "eq", rightOperand: "sustainability:1.0" },
+                    { type: "Permission", leftOperand: "cx-policy:UsagePurpose", operator: "eq", rightOperand: "cx.core.digitalTwinRegistry:1" }
+                ]
+            },
+            {
+                id: "offer-g7h8i9",
+                assetId: "urn:uuid:g7h8i9j0-k1l2-3456-mnop-qr7890123456",
+                name: "Production Quality Metrics - Plant Stuttgart",
+                description: "Real-time quality KPI stream for production line #4: PPM defect rates, SPC control charts, and measurement system analysis.",
+                type: "HTTP",
+                contentType: "application/json",
+                version: "1.2.0",
+                keywords: ["quality", "production", "KPI", "real-time"],
+                creator: "OEM Manufacturing Corp",
+                providerBpn: "BPNL00000003CRHK",
+                created: "2026-03-01",
+                policies: [
+                    { type: "Permission", leftOperand: "cx-policy:Membership", operator: "eq", rightOperand: "active" },
+                    { type: "Permission", leftOperand: "cx-policy:FrameworkAgreement", operator: "eq", rightOperand: "quality:1.0" },
+                    { type: "Constraint", leftOperand: "cx-policy:BusinessPartnerNumber", operator: "eq", rightOperand: "BPNL00000003AYRE" }
+                ]
+            },
+            {
+                id: "offer-j0k1l2",
+                assetId: "urn:uuid:j0k1l2m3-n4o5-6789-pqrs-tu0123456789",
+                name: "PCF (Product Carbon Footprint) - Gearbox Assembly",
+                description: "Cradle-to-gate carbon footprint data for ZF 8-speed automatic gearbox assembly, calculated per Catena-X PCF rulebook v3.0.",
+                type: "REST API",
+                contentType: "application/json",
+                version: "3.0.0",
+                keywords: ["PCF", "carbon", "sustainability", "gearbox"],
+                creator: "Tier-1 Supplier AG",
+                providerBpn: "BPNL00000003CRHK",
+                created: "2025-12-10",
+                policies: [
+                    { type: "Permission", leftOperand: "cx-policy:Membership", operator: "eq", rightOperand: "active" },
+                    { type: "Permission", leftOperand: "cx-policy:FrameworkAgreement", operator: "eq", rightOperand: "pcf:3.0" },
+                    { type: "Permission", leftOperand: "cx-policy:UsagePurpose", operator: "eq", rightOperand: "cx.pcf.base:1" }
+                ]
+            },
+            {
+                id: "offer-m3n4o5",
+                assetId: "urn:uuid:m3n4o5p6-q7r8-9012-stuv-wx3456789012",
+                name: "Digital Twin Registry - Serialized Parts",
+                description: "Access to the provider's Digital Twin Registry for looking up Asset Administration Shells of serialized part instances. Supports AAS submodel descriptors.",
+                type: "REST API",
+                contentType: "application/json",
+                version: "1.0.0",
+                keywords: ["digital twin", "AAS", "registry", "serialization"],
+                creator: "Tier-1 Supplier AG",
+                providerBpn: "BPNL00000003CRHK",
+                created: "2026-01-28",
+                policies: [
+                    { type: "Permission", leftOperand: "cx-policy:Membership", operator: "eq", rightOperand: "active" },
+                    { type: "Permission", leftOperand: "cx-policy:FrameworkAgreement", operator: "eq", rightOperand: "traceability:1.0" }
+                ]
+            },
+            {
+                id: "offer-p6q7r8",
+                assetId: "urn:uuid:p6q7r8s9-t0u1-2345-vwxy-za6789012345",
+                name: "Demand & Capacity - Weekly Forecast",
+                description: "Weekly demand and capacity forecast data for semiconductor components, following the Catena-X DCM standard. Covers 12-week rolling horizon.",
+                type: "AzureBlob",
+                contentType: "application/json",
+                version: "2.1.0",
+                keywords: ["demand", "capacity", "forecast", "semiconductor"],
+                creator: "Chip Manufacturing Inc",
+                providerBpn: "BPNL00000003CRHK",
+                created: "2026-03-15",
+                policies: [
+                    { type: "Permission", leftOperand: "cx-policy:Membership", operator: "eq", rightOperand: "active" },
+                    { type: "Permission", leftOperand: "cx-policy:FrameworkAgreement", operator: "eq", rightOperand: "demandcapacity:1.0" },
+                    { type: "Constraint", leftOperand: "cx-policy:BusinessPartnerNumber", operator: "isAnyOf", rightOperand: "BPNL00000003AYRE, BPNL00000003CRHK, BPNL00000003BZQT" },
+                    { type: "Duty", leftOperand: "cx-policy:UsagePurpose", operator: "eq", rightOperand: "cx.dcm.base:1" }
+                ]
+            }
+        ];
+
+        var currentOffers = [];
+        var displayedOffers = [];
+        var selectedOffer = null;
+
+        // Fetch catalog (simulated)
+        function fetchCatalog() {
+            var grid = document.getElementById("catalogGrid");
+            var spinner = document.getElementById("spinner");
+            var empty = document.getElementById("emptyState");
+            var stats = document.getElementById("stats");
+            var filterBar = document.getElementById("filterBar");
+
+            grid.innerHTML = "";
+            empty.style.display = "none";
+            spinner.classList.add("active");
+            stats.classList.add("d-none");
+            filterBar.classList.add("d-none");
+
+            setTimeout(function() {
+                spinner.classList.remove("active");
+                currentOffers = MOCK_CATALOG.slice();
+                renderStats(currentOffers);
+                renderOffers(currentOffers);
+                stats.classList.remove("d-none");
+                filterBar.classList.remove("d-none");
+                toast("Catalog received - " + currentOffers.length + " offers from provider");
+            }, 900);
+        }
+
+        // Render stats
+        function renderStats(offers) {
+            document.getElementById("statTotal").textContent = offers.length;
+            document.getElementById("statRest").textContent = offers.filter(function(o) { return o.type === "REST API"; }).length;
+            document.getElementById("statS3").textContent = offers.filter(function(o) { return o.type === "S3" || o.type === "AzureBlob"; }).length;
+            document.getElementById("statHttp").textContent = offers.filter(function(o) { return o.type === "HTTP"; }).length;
+        }
+
+        // Render offer cards
+        function renderOffers(offers) {
+            var grid = document.getElementById("catalogGrid");
+            displayedOffers = offers;
+
+            if (offers.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><p>No offers match your filter</p></div>';
+                return;
+            }
+
+            grid.innerHTML = offers.map(function(o, i) {
+                return '<div class="offer-card" data-index="' + i + '">' +
+                    '<div class="offer-card-header">' +
+                        '<h3>' + esc(o.name) + '</h3>' +
+                        '<span class="type-badge ' + typeClass(o.type) + '">' + esc(o.type) + '</span>' +
+                    '</div>' +
+                    '<div class="offer-card-body">' +
+                        '<div class="offer-description">' + esc(o.description) + '</div>' +
+                        '<div class="offer-meta">' +
+                            '<span class="meta-tag">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
+                                esc(o.contentType) +
+                            '</span>' +
+                            '<span class="meta-tag">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>' +
+                                'v' + esc(o.version) +
+                            '</span>' +
+                            '<span class="meta-tag">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+                                esc(o.created) +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="policy-badges">' + o.policies.map(policyBadge).join("") + '</div>' +
+                        '<div class="offer-card-footer">' +
+                            '<span class="provider-id-text" title="' + esc(o.providerBpn) + '">Provider: ' + esc(o.providerBpn) + '</span>' +
+                            '<button class="btn btn-outline-primary btn-sm detail-btn" data-index="' + i + '">View Details</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join("");
+
+            // Attach click handlers via event delegation
+            grid.querySelectorAll(".offer-card").forEach(function(card) {
+                card.addEventListener("click", function() {
+                    openModal(displayedOffers[card.dataset.index]);
+                });
+            });
+            grid.querySelectorAll(".detail-btn").forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    openModal(displayedOffers[btn.dataset.index]);
+                });
+            });
+        }
+
+        // Filter
+        function filterOffers() {
+            var q = document.getElementById("searchInput").value.toLowerCase();
+            var typeFilter = document.getElementById("typeFilter").value;
+            var filtered = currentOffers.filter(function(o) {
+                var matchesText = !q ||
+                    o.name.toLowerCase().indexOf(q) !== -1 ||
+                    o.description.toLowerCase().indexOf(q) !== -1 ||
+                    o.keywords.some(function(k) { return k.toLowerCase().indexOf(q) !== -1; }) ||
+                    o.policies.some(function(p) { return (p.leftOperand + p.rightOperand).toLowerCase().indexOf(q) !== -1; });
+                var matchesType = !typeFilter || o.type === typeFilter;
+                return matchesText && matchesType;
+            });
+            renderOffers(filtered);
+        }
+
+        // Modal
+        function openModal(offer) {
+            selectedOffer = offer;
+            var o = selectedOffer;
+            document.getElementById("modalTitle").textContent = o.name;
+            document.getElementById("modalAssetId").textContent = o.assetId;
+            document.getElementById("modalDesc").textContent = o.description;
+
+            document.getElementById("modalProps").innerHTML = [
+                kv("Asset ID", o.assetId),
+                kv("Offer ID", o.id),
+                kv("Content Type", o.contentType),
+                kv("Transfer Type", o.type),
+                kv("Version", o.version),
+                kv("Created", o.created),
+                kv("Creator", o.creator),
+                kv("Keywords", o.keywords.join(", "))
+            ].join("");
+
+            var tbody = document.querySelector("#modalPolicies tbody");
+            tbody.innerHTML = o.policies.map(function(p) {
+                return '<tr>' +
+                    '<td><span class="policy-badge ' + policyTypeClass(p.type) + '">' + esc(p.type) + '</span></td>' +
+                    '<td><code class="constraint">' + esc(p.leftOperand) + '</code></td>' +
+                    '<td style="font-weight:600;color:var(--tblr-muted)">' + esc(p.operator) + '</td>' +
+                    '<td><code class="constraint">' + esc(p.rightOperand) + '</code></td>' +
+                '</tr>';
+            }).join("");
+
+            document.getElementById("modalOverlay").classList.add("open");
+            document.addEventListener("keydown", escHandler);
+        }
+
+        function closeModal() {
+            document.getElementById("modalOverlay").classList.remove("open");
+            document.removeEventListener("keydown", escHandler);
+        }
+
+        function escHandler(e) {
+            if (e.key === "Escape") closeModal();
+        }
+
+        function copyOffer() {
+            if (!selectedOffer) return;
+            navigator.clipboard.writeText(selectedOffer.id).then(function() {
+                toast("Offer ID copied to clipboard", true);
+            });
+        }
+
+        function negotiate() {
+            if (!selectedOffer) return;
+            closeModal();
+            toast('Redirecting to negotiation wizard...', true);
+            setTimeout(function() {
+                window.location.href = 'contract-negotiation.html?asset=' + encodeURIComponent(selectedOffer.id) + '&provider=' + encodeURIComponent(selectedOffer.provider || '');
+            }, 500);
+        }
+
+        // Helpers
+        function typeClass(t) {
+            if (t === "REST API") return "type-rest";
+            if (t === "S3") return "type-s3";
+            if (t === "HTTP") return "type-http";
+            if (t === "AzureBlob") return "type-azblob";
+            return "";
+        }
+
+        function policyBadge(p) {
+            var lo = p.leftOperand;
+            var cls = "policy-membership";
+            if (lo.indexOf("Framework") !== -1) cls = "policy-framework";
+            if (lo.indexOf("BusinessPartner") !== -1) cls = "policy-bpn";
+            if (lo.indexOf("Purpose") !== -1) cls = "policy-purpose";
+            var label = lo.replace("cx-policy:", "");
+            return '<span class="policy-badge ' + cls + '">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+                esc(label) +
+            '</span>';
+        }
+
+        function policyTypeClass(t) {
+            if (t === "Permission") return "policy-framework";
+            if (t === "Constraint") return "policy-bpn";
+            if (t === "Duty") return "policy-purpose";
+            return "policy-membership";
+        }
+
+        function kv(key, val) {
+            return '<div class="detail-kv"><div class="k">' + esc(key) + '</div><div class="v">' + esc(val) + '</div></div>';
+        }
+
+        function esc(s) {
+            var d = document.createElement("div");
+            d.textContent = String(s);
+            return d.innerHTML;
+        }
+
+        function toast(msg, success) {
+            var c = document.getElementById("toasts");
+            var t = document.createElement("div");
+            t.className = "toast" + (success ? " success" : "");
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(function() {
+                t.style.opacity = "0";
+                setTimeout(function() { t.remove(); }, 200);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

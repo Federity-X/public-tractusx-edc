@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Policy - EDC Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #f1f5f9;
+            color: #3b82f6;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .wizard-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .wizard-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .wizard-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .wizard-subtitle {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .policy-meta {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            font-size: 0.875rem;
+            color: #0f172a;
+            font-family: 'Courier New', monospace;
+        }
+
+        .wizard-steps {
+            display: flex;
+            padding: 1.5rem 2rem;
+            background: #f8fafc;
+            overflow-x: auto;
+        }
+
+        .step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+
+        .step.completed:not(:last-child)::after {
+            background: #3b82f6;
+        }
+
+        .step-number {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .step.active .step-number {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .step.active .step-label {
+            color: #3b82f6;
+        }
+
+        .step.completed .step-label {
+            color: #10b981;
+        }
+
+        .wizard-content {
+            padding: 2rem;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #0f172a;
+            font-size: 0.875rem;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-help {
+            font-size: 0.813rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .form-error {
+            font-size: 0.813rem;
+            color: #ef4444;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .form-input.error,
+        .form-select.error,
+        .form-textarea.error {
+            border-color: #ef4444;
+        }
+
+        .form-input.error ~ .form-error,
+        .form-select.error ~ .form-error,
+        .form-textarea.error ~ .form-error {
+            display: block;
+        }
+
+        .alert {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .constraint-list {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .constraint-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            align-items: center;
+        }
+
+        .constraint-item:last-child {
+            border-bottom: none;
+        }
+
+        .constraint-header {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 0.813rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-primary:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.813rem;
+        }
+
+        .wizard-actions {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+        }
+
+        .preview-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.5rem;
+        }
+
+        .preview-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .preview-content {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.813rem;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .changes-summary {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .changes-summary h4 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .changes-list {
+            list-style: none;
+            font-size: 0.813rem;
+            color: #78350f;
+        }
+
+        .changes-list li {
+            padding: 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .template-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .template-card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .template-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .template-description {
+            font-size: 0.813rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .wizard-header {
+                padding: 1.5rem;
+            }
+
+            .wizard-steps {
+                padding: 1rem;
+                flex-direction: column;
+            }
+
+            .step:not(:last-child)::after {
+                display: none;
+            }
+
+            .wizard-content {
+                padding: 1.5rem;
+            }
+
+            .constraint-item {
+                grid-template-columns: 1fr;
+            }
+
+            .wizard-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .policy-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="javascript:history.back()" class="back-btn">← Back</a>
+            <h1>✏️ Edit Policy</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <div>Loading policy...</div>
+        </div>
+
+        <div id="wizardContainer" class="wizard-container" style="display: none;">
+            <!-- Wizard Header -->
+            <div class="wizard-header">
+                <h2 class="wizard-title" id="policyTitle">Edit Policy</h2>
+                <p class="wizard-subtitle">Update policy definition and constraints</p>
+                
+                <div class="policy-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Policy ID</span>
+                        <span class="meta-value" id="displayPolicyId">-</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Created</span>
+                        <span class="meta-value" id="displayCreatedAt">-</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Status</span>
+                        <span class="badge badge-info" id="displayStatus">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wizard Steps -->
+            <div class="wizard-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Basic Information</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Permissions</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Constraints</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Review & Save</div>
+                </div>
+            </div>
+
+            <!-- Wizard Content -->
+            <div class="wizard-content">
+                <!-- Step 1: Basic Information -->
+                <div class="form-section active" data-step="1">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.125rem;">Basic Information</h3>
+
+                    <div class="alert">
+                        ℹ️ <strong>Policy ID cannot be changed.</strong> All other fields can be updated.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Policy ID <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="policyId" readonly style="background: #f8fafc; cursor: not-allowed;">
+                        <div class="form-help">Unique identifier for this policy (read-only)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Policy Name/Description</label>
+                        <input type="text" class="form-input" id="policyName" placeholder="e.g., BPN Restricted Access Policy">
+                        <div class="form-help">Human-readable name to identify this policy</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Policy Type</label>
+                        <select class="form-select" id="policyType">
+                            <option value="access">Access Policy</option>
+                            <option value="contract">Contract Policy</option>
+                            <option value="usage">Usage Policy</option>
+                        </select>
+                        <div class="form-help">Indicates how this policy will be used</div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Permissions -->
+                <div class="form-section" data-step="2">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.125rem;">Permissions</h3>
+
+                    <div class="alert">
+                        ✅ <strong>Permissions:</strong> Define what actions are allowed under this policy.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Action Type <span class="required">*</span></label>
+                        <select class="form-select" id="actionType">
+                            <option value="use">Use (odrl:use)</option>
+                            <option value="transfer">Transfer (odrl:transfer)</option>
+                            <option value="read">Read (odrl:read)</option>
+                            <option value="write">Write (odrl:write)</option>
+                            <option value="display">Display (odrl:display)</option>
+                        </select>
+                        <div class="form-help">The primary action permitted by this policy</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Permission Scope</label>
+                        <div class="template-selector">
+                            <div class="template-card selected" data-scope="unrestricted">
+                                <div class="template-title">🌐 Unrestricted</div>
+                                <div class="template-description">No constraints applied</div>
+                            </div>
+                            <div class="template-card" data-scope="restricted">
+                                <div class="template-title">🔒 Restricted</div>
+                                <div class="template-description">Add constraints in next step</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Constraints -->
+                <div class="form-section" data-step="3">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.125rem;">Policy Constraints</h3>
+
+                    <div class="alert alert-warning">
+                        ⚠️ <strong>Constraints:</strong> Define conditions that must be met for the permission to be granted.
+                    </div>
+
+                    <div class="constraint-list">
+                        <div class="constraint-item constraint-header">
+                            <div>Left Operand</div>
+                            <div>Operator</div>
+                            <div>Right Operand</div>
+                            <div style="width: 40px;"></div>
+                        </div>
+                        <div id="constraintsList">
+                            <!-- Constraints will be added here -->
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary btn-small" onclick="addConstraint()">+ Add Constraint</button>
+
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="font-size: 0.875rem; margin-bottom: 0.75rem; color: #64748b;">Common Constraints:</h4>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-secondary btn-small" onclick="addPresetConstraint('BusinessPartnerNumber')">+ BPN</button>
+                            <button class="btn btn-secondary btn-small" onclick="addPresetConstraint('FrameworkAgreement')">+ Framework</button>
+                            <button class="btn btn-secondary btn-small" onclick="addPresetConstraint('Membership')">+ Membership</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review & Save -->
+                <div class="form-section" data-step="4">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.125rem;">Review Changes & Save</h3>
+
+                    <div class="changes-summary" id="changesSummary" style="display: none;">
+                        <h4>📝 Changes Detected:</h4>
+                        <ul class="changes-list" id="changesList"></ul>
+                    </div>
+
+                    <div class="alert">
+                        💡 <strong>Update Method:</strong> This will use PUT request to update the policy in-place. All references remain valid.
+                    </div>
+
+                    <div class="preview-card" id="reviewContent">
+                        <!-- Review content will be inserted here -->
+                    </div>
+
+                    <h4 style="margin: 2rem 0 1rem; font-size: 1rem; color: #64748b;">Updated Policy JSON</h4>
+                    <pre class="code-block" id="jsonPreview"></pre>
+                </div>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="wizard-actions">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">← Previous</button>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next →</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="savePolicy()" style="display: none;">💾 Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let totalSteps = 4;
+        let originalPolicy = null;
+        let constraints = [];
+        let permissionScope = 'unrestricted';
+
+        // API Configuration
+        const apiEndpoint = 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk/management/v3/policydefinitions';
+        const apiKey = 'TEST2';
+
+        // Get policy ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const policyId = urlParams.get('id') || 'test-edit-policy-001'; // Default for preview
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadPolicy();
+        });
+
+        function setupEventListeners() {
+            // Template card selection
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    permissionScope = this.dataset.scope;
+                });
+            });
+        }
+
+        function loadPolicy() {
+            // For demo/testing with sample data
+            setTimeout(() => {
+                originalPolicy = generateSamplePolicy(policyId);
+                populateForm(originalPolicy);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('wizardContainer').style.display = 'block';
+            }, 500);
+
+            // Uncomment to use live API
+            /*
+            fetch(apiEndpoint + '/' + policyId, {
+                method: 'GET',
+                headers: {
+                    'X-Api-Key': apiKey
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Policy not found');
+                return response.json();
+            })
+            .then(data => {
+                originalPolicy = data;
+                populateForm(data);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('wizardContainer').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading policy:', error);
+                document.getElementById('loadingState').innerHTML = 
+                    '<div style="color: #dc2626;">Failed to load policy. Please check your connection and try again.</div>';
+            });
+            */
+        }
+
+        function generateSamplePolicy(id) {
+            return {
+                '@context': {
+                    '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+                    'edc': 'https://w3id.org/edc/v0.0.1/ns/',
+                    'odrl': 'http://www.w3.org/ns/odrl/2/'
+                },
+                '@id': id,
+                '@type': 'PolicyDefinition',
+                'createdAt': 1763116426671,
+                'policy': {
+                    '@type': 'odrl:Set',
+                    'odrl:permission': [{
+                        'odrl:action': {
+                            'odrl:type': 'http://www.w3.org/ns/odrl/2/use'
+                        },
+                        'odrl:constraint': [{
+                            'odrl:leftOperand': 'BusinessPartnerNumber',
+                            'odrl:operator': 'odrl:eq',
+                            'odrl:rightOperand': 'BPNL000000000001'
+                        }]
+                    }]
+                }
+            };
+        }
+
+        function populateForm(policy) {
+            // Basic information
+            document.getElementById('policyId').value = policy['@id'];
+            document.getElementById('displayPolicyId').textContent = policy['@id'];
+            document.getElementById('policyTitle').textContent = `Edit Policy: ${policy['@id']}`;
+            
+            // Format and display created date
+            if (policy.createdAt) {
+                const date = new Date(policy.createdAt);
+                document.getElementById('displayCreatedAt').textContent = date.toLocaleString();
+            }
+
+            // Extract permission action
+            const permission = policy.policy?.['odrl:permission']?.[0] || policy.policy?.['odrl:permission'];
+            if (permission) {
+                const action = permission['odrl:action']?.['odrl:type'] || permission['odrl:action']?.['@id'];
+                if (action) {
+                    const actionType = action.split('/').pop();
+                    document.getElementById('actionType').value = actionType;
+                }
+
+                // Extract constraints
+                const policyConstraints = permission['odrl:constraint'];
+                if (policyConstraints && (Array.isArray(policyConstraints) ? policyConstraints.length > 0 : true)) {
+                    permissionScope = 'restricted';
+                    document.querySelector('.template-card[data-scope="restricted"]').classList.add('selected');
+                    document.querySelector('.template-card[data-scope="unrestricted"]').classList.remove('selected');
+                    
+                    constraints = [];
+                    const constraintArray = Array.isArray(policyConstraints) ? policyConstraints : [policyConstraints];
+                    constraintArray.forEach(c => {
+                        constraints.push({
+                            leftOperand: c['odrl:leftOperand'] || c.leftOperand || '',
+                            operator: (c['odrl:operator'] || c.operator || '').replace('odrl:', ''),
+                            rightOperand: c['odrl:rightOperand'] || c.rightOperand || ''
+                        });
+                    });
+                }
+            }
+
+            renderConstraints();
+        }
+
+        function addConstraint() {
+            constraints.push({ leftOperand: '', operator: 'eq', rightOperand: '' });
+            renderConstraints();
+        }
+
+        function addPresetConstraint(type) {
+            let constraint = { leftOperand: type, operator: 'eq', rightOperand: '' };
+            
+            if (type === 'BusinessPartnerNumber') {
+                constraint.rightOperand = 'BPNL000000000000';
+            } else if (type === 'FrameworkAgreement') {
+                constraint.leftOperand = 'FrameworkAgreement.traceability';
+                constraint.rightOperand = 'active';
+            } else if (type === 'Membership') {
+                constraint.leftOperand = 'Membership';
+                constraint.rightOperand = 'active';
+            }
+            
+            constraints.push(constraint);
+            renderConstraints();
+        }
+
+        function removeConstraint(index) {
+            constraints.splice(index, 1);
+            renderConstraints();
+        }
+
+        function renderConstraints() {
+            const container = document.getElementById('constraintsList');
+            
+            if (constraints.length === 0) {
+                container.innerHTML = '<div class="constraint-item" style="justify-content: center; color: #64748b;">No constraints added</div>';
+                return;
+            }
+
+            container.innerHTML = constraints.map((constraint, index) => `
+                <div class="constraint-item">
+                    <input type="text" class="form-input" placeholder="e.g., BusinessPartnerNumber" 
+                           value="${constraint.leftOperand}" 
+                           onchange="constraints[${index}].leftOperand = this.value">
+                    <select class="form-select" onchange="constraints[${index}].operator = this.value">
+                        <option value="eq" ${constraint.operator === 'eq' ? 'selected' : ''}>Equals (eq)</option>
+                        <option value="neq" ${constraint.operator === 'neq' ? 'selected' : ''}>Not Equals (neq)</option>
+                        <option value="gt" ${constraint.operator === 'gt' ? 'selected' : ''}>Greater Than (gt)</option>
+                        <option value="lt" ${constraint.operator === 'lt' ? 'selected' : ''}>Less Than (lt)</option>
+                        <option value="in" ${constraint.operator === 'in' ? 'selected' : ''}>In (in)</option>
+                    </select>
+                    <input type="text" class="form-input" placeholder="Value" 
+                           value="${constraint.rightOperand}" 
+                           onchange="constraints[${index}].rightOperand = this.value">
+                    <button class="btn btn-danger btn-small" onclick="removeConstraint(${index})" style="width: auto; padding: 0.375rem;">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (!validateStep(currentStep)) {
+                    return;
+                }
+
+                currentStep++;
+                updateWizard();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizard();
+            }
+        }
+
+        function updateWizard() {
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Update form sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelector(`.form-section[data-step="${currentStep}"]`).classList.add('active');
+
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = currentStep < totalSteps ? 'inline-flex' : 'none';
+            document.getElementById('saveBtn').style.display = currentStep === totalSteps ? 'inline-flex' : 'none';
+
+            // Generate review if on last step
+            if (currentStep === totalSteps) {
+                generateReview();
+            }
+        }
+
+        function validateStep(step) {
+            if (step === 1) {
+                const policyId = document.getElementById('policyId').value;
+                if (!policyId) {
+                    alert('Policy ID is required');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function detectChanges() {
+            const changes = [];
+            const newPolicy = buildPolicyObject();
+
+            // Compare action type
+            const oldAction = originalPolicy.policy?.['odrl:permission']?.[0]?.['odrl:action']?.['odrl:type'] || '';
+            const newAction = newPolicy.policy['odrl:permission'][0]['odrl:action']['odrl:type'];
+            if (oldAction !== newAction) {
+                changes.push(`Action changed from ${oldAction.split('/').pop()} to ${newAction.split('/').pop()}`);
+            }
+
+            // Compare constraints
+            const oldConstraints = originalPolicy.policy?.['odrl:permission']?.[0]?.['odrl:constraint'] || [];
+            const newConstraints = newPolicy.policy['odrl:permission'][0]['odrl:constraint'] || [];
+            const oldCount = Array.isArray(oldConstraints) ? oldConstraints.length : (oldConstraints ? 1 : 0);
+            const newCount = newConstraints.length;
+            
+            if (oldCount !== newCount) {
+                changes.push(`Constraints changed from ${oldCount} to ${newCount}`);
+            }
+
+            return changes;
+        }
+
+        function generateReview() {
+            const policy = buildPolicyObject();
+            const changes = detectChanges();
+
+            // Show changes summary
+            const changesSummary = document.getElementById('changesSummary');
+            const changesList = document.getElementById('changesList');
+            
+            if (changes.length > 0) {
+                changesSummary.style.display = 'block';
+                changesList.innerHTML = changes.map(change => `<li>✏️ ${change}</li>`).join('');
+            } else {
+                changesSummary.style.display = 'none';
+            }
+
+            // Build review content
+            const permission = policy.policy['odrl:permission'][0];
+            const action = permission['odrl:action']['odrl:type'].split('/').pop();
+            
+            let reviewHtml = `
+                <div class="preview-section">
+                    <div class="preview-title">Policy ID</div>
+                    <div class="preview-content"><code>${policy['@id']}</code></div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="preview-title">Permission</div>
+                    <div class="preview-content">
+                        <strong>Action:</strong> ${action}<br>
+                        <strong>Scope:</strong> <span class="badge ${permissionScope === 'unrestricted' ? 'badge-success' : 'badge-warning'}">${permissionScope}</span>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-title">Constraints</div>
+                    <div class="preview-content">
+                        ${constraints.length > 0 
+                            ? constraints.map(c => `<strong>${c.leftOperand}</strong> ${c.operator} <code>${c.rightOperand}</code>`).join('<br>') 
+                            : '<span class="badge badge-success">No constraints (unrestricted)</span>'}
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-title">Created</div>
+                    <div class="preview-content">${new Date(originalPolicy.createdAt).toLocaleString()}</div>
+                </div>
+            `;
+
+            document.getElementById('reviewContent').innerHTML = reviewHtml;
+            document.getElementById('jsonPreview').textContent = JSON.stringify(policy, null, 2);
+        }
+
+        function buildPolicyObject() {
+            const actionType = document.getElementById('actionType').value;
+            
+            const policy = {
+                '@context': {
+                    '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+                    'odrl': 'http://www.w3.org/ns/odrl/2/'
+                },
+                '@id': document.getElementById('policyId').value,
+                '@type': 'PolicyDefinition',
+                'policy': {
+                    '@type': 'odrl:Set',
+                    'odrl:permission': [{
+                        'odrl:action': {
+                            'odrl:type': `http://www.w3.org/ns/odrl/2/${actionType}`
+                        }
+                    }]
+                }
+            };
+
+            // Add constraints if in restricted scope
+            if (permissionScope === 'restricted' && constraints.length > 0) {
+                const validConstraints = constraints.filter(c => c.leftOperand && c.rightOperand);
+                if (validConstraints.length > 0) {
+                    policy.policy['odrl:permission'][0]['odrl:constraint'] = validConstraints.map(c => ({
+                        'odrl:leftOperand': c.leftOperand,
+                        'odrl:operator': `odrl:${c.operator}`,
+                        'odrl:rightOperand': c.rightOperand
+                    }));
+                }
+            }
+
+            return policy;
+        }
+
+        async function savePolicy() {
+            if (!confirm('Save changes to policy: ' + document.getElementById('policyId').value + '?')) {
+                return;
+            }
+
+            const policy = buildPolicyObject();
+            const policyId = policy['@id'];
+
+            try {
+                // For demo
+                setTimeout(() => {
+                    alert('✅ Policy updated successfully!\n\nPolicy ID: ' + policyId);
+                    window.location.href = 'policy-details.html?id=' + policyId;
+                }, 500);
+
+                // Uncomment to use live API
+                /*
+                const response = await fetch(apiEndpoint + '/' + policyId, {
+                    method: 'PUT',
+                    headers: {
+                        'X-Api-Key': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(policy)
+                });
+
+                if (response.status === 204) {
+                    // Success - 204 No Content
+                    alert('✅ Policy updated successfully!');
+                    window.location.href = 'policy-details.html?id=' + policyId;
+                } else if (response.status === 404) {
+                    const error = await response.json();
+                    alert('❌ Policy not found: ' + error[0].message);
+                } else {
+                    throw new Error('Update failed with status: ' + response.status);
+                }
+                */
+
+            } catch (error) {
+                console.error('Error saving policy:', error);
+                alert('❌ Failed to save policy. Please try again.');
+            }
+        }
+
+        function cancelEdit() {
+            if (confirm('Cancel editing? Any unsaved changes will be lost.')) {
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+</html>
