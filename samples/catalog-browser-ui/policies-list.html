@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Definitions - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--tblr-body-bg);
+            color: var(--tblr-body-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 1;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .filter-select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table thead {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .table th.sortable:hover {
+            color: #3b82f6;
+        }
+
+        .sort-indicator {
+            margin-left: 0.25rem;
+            font-size: 0.625rem;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        .checkbox {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .policy-id {
+            font-weight: 500;
+            color: #0f172a;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8125rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-orange {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .badge-gray {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .constraint-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #64748b;
+            font-size: 0.8125rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            padding: 0.375rem;
+            border: none;
+            background: none;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: #f1f5f9;
+            color: #3b82f6;
+        }
+
+        .icon-btn.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .bulk-actions {
+            background: #eff6ff;
+            border-bottom: 1px solid #bfdbfe;
+            padding: 0.75rem 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bulk-actions.active {
+            display: flex;
+        }
+
+        .bulk-actions-text {
+            color: #1e40af;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .pagination {
+            padding: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-size-select {
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #334155;
+        }
+
+        .empty-state-description {
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .loading {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .stat-badge {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .filters {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+
+            .table {
+                font-size: 0.8125rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .pagination {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Tabler theme overrides — map Tailwind blue to Catena-X primary */
+        .btn-primary { background: var(--tblr-primary); }
+        .btn-primary:hover { background: #004494; }
+        .search-input:focus { border-color: var(--tblr-primary); box-shadow: 0 0 0 3px rgba(var(--tblr-primary-rgb), 0.1); }
+        .filter-select:focus { border-color: var(--tblr-primary); }
+        .table th.sortable:hover { color: var(--tblr-primary); }
+        .icon-btn:hover { color: var(--tblr-primary); }
+        .page-btn:hover:not(:disabled) { border-color: var(--tblr-primary); color: var(--tblr-primary); }
+        .page-btn.active { background: var(--tblr-primary); border-color: var(--tblr-primary); }
+        .spinner { border-top-color: var(--tblr-primary); }
+        .header h1 { color: var(--tblr-dark); }
+        .header { border-bottom: 1px solid var(--tblr-border-color); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <div class="breadcrumb" style="font-size:0.8125rem;color:#64748b;"><a href="index.html" style="color:var(--tblr-primary);text-decoration:none;">Dashboard</a> / Policy Definitions</div>
+                <h1>🛡️ Policy Definitions</h1>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline" onclick="refreshPolicies()">↻ Refresh</button>
+            <button class="btn btn-primary" onclick="window.location.href='create-policy.html'">+ Create Policy</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="page-title">Policy Management</div>
+            <div class="page-description">Manage access and usage policies for your data assets in the Eclipse Dataspace Connector</div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Policies</div>
+                <div class="stat-value" id="totalPolicies">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unrestricted</div>
+                <div class="stat-value" id="unrestrictedPolicies">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">With Constraints</div>
+                <div class="stat-value" id="constrainedPolicies">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">BPN Restricted</div>
+                <div class="stat-value" id="bpnPolicies">0</div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="filters">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search by policy ID or constraint...">
+                    </div>
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="unrestricted">Unrestricted</option>
+                        <option value="bpn-restricted">BPN Restricted</option>
+                        <option value="membership">Membership</option>
+                        <option value="time-restricted">Time Restricted</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <select class="filter-select" id="constraintFilter">
+                        <option value="">All Constraints</option>
+                        <option value="0">No Constraints</option>
+                        <option value="1">1+ Constraints</option>
+                        <option value="2">2+ Constraints</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bulk-actions" id="bulkActions">
+                <span class="bulk-actions-text"><span id="selectedCount">0</span> selected</span>
+                <button class="btn btn-sm btn-secondary" onclick="exportSelected()">📥 Export</button>
+                <button class="btn btn-sm btn-secondary" onclick="cloneSelected()">📋 Clone</button>
+                <button class="btn btn-sm btn-secondary" style="background: #fee2e2; color: #dc2626;" onclick="deleteSelected()">🗑️ Delete</button>
+            </div>
+
+            <div class="table-container">
+                <div id="loadingState" class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading policies...</div>
+                </div>
+
+                <table class="table" id="policiesTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th class="sortable" onclick="sortTable('id')">
+                                Policy ID
+                                <span class="sort-indicator" id="sort-id"></span>
+                            </th>
+                            <th class="sortable" onclick="sortTable('type')">
+                                Type
+                                <span class="sort-indicator" id="sort-type"></span>
+                            </th>
+                            <th class="sortable" onclick="sortTable('permission')">
+                                Permission
+                                <span class="sort-indicator" id="sort-permission"></span>
+                            </th>
+                            <th class="sortable" onclick="sortTable('constraints')">
+                                Constraints
+                                <span class="sort-indicator" id="sort-constraints"></span>
+                            </th>
+                            <th>Constraint Details</th>
+                            <th class="sortable" onclick="sortTable('created')">
+                                Created
+                                <span class="sort-indicator" id="sort-created"></span>
+                            </th>
+                            <th style="width: 150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policiesTableBody">
+                        <!-- Rows will be inserted here -->
+                    </tbody>
+                </table>
+
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">🛡️</div>
+                    <div class="empty-state-title">No policies found</div>
+                    <div class="empty-state-description">Create your first policy to control access and usage of your data assets</div>
+                    <button class="btn btn-primary" onclick="window.location.href='create-policy.html'">+ Create Policy</button>
+                </div>
+            </div>
+
+            <div class="pagination" id="paginationContainer" style="display: none;">
+                <div class="pagination-info">
+                    Showing <strong id="showingFrom">0</strong> to <strong id="showingTo">0</strong> of <strong id="totalCount">0</strong> policies
+                </div>
+                <div class="pagination-controls">
+                    <select class="page-size-select" id="pageSizeSelect" onchange="changePageSize()">
+                        <option value="10">10 per page</option>
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                    <button class="page-btn" id="prevBtn" onclick="previousPage()">← Previous</button>
+                    <div id="pageNumbers"></div>
+                    <button class="page-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let allPolicies = [];
+        let filteredPolicies = [];
+        let currentPage = 1;
+        let pageSize = 25;
+        let sortColumn = 'created';
+        let sortDirection = 'desc';
+        let selectedPolicies = new Set();
+
+        // API Configuration
+        const apiEndpoint = 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk/management/v3/policydefinitions';
+        const apiKey = 'TEST2';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPolicies();
+            
+            // Set up search with debounce
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => filterPolicies(), 300);
+            });
+
+            // Set up filters
+            document.getElementById('typeFilter').addEventListener('change', filterPolicies);
+            document.getElementById('constraintFilter').addEventListener('change', filterPolicies);
+        });
+
+        function loadPolicies() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('policiesTable').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('paginationContainer').style.display = 'none';
+
+            // For demo/testing with sample data
+            // Comment this out and uncomment the fetch() call to use live API
+            setTimeout(() => {
+                allPolicies = generateSamplePolicies();
+                filteredPolicies = [...allPolicies];
+                updateStatistics();
+                renderTable();
+            }, 500);
+
+            // Uncomment to use live API
+            /*
+            fetch(apiEndpoint + '/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Api-Key': apiKey
+                },
+                body: JSON.stringify({
+                    "@context": {"@vocab": "https://w3id.org/edc/v0.0.1/ns/"},
+                    "@type": "QuerySpec",
+                    "limit": 1000
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                allPolicies = data.map(p => transformPolicy(p));
+                filteredPolicies = [...allPolicies];
+                updateStatistics();
+                renderTable();
+            })
+            .catch(error => {
+                console.error('Error loading policies:', error);
+                document.getElementById('loadingState').innerHTML = 
+                    '<div style="color: #dc2626;">Failed to load policies. Please check your connection and try again.</div>';
+            });
+            */
+        }
+
+        function transformPolicy(policyData) {
+            const policy = policyData.policy;
+            const permission = policy['odrl:permission'];
+            const constraint = permission?.['odrl:constraint'];
+            
+            let constraints = [];
+            if (constraint) {
+                if (constraint['odrl:and']) {
+                    constraints = constraint['odrl:and'];
+                } else if (constraint['odrl:or']) {
+                    constraints = [constraint['odrl:or']];
+                } else {
+                    constraints = [constraint];
+                }
+            }
+
+            return {
+                id: policyData['@id'],
+                permission: permission?.['odrl:action']?.['@id'] || 'USE',
+                constraints: constraints.map(c => ({
+                    leftOperand: c['odrl:leftOperand']?.['@id'] || c['odrl:leftOperand'],
+                    operator: c['odrl:operator']?.['@id'] || c['odrl:operator'],
+                    rightOperand: c['odrl:rightOperand']
+                })),
+                prohibitions: policy['odrl:prohibition']?.length || 0,
+                obligations: policy['odrl:obligation']?.length || 0,
+                createdAt: policyData.createdAt,
+                raw: policyData
+            };
+        }
+
+        function generateSamplePolicies() {
+            const policies = [];
+            const now = Date.now();
+
+            // Unrestricted policies
+            policies.push({
+                id: 'policy-unrestricted-001',
+                permission: 'USE',
+                constraints: [],
+                prohibitions: 0,
+                obligations: 0,
+                createdAt: now - 86400000 * 30
+            });
+
+            policies.push({
+                id: 'policy-unrestricted-002',
+                permission: 'USE',
+                constraints: [],
+                prohibitions: 0,
+                obligations: 0,
+                createdAt: now - 86400000 * 25
+            });
+
+            // BPN-restricted policies
+            for (let i = 1; i <= 8; i++) {
+                policies.push({
+                    id: `policy-bpn-restricted-00${i}`,
+                    permission: 'USE',
+                    constraints: [{
+                        leftOperand: 'BusinessPartnerNumber',
+                        operator: 'odrl:eq',
+                        rightOperand: `BPNL00000003${String(i).padStart(4, '0')}`
+                    }],
+                    prohibitions: 0,
+                    obligations: 0,
+                    createdAt: now - 86400000 * (20 - i)
+                });
+            }
+
+            // Membership policies
+            policies.push({
+                id: 'policy-membership-001',
+                permission: 'USE',
+                constraints: [{
+                    leftOperand: 'Membership',
+                    operator: 'odrl:eq',
+                    rightOperand: 'active'
+                }],
+                prohibitions: 0,
+                obligations: 0,
+                createdAt: now - 86400000 * 15
+            });
+
+            // Time-restricted policies
+            policies.push({
+                id: 'policy-time-restricted-001',
+                permission: 'USE',
+                constraints: [{
+                    leftOperand: 'policy-evaluation-time',
+                    operator: 'odrl:lt',
+                    rightOperand: '2025-12-31T23:59:59Z'
+                }],
+                prohibitions: 0,
+                obligations: 0,
+                createdAt: now - 86400000 * 10
+            });
+
+            // Multi-constraint policies
+            policies.push({
+                id: 'policy-multi-constraint-001',
+                permission: 'USE',
+                constraints: [
+                    {
+                        leftOperand: 'BusinessPartnerNumber',
+                        operator: 'odrl:eq',
+                        rightOperand: 'BPNL00000003AYRE'
+                    },
+                    {
+                        leftOperand: 'policy-evaluation-time',
+                        operator: 'odrl:lt',
+                        rightOperand: '2026-01-01T00:00:00Z'
+                    }
+                ],
+                prohibitions: 0,
+                obligations: 0,
+                createdAt: now - 86400000 * 5
+            });
+
+            return policies;
+        }
+
+        function getPolicyType(policy) {
+            if (policy.constraints.length === 0) return 'unrestricted';
+            
+            const hasBPN = policy.constraints.some(c => c.leftOperand === 'BusinessPartnerNumber');
+            const hasMembership = policy.constraints.some(c => c.leftOperand === 'Membership');
+            const hasTime = policy.constraints.some(c => c.leftOperand === 'policy-evaluation-time');
+            
+            if (hasBPN && policy.constraints.length === 1) return 'bpn-restricted';
+            if (hasMembership && policy.constraints.length === 1) return 'membership';
+            if (hasTime && policy.constraints.length === 1) return 'time-restricted';
+            return 'custom';
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalPolicies').textContent = allPolicies.length;
+            document.getElementById('unrestrictedPolicies').textContent = 
+                allPolicies.filter(p => p.constraints.length === 0).length;
+            document.getElementById('constrainedPolicies').textContent = 
+                allPolicies.filter(p => p.constraints.length > 0).length;
+            document.getElementById('bpnPolicies').textContent = 
+                allPolicies.filter(p => p.constraints.some(c => c.leftOperand === 'BusinessPartnerNumber')).length;
+        }
+
+        function filterPolicies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const constraintFilter = document.getElementById('constraintFilter').value;
+
+            filteredPolicies = allPolicies.filter(policy => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    policy.id.toLowerCase().includes(searchTerm) ||
+                    policy.constraints.some(c => 
+                        c.leftOperand.toLowerCase().includes(searchTerm) ||
+                        c.rightOperand.toLowerCase().includes(searchTerm)
+                    );
+
+                // Type filter
+                const matchesType = !typeFilter || getPolicyType(policy) === typeFilter;
+
+                // Constraint count filter
+                const matchesConstraint = !constraintFilter || 
+                    (constraintFilter === '0' && policy.constraints.length === 0) ||
+                    (constraintFilter === '1' && policy.constraints.length >= 1) ||
+                    (constraintFilter === '2' && policy.constraints.length >= 2);
+
+                return matchesSearch && matchesType && matchesConstraint;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredPolicies.sort((a, b) => {
+                let aVal, bVal;
+
+                switch (column) {
+                    case 'id':
+                        aVal = a.id;
+                        bVal = b.id;
+                        break;
+                    case 'type':
+                        aVal = getPolicyType(a);
+                        bVal = getPolicyType(b);
+                        break;
+                    case 'permission':
+                        aVal = a.permission;
+                        bVal = b.permission;
+                        break;
+                    case 'constraints':
+                        aVal = a.constraints.length;
+                        bVal = b.constraints.length;
+                        break;
+                    case 'created':
+                        aVal = a.createdAt;
+                        bVal = b.createdAt;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            updateSortIndicators();
+            renderTable();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = '');
+            const indicator = document.getElementById(`sort-${sortColumn}`);
+            if (indicator) {
+                indicator.textContent = sortDirection === 'asc' ? '↑' : '↓';
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('policiesTableBody');
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = filteredPolicies.slice(startIndex, endIndex);
+
+            if (filteredPolicies.length === 0) {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('policiesTable').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('paginationContainer').style.display = 'none';
+                return;
+            }
+
+            tbody.innerHTML = pageData.map(policy => {
+                const type = getPolicyType(policy);
+                const typeBadge = getTypeBadge(type);
+                const createdDate = new Date(policy.createdAt).toLocaleDateString();
+                const isSelected = selectedPolicies.has(policy.id);
+
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="checkbox" ${isSelected ? 'checked' : ''} 
+                                onchange="toggleSelect('${policy.id}')">
+                        </td>
+                        <td>
+                            <div class="policy-id">${policy.id}</div>
+                        </td>
+                        <td>${typeBadge}</td>
+                        <td><span class="badge badge-blue">${policy.permission}</span></td>
+                        <td>
+                            <span class="constraint-count">
+                                ${policy.constraints.length > 0 ? `${policy.constraints.length} constraint${policy.constraints.length > 1 ? 's' : ''}` : 'None'}
+                            </span>
+                        </td>
+                        <td>
+                            ${policy.constraints.length > 0 ? 
+                                policy.constraints.map(c => `
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">
+                                        ${c.leftOperand} ${formatOperator(c.operator)} ${c.rightOperand}
+                                    </div>
+                                `).join('') : 
+                                '<span style="color: #94a3b8;">-</span>'
+                            }
+                        </td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="icon-btn" onclick="viewPolicy('${policy.id}')" title="View">👁️</button>
+                                <button class="icon-btn" onclick="clonePolicy('${policy.id}')" title="Clone">📋</button>
+                                <button class="icon-btn danger" onclick="deletePolicy('${policy.id}')" title="Delete">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('policiesTable').style.display = 'table';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('paginationContainer').style.display = 'flex';
+
+            updatePagination();
+            updateSortIndicators();
+        }
+
+        function getTypeBadge(type) {
+            const badges = {
+                'unrestricted': '<span class="badge badge-green">Unrestricted</span>',
+                'bpn-restricted': '<span class="badge badge-blue">BPN Restricted</span>',
+                'membership': '<span class="badge badge-orange">Membership</span>',
+                'time-restricted': '<span class="badge badge-orange">Time Restricted</span>',
+                'custom': '<span class="badge badge-gray">Custom</span>'
+            };
+            return badges[type] || '<span class="badge badge-gray">Unknown</span>';
+        }
+
+        function formatOperator(op) {
+            const operators = {
+                'odrl:eq': '=',
+                'odrl:neq': '≠',
+                'odrl:lt': '<',
+                'odrl:gt': '>',
+                'odrl:lteq': '≤',
+                'odrl:gteq': '≥',
+                'odrl:in': '∈'
+            };
+            return operators[op] || op;
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredPolicies.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize + 1;
+            const endIndex = Math.min(currentPage * pageSize, filteredPolicies.length);
+
+            document.getElementById('showingFrom').textContent = startIndex;
+            document.getElementById('showingTo').textContent = endIndex;
+            document.getElementById('totalCount').textContent = filteredPolicies.length;
+
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+            // Generate page numbers
+            const pageNumbers = document.getElementById('pageNumbers');
+            pageNumbers.innerHTML = '';
+
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 1) {
+                pageNumbers.innerHTML += '<button class="page-btn" onclick="goToPage(1)">1</button>';
+                if (startPage > 2) {
+                    pageNumbers.innerHTML += '<span style="padding: 0 0.5rem;">...</span>';
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pageNumbers.innerHTML += `
+                    <button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>
+                `;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pageNumbers.innerHTML += '<span style="padding: 0 0.5rem;">...</span>';
+                }
+                pageNumbers.innerHTML += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredPolicies.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = filteredPolicies.slice(startIndex, endIndex);
+
+            pageData.forEach(policy => {
+                if (checked) {
+                    selectedPolicies.add(policy.id);
+                } else {
+                    selectedPolicies.delete(policy.id);
+                }
+            });
+
+            updateBulkActions();
+            renderTable();
+        }
+
+        function toggleSelect(policyId) {
+            if (selectedPolicies.has(policyId)) {
+                selectedPolicies.delete(policyId);
+            } else {
+                selectedPolicies.add(policyId);
+            }
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            document.getElementById('selectedCount').textContent = selectedPolicies.size;
+            
+            if (selectedPolicies.size > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        function viewPolicy(policyId) {
+            const policy = allPolicies.find(p => p.id === policyId);
+            if (policy) {
+                alert('View Policy: ' + policyId + '\n\nIn production, this would open a policy details page.\n\n' + JSON.stringify(policy, null, 2));
+                // window.location.href = `policy-details.html?id=${policyId}`;
+            }
+        }
+
+        function clonePolicy(policyId) {
+            if (confirm('Clone policy: ' + policyId + '?')) {
+                alert('Clone functionality would create a copy of this policy with a new ID');
+            }
+        }
+
+        function deletePolicy(policyId) {
+            if (confirm('Are you sure you want to delete policy: ' + policyId + '?\n\nThis action cannot be undone.')) {
+                alert('Delete functionality would remove this policy via DELETE /v3/policydefinitions/' + policyId);
+                // In production, call the API and refresh
+                // fetch(apiEndpoint + '/' + policyId, { method: 'DELETE', headers: { 'X-Api-Key': apiKey } })
+                //     .then(() => loadPolicies());
+            }
+        }
+
+        function exportSelected() {
+            if (selectedPolicies.size === 0) return;
+            const selected = allPolicies.filter(p => selectedPolicies.has(p.id));
+            const json = JSON.stringify(selected, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'policies-export.json';
+            a.click();
+        }
+
+        function cloneSelected() {
+            alert(`Clone ${selectedPolicies.size} selected policies?\n\nThis would create copies with new IDs.`);
+        }
+
+        function deleteSelected() {
+            if (confirm(`Are you sure you want to delete ${selectedPolicies.size} selected policies?\n\nThis action cannot be undone.`)) {
+                alert('Delete functionality would remove selected policies via API');
+                selectedPolicies.clear();
+                updateBulkActions();
+            }
+        }
+
+        function refreshPolicies() {
+            selectedPolicies.clear();
+            updateBulkActions();
+            loadPolicies();
+        }
+    </script>
+</body>
+</html>

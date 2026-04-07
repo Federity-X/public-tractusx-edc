@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assets - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size);
+            line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color);
+            background-color: var(--tblr-body-bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        .subtitle {
+            color: var(--tblr-muted);
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+
+        .btn-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+            border-color: #004494;
+        }
+
+        .btn-outline-primary {
+            color: var(--tblr-primary);
+            background-color: transparent;
+            border-color: var(--tblr-primary);
+        }
+
+        .btn-outline-primary:hover {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .btn-outline-secondary {
+            color: var(--tblr-secondary);
+            background-color: transparent;
+            border-color: var(--tblr-secondary);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--tblr-border-color);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+
+        /* Search and Filter Section */
+        .filters-section {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+            font-size: 0.875rem;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            background: white;
+        }
+
+        .search-box input:focus {
+            outline: 0;
+            border-color: var(--tblr-primary);
+            box-shadow: 0 0 0 0.2rem rgba(var(--tblr-primary-rgb), 0.25);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--tblr-muted);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .form-select {
+            padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--tblr-body-color);
+            background-color: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.375rem;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            border-color: var(--tblr-primary);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(var(--tblr-primary-rgb), 0.25);
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+            color: var(--tblr-body-color);
+            border-collapse: collapse;
+        }
+
+        .table thead th {
+            padding: 0.75rem;
+            font-weight: 600;
+            text-align: left;
+            color: var(--tblr-dark);
+            background-color: var(--tblr-light);
+            border-bottom: 2px solid var(--tblr-border-color);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .table thead th:hover {
+            background-color: #e9ecef;
+        }
+
+        .table tbody td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--tblr-border-color-light);
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--tblr-light);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sortable::after {
+            content: " ↕";
+            color: var(--tblr-muted);
+            font-size: 0.75rem;
+        }
+
+        .sorted-asc::after {
+            content: " ↑";
+            color: var(--tblr-primary);
+        }
+
+        .sorted-desc::after {
+            content: " ↓";
+            color: var(--tblr-primary);
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+        .badge-primary {
+            color: white;
+            background-color: var(--tblr-primary);
+        }
+
+        .badge-success {
+            color: white;
+            background-color: var(--tblr-success);
+        }
+
+        .badge-warning {
+            color: white;
+            background-color: var(--tblr-warning);
+        }
+
+        .badge-danger {
+            color: white;
+            background-color: var(--tblr-danger);
+        }
+
+        .badge-secondary {
+            color: white;
+            background-color: var(--tblr-secondary);
+        }
+
+        .badge-info {
+            color: white;
+            background-color: var(--tblr-info);
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            background: transparent;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.25rem;
+            cursor: pointer;
+            color: var(--tblr-muted);
+            transition: all 0.15s ease-in-out;
+        }
+
+        .btn-action:hover {
+            background-color: var(--tblr-light);
+            color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+        }
+
+        /* Pagination */
+        .card-footer {
+            padding: 1rem 1.5rem;
+            background-color: white;
+            border-top: 1px solid var(--tblr-border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.25rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pagination-item {
+            display: inline-block;
+        }
+
+        .pagination-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: var(--tblr-body-color);
+            text-decoration: none;
+            background-color: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.25rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .pagination-link:hover {
+            background-color: var(--tblr-light);
+            border-color: var(--tblr-primary);
+            color: var(--tblr-primary);
+        }
+
+        .pagination-link.active {
+            background-color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+            color: white;
+        }
+
+        .pagination-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .pagination-info {
+            color: var(--tblr-muted);
+            font-size: 0.875rem;
+        }
+
+        .items-per-page {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--tblr-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--tblr-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid var(--tblr-border-color);
+            border-radius: 50%;
+            border-top-color: var(--tblr-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Utilities */
+        .text-muted {
+            color: var(--tblr-muted) !important;
+        }
+
+        .text-small {
+            font-size: 0.75rem;
+        }
+
+        .d-flex {
+            display: flex !important;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .filters-section {
+                width: 100%;
+            }
+
+            .search-box {
+                max-width: none;
+            }
+
+            .filter-group {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-select {
+                width: 100%;
+            }
+
+            .table {
+                font-size: 0.75rem;
+            }
+
+            .table thead th,
+            .table tbody td {
+                padding: 0.5rem;
+            }
+
+            .card-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .pagination {
+                justify-content: center;
+            }
+        }
+
+        /* Checkbox */
+        .form-check {
+            display: inline-block;
+            position: relative;
+        }
+
+        .form-check-input {
+            width: 1rem;
+            height: 1rem;
+            margin-top: 0.125rem;
+            vertical-align: top;
+            background-color: white;
+            border: 1px solid var(--tblr-border-color);
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--tblr-primary);
+            border-color: var(--tblr-primary);
+        }
+
+        /* Bulk Actions */
+        .bulk-actions {
+            display: none;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--tblr-light);
+            border-bottom: 1px solid var(--tblr-border-color);
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bulk-actions.active {
+            display: flex;
+        }
+
+        .bulk-actions-label {
+            font-weight: 600;
+            color: var(--tblr-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="page-header">
+                <div>
+                    <h1>Assets</h1>
+                    <div class="subtitle">Manage data assets in your EDC connector</div>
+                </div>
+                <button class="btn btn-primary" onclick="createAsset()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Create Asset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <!-- Filters Section -->
+            <div class="card-header">
+                <div class="filters-section">
+                    <div class="search-box">
+                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="Search assets..." onkeyup="searchAssets()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select class="form-select" id="statusFilter" onchange="applyFilters()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="draft">Draft</option>
+                        </select>
+
+                        <select class="form-select" id="categoryFilter" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <option value="quality-data">Quality Data</option>
+                            <option value="production-data">Production Data</option>
+                            <option value="supply-chain">Supply Chain</option>
+                            <option value="financial-data">Financial Data</option>
+                            <option value="sensor-data">Sensor Data</option>
+                            <option value="analytics">Analytics</option>
+                        </select>
+
+                        <select class="form-select" id="classificationFilter" onchange="applyFilters()">
+                            <option value="">All Classifications</option>
+                            <option value="public">Public</option>
+                            <option value="internal">Internal</option>
+                            <option value="confidential">Confidential</option>
+                            <option value="restricted">Restricted</option>
+                        </select>
+
+                        <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshAssets()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Bulk Actions Bar -->
+            <div class="bulk-actions" id="bulkActions">
+                <span class="bulk-actions-label"><span id="selectedCount">0</span> selected</span>
+                <button class="btn btn-outline-primary btn-sm" onclick="bulkExport()">Export</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="bulkDeactivate()">Deactivate</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="bulkDelete()">Delete</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">Clear Selection</button>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading" id="loadingState" style="display: none;">
+                <div class="spinner"></div>
+                <div style="margin-top: 1rem;">Loading assets...</div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive" id="tableContainer">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th class="sortable" onclick="sortTable('id')">Asset ID</th>
+                            <th class="sortable" onclick="sortTable('name')">Name</th>
+                            <th class="sortable" onclick="sortTable('category')">Category</th>
+                            <th class="sortable" onclick="sortTable('contentType')">Content Type</th>
+                            <th class="sortable" onclick="sortTable('classification')">Classification</th>
+                            <th class="sortable" onclick="sortTable('status')">Status</th>
+                            <th class="sortable" onclick="sortTable('created')">Created</th>
+                            <th style="width: 150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetsTableBody">
+                        <!-- Assets will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-state-icon">📦</div>
+                <h3>No assets found</h3>
+                <p class="text-muted">Create your first asset to get started</p>
+                <button class="btn btn-primary" onclick="createAsset()">Create Asset</button>
+            </div>
+
+            <!-- Footer with Pagination -->
+            <div class="card-footer">
+                <div class="pagination-info">
+                    Showing <strong id="showingStart">1</strong> to <strong id="showingEnd">10</strong> of <strong id="totalAssets">0</strong> assets
+                </div>
+
+                <ul class="pagination" id="paginationContainer">
+                    <!-- Pagination will be generated here -->
+                </ul>
+
+                <div class="items-per-page">
+                    <label for="itemsPerPage">Show:</label>
+                    <select class="form-select" id="itemsPerPage" onchange="changeItemsPerPage()" style="width: auto;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data
+        const mockAssets = [
+            {
+                id: 'asset.quality.data.v1',
+                name: 'Quality Data Asset',
+                category: 'quality-data',
+                contentType: 'application/json',
+                classification: 'confidential',
+                status: 'active',
+                version: '1.0.0',
+                created: new Date('2025-11-10T10:30:00Z'),
+                publisher: 'SmartParts Industries',
+                contracts: 3
+            },
+            {
+                id: 'asset.production.metrics',
+                name: 'Production Metrics',
+                category: 'production-data',
+                contentType: 'application/json',
+                classification: 'internal',
+                status: 'active',
+                version: '2.1.0',
+                created: new Date('2025-11-09T14:20:00Z'),
+                publisher: 'Manufacturing Division',
+                contracts: 5
+            },
+            {
+                id: 'asset.supply.chain.v2',
+                name: 'Supply Chain Data',
+                category: 'supply-chain',
+                contentType: 'application/xml',
+                classification: 'confidential',
+                status: 'active',
+                version: '2.0.0',
+                created: new Date('2025-11-08T09:15:00Z'),
+                publisher: 'Logistics Team',
+                contracts: 2
+            },
+            {
+                id: 'asset.sensor.temperature',
+                name: 'Temperature Sensor Data',
+                category: 'sensor-data',
+                contentType: 'application/json',
+                classification: 'internal',
+                status: 'active',
+                version: '1.5.0',
+                created: new Date('2025-11-07T16:45:00Z'),
+                publisher: 'IoT Division',
+                contracts: 8
+            },
+            {
+                id: 'asset.financial.reports',
+                name: 'Financial Reports Q3',
+                category: 'financial-data',
+                contentType: 'application/pdf',
+                classification: 'restricted',
+                status: 'active',
+                version: '1.0.0',
+                created: new Date('2025-11-06T11:00:00Z'),
+                publisher: 'Finance Department',
+                contracts: 1
+            },
+            {
+                id: 'asset.customer.analytics',
+                name: 'Customer Analytics Dashboard',
+                category: 'analytics',
+                contentType: 'application/json',
+                classification: 'confidential',
+                status: 'active',
+                version: '3.2.1',
+                created: new Date('2025-11-05T13:30:00Z'),
+                publisher: 'Analytics Team',
+                contracts: 4
+            },
+            {
+                id: 'asset.inventory.realtime',
+                name: 'Real-time Inventory Data',
+                category: 'supply-chain',
+                contentType: 'application/json',
+                classification: 'internal',
+                status: 'active',
+                version: '1.8.0',
+                created: new Date('2025-11-04T08:20:00Z'),
+                publisher: 'Warehouse Operations',
+                contracts: 6
+            },
+            {
+                id: 'asset.compliance.docs',
+                name: 'Compliance Documentation',
+                category: 'quality-data',
+                contentType: 'application/pdf',
+                classification: 'restricted',
+                status: 'inactive',
+                version: '1.0.0',
+                created: new Date('2025-11-03T10:10:00Z'),
+                publisher: 'Compliance Office',
+                contracts: 0
+            },
+            {
+                id: 'asset.test.dataset',
+                name: 'Test Dataset',
+                category: 'analytics',
+                contentType: 'text/csv',
+                classification: 'public',
+                status: 'draft',
+                version: '0.9.0',
+                created: new Date('2025-11-02T15:50:00Z'),
+                publisher: 'Development Team',
+                contracts: 0
+            },
+            {
+                id: 'asset.machine.logs',
+                name: 'Machine Operation Logs',
+                category: 'production-data',
+                contentType: 'text/plain',
+                classification: 'internal',
+                status: 'active',
+                version: '2.5.0',
+                created: new Date('2025-11-01T12:40:00Z'),
+                publisher: 'Operations Team',
+                contracts: 7
+            },
+            {
+                id: 'asset.warranty.claims',
+                name: 'Warranty Claims Data',
+                category: 'quality-data',
+                contentType: 'application/json',
+                classification: 'confidential',
+                status: 'active',
+                version: '1.3.0',
+                created: new Date('2025-10-31T09:25:00Z'),
+                publisher: 'Customer Service',
+                contracts: 3
+            },
+            {
+                id: 'asset.emissions.tracking',
+                name: 'Emissions Tracking Data',
+                category: 'sensor-data',
+                contentType: 'application/json',
+                classification: 'public',
+                status: 'active',
+                version: '1.0.0',
+                created: new Date('2025-10-30T14:15:00Z'),
+                publisher: 'Environmental Team',
+                contracts: 2
+            }
+        ];
+
+        let assets = [...mockAssets];
+        let filteredAssets = [...assets];
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let sortColumn = 'created';
+        let sortDirection = 'desc';
+        let selectedAssets = new Set();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAssets();
+        });
+
+        function renderAssets() {
+            const tbody = document.getElementById('assetsTableBody');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageAssets = filteredAssets.slice(start, end);
+
+            if (filteredAssets.length === 0) {
+                document.getElementById('tableContainer').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                document.querySelector('.card-footer').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.querySelector('.card-footer').style.display = 'flex';
+
+            tbody.innerHTML = pageAssets.map(asset => `
+                <tr>
+                    <td>
+                        <input type="checkbox" class="form-check-input asset-checkbox" 
+                               data-id="${asset.id}" 
+                               ${selectedAssets.has(asset.id) ? 'checked' : ''}
+                               onchange="toggleAssetSelection('${asset.id}')">
+                    </td>
+                    <td><code>${asset.id}</code></td>
+                    <td>
+                        <strong>${asset.name}</strong>
+                        <div class="text-small text-muted">v${asset.version}</div>
+                    </td>
+                    <td>${formatCategory(asset.category)}</td>
+                    <td><code class="text-small">${asset.contentType}</code></td>
+                    <td>${getClassificationBadge(asset.classification)}</td>
+                    <td>${getStatusBadge(asset.status)}</td>
+                    <td>
+                        <div>${formatDate(asset.created)}</div>
+                        <div class="text-small text-muted">${asset.publisher}</div>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-action" onclick="viewAsset('${asset.id}')" title="View Details">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                            <button class="btn-action" onclick="editAsset('${asset.id}')" title="Edit">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-action" onclick="cloneAsset('${asset.id}')" title="Clone">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                            </button>
+                            <button class="btn-action" onclick="deleteAsset('${asset.id}')" title="Delete">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3,6 5,6 21,6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            updatePagination();
+            updateBulkActionsBar();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, filteredAssets.length);
+
+            document.getElementById('showingStart').textContent = filteredAssets.length > 0 ? start : 0;
+            document.getElementById('showingEnd').textContent = end;
+            document.getElementById('totalAssets').textContent = filteredAssets.length;
+
+            const paginationContainer = document.getElementById('paginationContainer');
+            let paginationHTML = '';
+
+            // Previous button
+            paginationHTML += `
+                <li class="pagination-item">
+                    <a class="pagination-link ${currentPage === 1 ? 'disabled' : ''}" 
+                       onclick="changePage(${currentPage - 1})">
+                        Previous
+                    </a>
+                </li>
+            `;
+
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                paginationHTML += `
+                    <li class="pagination-item">
+                        <a class="pagination-link" onclick="changePage(1)">1</a>
+                    </li>
+                `;
+                if (startPage > 2) {
+                    paginationHTML += `
+                        <li class="pagination-item">
+                            <span class="pagination-link disabled">...</span>
+                        </li>
+                    `;
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <li class="pagination-item">
+                        <a class="pagination-link ${i === currentPage ? 'active' : ''}" 
+                           onclick="changePage(${i})">
+                            ${i}
+                        </a>
+                    </li>
+                `;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `
+                        <li class="pagination-item">
+                            <span class="pagination-link disabled">...</span>
+                        </li>
+                    `;
+                }
+                paginationHTML += `
+                    <li class="pagination-item">
+                        <a class="pagination-link" onclick="changePage(${totalPages})">${totalPages}</a>
+                    </li>
+                `;
+            }
+
+            // Next button
+            paginationHTML += `
+                <li class="pagination-item">
+                    <a class="pagination-link ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}" 
+                       onclick="changePage(${currentPage + 1})">
+                        Next
+                    </a>
+                </li>
+            `;
+
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderAssets();
+        }
+
+        function changeItemsPerPage() {
+            itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            currentPage = 1;
+            renderAssets();
+        }
+
+        function searchAssets() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const classificationFilter = document.getElementById('classificationFilter').value;
+
+            filteredAssets = assets.filter(asset => {
+                const matchesSearch = !searchTerm || 
+                    asset.id.toLowerCase().includes(searchTerm) ||
+                    asset.name.toLowerCase().includes(searchTerm) ||
+                    asset.publisher.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || asset.status === statusFilter;
+                const matchesCategory = !categoryFilter || asset.category === categoryFilter;
+                const matchesClassification = !classificationFilter || asset.classification === classificationFilter;
+
+                return matchesSearch && matchesStatus && matchesCategory && matchesClassification;
+            });
+
+            currentPage = 1;
+            renderAssets();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('classificationFilter').value = '';
+            filteredAssets = [...assets];
+            currentPage = 1;
+            renderAssets();
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredAssets.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (column === 'created') {
+                    aVal = new Date(aVal).getTime();
+                    bVal = new Date(bVal).getTime();
+                } else if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // Update sort indicators
+            document.querySelectorAll('.table thead th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            const sortedHeader = Array.from(document.querySelectorAll('.table thead th'))
+                .find(th => th.textContent.toLowerCase().includes(column.toLowerCase()));
+            
+            if (sortedHeader) {
+                sortedHeader.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            }
+
+            renderAssets();
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll').checked;
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageAssets = filteredAssets.slice(start, end);
+
+            if (selectAll) {
+                pageAssets.forEach(asset => selectedAssets.add(asset.id));
+            } else {
+                pageAssets.forEach(asset => selectedAssets.delete(asset.id));
+            }
+
+            renderAssets();
+        }
+
+        function toggleAssetSelection(assetId) {
+            if (selectedAssets.has(assetId)) {
+                selectedAssets.delete(assetId);
+            } else {
+                selectedAssets.add(assetId);
+            }
+            updateBulkActionsBar();
+        }
+
+        function updateBulkActionsBar() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = selectedAssets.size;
+            
+            if (selectedAssets.size > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+
+            // Update select all checkbox
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageAssets = filteredAssets.slice(start, end);
+            const allSelected = pageAssets.every(asset => selectedAssets.has(asset.id));
+            document.getElementById('selectAll').checked = allSelected && pageAssets.length > 0;
+        }
+
+        function clearSelection() {
+            selectedAssets.clear();
+            renderAssets();
+        }
+
+        function bulkExport() {
+            alert(`Exporting ${selectedAssets.size} assets...`);
+        }
+
+        function bulkDeactivate() {
+            if (confirm(`Deactivate ${selectedAssets.size} selected assets?`)) {
+                alert('Assets deactivated successfully!');
+                clearSelection();
+            }
+        }
+
+        function bulkDelete() {
+            if (confirm(`Delete ${selectedAssets.size} selected assets? This action cannot be undone.`)) {
+                alert('Assets deleted successfully!');
+                clearSelection();
+            }
+        }
+
+        function refreshAssets() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'none';
+            
+            setTimeout(() => {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+                renderAssets();
+                alert('Assets refreshed successfully!');
+            }, 1000);
+        }
+
+        function createAsset() {
+            window.location.href = 'create-asset.html';
+        }
+
+        function viewAsset(assetId) {
+            window.location.href = `asset-details.html?id=${encodeURIComponent(assetId)}`;
+        }
+
+        function editAsset(assetId) {
+            alert(`Edit asset: ${assetId}`);
+        }
+
+        function cloneAsset(assetId) {
+            if (confirm(`Clone asset "${assetId}"?`)) {
+                alert(`Asset cloned successfully! New ID: ${assetId}.copy`);
+                renderAssets();
+            }
+        }
+
+        function deleteAsset(assetId) {
+            if (confirm(`Delete asset "${assetId}"? This action cannot be undone.`)) {
+                assets = assets.filter(a => a.id !== assetId);
+                filteredAssets = filteredAssets.filter(a => a.id !== assetId);
+                renderAssets();
+                alert('Asset deleted successfully!');
+            }
+        }
+
+        // Helper functions
+        function getStatusBadge(status) {
+            const badges = {
+                'active': '<span class="badge badge-success">Active</span>',
+                'inactive': '<span class="badge badge-secondary">Inactive</span>',
+                'draft': '<span class="badge badge-warning">Draft</span>'
+            };
+            return badges[status] || status;
+        }
+
+        function getClassificationBadge(classification) {
+            const badges = {
+                'public': '<span class="badge badge-info">Public</span>',
+                'internal': '<span class="badge badge-primary">Internal</span>',
+                'confidential': '<span class="badge badge-warning">Confidential</span>',
+                'restricted': '<span class="badge badge-danger">Restricted</span>'
+            };
+            return badges[classification] || classification;
+        }
+
+        function formatCategory(category) {
+            return category.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+</html>

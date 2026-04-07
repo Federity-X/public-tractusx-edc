@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Details - EDC Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #f1f5f9;
+            color: #3b82f6;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .policy-header {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .policy-title {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-family: 'Courier New', monospace;
+            color: #0f172a;
+        }
+
+        .policy-meta {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            font-size: 0.875rem;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-orange {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .badge-gray {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .tabs {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #3b82f6;
+            background: white;
+        }
+
+        .tab-btn.active {
+            color: #3b82f6;
+            background: white;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.25rem;
+        }
+
+        .info-card-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card-content {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .constraint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .constraint-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.25rem;
+        }
+
+        .constraint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .constraint-title {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 0.875rem;
+        }
+
+        .constraint-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .constraint-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .constraint-field-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .constraint-field-value {
+            font-size: 0.875rem;
+            color: #0f172a;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 0.875rem;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .usage-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .usage-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .usage-info {
+            flex: 1;
+        }
+
+        .usage-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+
+        .usage-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .alert {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #fde047;
+            color: #854d0e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .policy-header {
+                padding: 1.5rem;
+            }
+
+            .policy-title {
+                font-size: 1.25rem;
+            }
+
+            .policy-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .tab-nav {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 0.75rem 1rem;
+                white-space: nowrap;
+            }
+
+            .constraint-details {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="policies-list.html" class="back-btn">← Back to Policies</a>
+            <h1>🛡️ Policy Details</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="clonePolicy()">📋 Clone</button>
+            <button class="btn btn-secondary" onclick="exportPolicy()">📥 Export</button>
+            <button class="btn btn-danger" onclick="deletePolicy()">🗑️ Delete</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <div>Loading policy details...</div>
+        </div>
+
+        <div id="policyContent" style="display: none;">
+            <!-- Policy Header -->
+            <div class="policy-header">
+                <div class="policy-title" id="policyId"></div>
+                <div class="policy-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Type</div>
+                        <div class="meta-value" id="policyType"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Permission</div>
+                        <div class="meta-value" id="policyPermission"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Constraints</div>
+                        <div class="meta-value" id="constraintCount"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Created</div>
+                        <div class="meta-value" id="createdDate"></div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Status</div>
+                        <div class="meta-value" id="policyStatus"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+                    <button class="tab-btn" onclick="switchTab('constraints')">⚖️ Constraints & Rules</button>
+                    <button class="tab-btn" onclick="switchTab('usage')">📈 Usage & References</button>
+                    <button class="tab-btn" onclick="switchTab('json')">📄 JSON View</button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="overview-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Policy Overview</h3>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-card-title">🎯 Permission Action</div>
+                            <div class="info-card-content" id="overview-permission"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">⚖️ Constraint Summary</div>
+                            <div class="info-card-content" id="overview-constraints"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">🚫 Prohibitions</div>
+                            <div class="info-card-content" id="overview-prohibitions"></div>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-card-title">📋 Obligations</div>
+                            <div class="info-card-content" id="overview-obligations"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-contracts">0</div>
+                            <div class="stat-label">Contract Definitions</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-negotiations">0</div>
+                            <div class="stat-label">Active Negotiations</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-agreements">0</div>
+                            <div class="stat-label">Agreements</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-transfers">0</div>
+                            <div class="stat-label">Data Transfers</div>
+                        </div>
+                    </div>
+
+                    <div class="alert">
+                        ℹ️ <strong>Policy Scope:</strong> This policy can be used as an access policy (controls catalog visibility), contract policy (controls negotiations), or usage policy (controls data transfer and usage).
+                    </div>
+                </div>
+
+                <!-- Constraints Tab -->
+                <div class="tab-content" id="constraints-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Constraints & Rules</h3>
+
+                    <div id="constraintsContainer">
+                        <!-- Constraints will be inserted here -->
+                    </div>
+
+                    <div id="prohibitionsContainer" style="margin-top: 2rem;">
+                        <!-- Prohibitions will be inserted here -->
+                    </div>
+
+                    <div id="obligationsContainer" style="margin-top: 2rem;">
+                        <!-- Obligations will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Usage Tab -->
+                <div class="tab-content" id="usage-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Usage & References</h3>
+
+                    <div class="alert">
+                        📊 <strong>Usage Tracking:</strong> This shows where this policy is being used across your EDC deployment.
+                    </div>
+
+                    <h4 style="margin-bottom: 1rem; font-size: 1rem; color: #64748b;">Contract Definitions Using This Policy</h4>
+                    <div id="contractsList" class="usage-list">
+                        <!-- Contract definitions will be inserted here -->
+                    </div>
+
+                    <h4 style="margin: 2rem 0 1rem; font-size: 1rem; color: #64748b;">Recent Negotiations</h4>
+                    <div id="negotiationsList" class="usage-list">
+                        <!-- Negotiations will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- JSON Tab -->
+                <div class="tab-content" id="json-tab">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Policy JSON Definition</h3>
+
+                    <div class="alert">
+                        📄 <strong>ODRL Format:</strong> This policy follows the ODRL 2.0 (Open Digital Rights Language) standard for expressing permissions, prohibitions, and obligations.
+                    </div>
+
+                    <pre class="code-block" id="jsonContent"></pre>
+
+                    <button class="btn btn-secondary" onclick="copyJSON()" style="margin-top: 1rem;">📋 Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPolicy = null;
+        let activeTab = 'overview';
+
+        // API Configuration
+        const apiEndpoint = 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk/management/v3/policydefinitions';
+        const apiKey = 'TEST2';
+
+        // Get policy ID from URL or use default for preview
+        const urlParams = new URLSearchParams(window.location.search);
+        const policyId = urlParams.get('id') || 'policy-bpn-multi-constraint-001'; // Default for design preview
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPolicy();
+        });
+
+        function loadPolicy() {
+            // For demo/testing with sample data
+            // Comment this out and uncomment the fetch() call to use live API
+            setTimeout(() => {
+                currentPolicy = generateSamplePolicy(policyId);
+                displayPolicy();
+            }, 500);
+
+            // Uncomment to use live API
+            /*
+            fetch(apiEndpoint + '/' + policyId, {
+                method: 'GET',
+                headers: {
+                    'X-Api-Key': apiKey
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Policy not found');
+                return response.json();
+            })
+            .then(data => {
+                currentPolicy = transformPolicy(data);
+                displayPolicy();
+            })
+            .catch(error => {
+                console.error('Error loading policy:', error);
+                document.getElementById('loadingState').innerHTML = 
+                    '<div style="color: #dc2626;">Failed to load policy. Please check your connection and try again.</div>' +
+                    '<button class="btn btn-primary" style="margin-top: 1rem;" onclick="window.location.href=\'policies-list.html\'">← Back to Policies</button>';
+            });
+            */
+        }
+
+        function transformPolicy(policyData) {
+            const policy = policyData.policy;
+            const permission = policy['odrl:permission'];
+            const constraint = permission?.['odrl:constraint'];
+            
+            let constraints = [];
+            if (constraint) {
+                if (constraint['odrl:and']) {
+                    constraints = constraint['odrl:and'];
+                } else if (constraint['odrl:or']) {
+                    constraints = [constraint['odrl:or']];
+                } else {
+                    constraints = [constraint];
+                }
+            }
+
+            return {
+                id: policyData['@id'],
+                permission: permission?.['odrl:action']?.['@id'] || 'USE',
+                constraints: constraints.map(c => ({
+                    leftOperand: c['odrl:leftOperand']?.['@id'] || c['odrl:leftOperand'],
+                    operator: c['odrl:operator']?.['@id'] || c['odrl:operator'],
+                    rightOperand: c['odrl:rightOperand']
+                })),
+                prohibitions: policy['odrl:prohibition'] || [],
+                obligations: policy['odrl:obligation'] || [],
+                createdAt: policyData.createdAt,
+                raw: policyData
+            };
+        }
+
+        function generateSamplePolicy(id) {
+            // Generate sample policy based on ID type
+            const now = Date.now();
+            
+            if (id.includes('unrestricted')) {
+                return {
+                    id: id,
+                    permission: 'USE',
+                    constraints: [],
+                    prohibitions: [],
+                    obligations: [],
+                    createdAt: now - 86400000 * 30,
+                    raw: {
+                        "@context": {
+                            "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+                            "odrl": "http://www.w3.org/ns/odrl/2/"
+                        },
+                        "@type": "PolicyDefinition",
+                        "@id": id,
+                        "createdAt": now - 86400000 * 30,
+                        "policy": {
+                            "@type": "odrl:Set",
+                            "odrl:permission": {
+                                "odrl:action": { "@id": "USE" }
+                            },
+                            "odrl:prohibition": [],
+                            "odrl:obligation": []
+                        }
+                    }
+                };
+            } else if (id.includes('bpn')) {
+                return {
+                    id: id,
+                    permission: 'USE',
+                    constraints: [{
+                        leftOperand: 'BusinessPartnerNumber',
+                        operator: 'odrl:eq',
+                        rightOperand: 'BPNL00000003AYRE'
+                    }],
+                    prohibitions: [],
+                    obligations: [],
+                    createdAt: now - 86400000 * 20,
+                    raw: {
+                        "@context": {
+                            "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+                            "odrl": "http://www.w3.org/ns/odrl/2/"
+                        },
+                        "@type": "PolicyDefinition",
+                        "@id": id,
+                        "createdAt": now - 86400000 * 20,
+                        "policy": {
+                            "@type": "odrl:Set",
+                            "odrl:permission": {
+                                "odrl:action": { "@id": "USE" },
+                                "odrl:constraint": {
+                                    "odrl:leftOperand": { "@id": "BusinessPartnerNumber" },
+                                    "odrl:operator": { "@id": "odrl:eq" },
+                                    "odrl:rightOperand": "BPNL00000003AYRE"
+                                }
+                            },
+                            "odrl:prohibition": [],
+                            "odrl:obligation": []
+                        }
+                    }
+                };
+            } else if (id.includes('multi')) {
+                return {
+                    id: id,
+                    permission: 'USE',
+                    constraints: [
+                        {
+                            leftOperand: 'BusinessPartnerNumber',
+                            operator: 'odrl:eq',
+                            rightOperand: 'BPNL00000003AYRE'
+                        },
+                        {
+                            leftOperand: 'policy-evaluation-time',
+                            operator: 'odrl:lt',
+                            rightOperand: '2026-01-01T00:00:00Z'
+                        }
+                    ],
+                    prohibitions: [],
+                    obligations: [],
+                    createdAt: now - 86400000 * 5,
+                    raw: {
+                        "@context": {
+                            "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+                            "odrl": "http://www.w3.org/ns/odrl/2/"
+                        },
+                        "@type": "PolicyDefinition",
+                        "@id": id,
+                        "createdAt": now - 86400000 * 5,
+                        "policy": {
+                            "@type": "odrl:Set",
+                            "odrl:permission": {
+                                "odrl:action": { "@id": "USE" },
+                                "odrl:constraint": {
+                                    "odrl:and": [
+                                        {
+                                            "odrl:leftOperand": { "@id": "BusinessPartnerNumber" },
+                                            "odrl:operator": { "@id": "odrl:eq" },
+                                            "odrl:rightOperand": "BPNL00000003AYRE"
+                                        },
+                                        {
+                                            "odrl:leftOperand": { "@id": "policy-evaluation-time" },
+                                            "odrl:operator": { "@id": "odrl:lt" },
+                                            "odrl:rightOperand": "2026-01-01T00:00:00Z"
+                                        }
+                                    ]
+                                }
+                            },
+                            "odrl:prohibition": [],
+                            "odrl:obligation": []
+                        }
+                    }
+                };
+            } else {
+                // Default sample
+                return generateSamplePolicy('policy-bpn-restricted-001');
+            }
+        }
+
+        function displayPolicy() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('policyContent').style.display = 'block';
+
+            // Header
+            document.getElementById('policyId').textContent = currentPolicy.id;
+            document.getElementById('policyType').innerHTML = getTypeBadge(getPolicyType(currentPolicy));
+            document.getElementById('policyPermission').innerHTML = `<span class="badge badge-blue">${currentPolicy.permission}</span>`;
+            document.getElementById('constraintCount').textContent = currentPolicy.constraints.length;
+            document.getElementById('createdDate').textContent = new Date(currentPolicy.createdAt).toLocaleString();
+            document.getElementById('policyStatus').innerHTML = '<span class="badge badge-green">Active</span>';
+
+            // Overview Tab
+            document.getElementById('overview-permission').innerHTML = `
+                <strong>${currentPolicy.permission}</strong> - Allows data usage according to specified constraints
+            `;
+            
+            document.getElementById('overview-constraints').textContent = currentPolicy.constraints.length === 0 
+                ? 'No constraints - Unrestricted access' 
+                : `${currentPolicy.constraints.length} constraint(s) defined`;
+
+            document.getElementById('overview-prohibitions').textContent = currentPolicy.prohibitions.length === 0
+                ? 'No prohibitions defined'
+                : `${currentPolicy.prohibitions.length} prohibition(s) defined`;
+
+            document.getElementById('overview-obligations').textContent = currentPolicy.obligations.length === 0
+                ? 'No obligations defined'
+                : `${currentPolicy.obligations.length} obligation(s) defined`;
+
+            // Sample stats
+            document.getElementById('stat-contracts').textContent = Math.floor(Math.random() * 10) + 1;
+            document.getElementById('stat-negotiations').textContent = Math.floor(Math.random() * 5);
+            document.getElementById('stat-agreements').textContent = Math.floor(Math.random() * 15);
+            document.getElementById('stat-transfers').textContent = Math.floor(Math.random() * 50);
+
+            // Constraints Tab
+            displayConstraints();
+
+            // Usage Tab
+            displayUsage();
+
+            // JSON Tab
+            document.getElementById('jsonContent').textContent = JSON.stringify(currentPolicy.raw, null, 2);
+        }
+
+        function displayConstraints() {
+            const container = document.getElementById('constraintsContainer');
+            
+            if (currentPolicy.constraints.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚖️</div>
+                        <div class="empty-state-text">No constraints defined - This is an unrestricted policy</div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<div class="constraint-list">' +
+                    currentPolicy.constraints.map((c, i) => {
+                        const isVerified = c.leftOperand === 'BusinessPartnerNumber';
+                        return `
+                            <div class="constraint-item">
+                                <div class="constraint-header">
+                                    <span class="constraint-title">
+                                        Constraint #${i + 1} ${isVerified ? '<span class="badge badge-green">✅ Verified</span>' : '<span class="badge badge-orange">⚠️ Experimental</span>'}
+                                    </span>
+                                </div>
+                                <div class="constraint-details">
+                                    <div class="constraint-field">
+                                        <div class="constraint-field-label">Left Operand</div>
+                                        <div class="constraint-field-value">${c.leftOperand}</div>
+                                    </div>
+                                    <div class="constraint-field">
+                                        <div class="constraint-field-label">Operator</div>
+                                        <div class="constraint-field-value">${formatOperator(c.operator)}</div>
+                                    </div>
+                                    <div class="constraint-field">
+                                        <div class="constraint-field-label">Right Operand</div>
+                                        <div class="constraint-field-value">${c.rightOperand}</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: #eff6ff; border-radius: 6px; font-size: 0.875rem; color: #1e40af;">
+                                    <strong>Evaluation:</strong> ${getConstraintExplanation(c)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('') + '</div>';
+            }
+
+            // Prohibitions
+            const prohibitionsContainer = document.getElementById('prohibitionsContainer');
+            if (currentPolicy.prohibitions.length === 0) {
+                prohibitionsContainer.innerHTML = `
+                    <h4 style="margin-bottom: 1rem; font-size: 1rem; color: #64748b;">Prohibitions</h4>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🚫</div>
+                        <div class="empty-state-text">No prohibitions defined</div>
+                    </div>
+                `;
+            }
+
+            // Obligations
+            const obligationsContainer = document.getElementById('obligationsContainer');
+            if (currentPolicy.obligations.length === 0) {
+                obligationsContainer.innerHTML = `
+                    <h4 style="margin-bottom: 1rem; font-size: 1rem; color: #64748b;">Obligations</h4>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">No obligations defined</div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayUsage() {
+            // Sample contract definitions
+            const contractsList = document.getElementById('contractsList');
+            contractsList.innerHTML = `
+                <div class="usage-item">
+                    <div class="usage-info">
+                        <div class="usage-title">contract-def-engine-data-001</div>
+                        <div class="usage-subtitle">Used as access policy and contract policy</div>
+                    </div>
+                    <span class="badge badge-blue">Active</span>
+                </div>
+                <div class="usage-item">
+                    <div class="usage-info">
+                        <div class="usage-title">contract-def-quality-metrics-002</div>
+                        <div class="usage-subtitle">Used as contract policy</div>
+                    </div>
+                    <span class="badge badge-blue">Active</span>
+                </div>
+            `;
+
+            // Sample negotiations
+            const negotiationsList = document.getElementById('negotiationsList');
+            negotiationsList.innerHTML = `
+                <div class="usage-item">
+                    <div class="usage-info">
+                        <div class="usage-title">Negotiation #12345</div>
+                        <div class="usage-subtitle">With BPNL00000003CRHK - 2 days ago</div>
+                    </div>
+                    <span class="badge badge-green">Confirmed</span>
+                </div>
+                <div class="usage-item">
+                    <div class="usage-info">
+                        <div class="usage-title">Negotiation #12344</div>
+                        <div class="usage-subtitle">With BPNL00000003AZQP - 5 days ago</div>
+                    </div>
+                    <span class="badge badge-green">Confirmed</span>
+                </div>
+            `;
+        }
+
+        function getPolicyType(policy) {
+            if (policy.constraints.length === 0) return 'unrestricted';
+            
+            const hasBPN = policy.constraints.some(c => c.leftOperand === 'BusinessPartnerNumber');
+            const hasMembership = policy.constraints.some(c => c.leftOperand === 'Membership');
+            const hasTime = policy.constraints.some(c => c.leftOperand === 'policy-evaluation-time');
+            
+            if (hasBPN && policy.constraints.length === 1) return 'bpn-restricted';
+            if (hasMembership && policy.constraints.length === 1) return 'membership';
+            if (hasTime && policy.constraints.length === 1) return 'time-restricted';
+            return 'custom';
+        }
+
+        function getTypeBadge(type) {
+            const badges = {
+                'unrestricted': '<span class="badge badge-green">Unrestricted</span>',
+                'bpn-restricted': '<span class="badge badge-blue">BPN Restricted</span>',
+                'membership': '<span class="badge badge-orange">Membership</span>',
+                'time-restricted': '<span class="badge badge-orange">Time Restricted</span>',
+                'custom': '<span class="badge badge-gray">Custom</span>'
+            };
+            return badges[type] || '<span class="badge badge-gray">Unknown</span>';
+        }
+
+        function formatOperator(op) {
+            const operators = {
+                'odrl:eq': '= (equals)',
+                'odrl:neq': '≠ (not equals)',
+                'odrl:lt': '< (less than)',
+                'odrl:gt': '> (greater than)',
+                'odrl:lteq': '≤ (less or equal)',
+                'odrl:gteq': '≥ (greater or equal)',
+                'odrl:in': '∈ (in set)'
+            };
+            return operators[op] || op;
+        }
+
+        function getConstraintExplanation(constraint) {
+            if (constraint.leftOperand === 'BusinessPartnerNumber') {
+                return `Only participants with Business Partner Number "${constraint.rightOperand}" can access this data.`;
+            } else if (constraint.leftOperand === 'Membership') {
+                return `Only participants with membership status "${constraint.rightOperand}" can access this data.`;
+            } else if (constraint.leftOperand === 'policy-evaluation-time') {
+                return `This policy is valid until ${new Date(constraint.rightOperand).toLocaleString()}.`;
+            }
+            return `The ${constraint.leftOperand} must be ${formatOperator(constraint.operator)} ${constraint.rightOperand}.`;
+        }
+
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            activeTab = tabName;
+        }
+
+        function clonePolicy() {
+            if (confirm('Clone policy: ' + currentPolicy.id + '?\n\nThis will create a copy with a new ID.')) {
+                alert('Clone functionality would duplicate this policy with ID: ' + currentPolicy.id + '-clone-' + Date.now());
+            }
+        }
+
+        function exportPolicy() {
+            const json = JSON.stringify(currentPolicy.raw, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentPolicy.id + '.json';
+            a.click();
+        }
+
+        function deletePolicy() {
+            if (confirm('Are you sure you want to delete policy: ' + currentPolicy.id + '?\n\nThis action cannot be undone and may affect active contract definitions.')) {
+                alert('Delete functionality would remove this policy via DELETE ' + apiEndpoint + '/' + currentPolicy.id);
+                // window.location.href = 'policies-list.html';
+            }
+        }
+
+        function copyJSON() {
+            const text = document.getElementById('jsonContent').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ JSON copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

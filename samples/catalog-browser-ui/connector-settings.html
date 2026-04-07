@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connector Settings - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size); line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color); background: var(--tblr-body-bg);
+        }
+        .header {
+            background: white; border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header h1 { font-size: 1.5rem; font-weight: 600; color: var(--tblr-dark); }
+        .breadcrumb { font-size: 0.8125rem; color: var(--tblr-muted); }
+        .breadcrumb a { color: var(--tblr-primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .header-actions { display: flex; gap: 0.75rem; }
+        .btn {
+            padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem;
+            font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-primary { background: var(--tblr-primary); color: white; }
+        .btn-primary:hover { background: #004494; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-success { background: var(--tblr-success); color: white; }
+        .btn-success:hover { background: #27a03d; }
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        .card { background: white; border: 1px solid var(--tblr-border-color); border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
+        .card-header {
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--tblr-border-color);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-title { font-weight: 600; font-size: 1rem; }
+        .card-body { padding: 1.5rem; }
+
+        /* Health status bar */
+        .health-bar {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem; margin-bottom: 2rem;
+        }
+        .health-item {
+            background: white; border: 1px solid var(--tblr-border-color); border-radius: 8px;
+            padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;
+        }
+        .health-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .health-dot.green { background: var(--tblr-success); box-shadow: 0 0 6px rgba(47,179,68, 0.4); }
+        .health-dot.amber { background: var(--tblr-warning); box-shadow: 0 0 6px rgba(245,159,0, 0.4); }
+        .health-dot.red { background: var(--tblr-danger); box-shadow: 0 0 6px rgba(214,51,132, 0.4); }
+        .health-dot.gray { background: #cbd5e1; }
+        .health-info { flex: 1; }
+        .health-name { font-weight: 600; font-size: 0.8125rem; }
+        .health-status { font-size: 0.6875rem; color: var(--tblr-muted); }
+        .health-latency { font-size: 0.6875rem; font-weight: 600; }
+
+        /* Config sections */
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .config-item { padding: 0.875rem 0; border-bottom: 1px solid var(--tblr-border-color-light); }
+        .config-item:last-child { border-bottom: none; }
+        .config-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--tblr-muted); margin-bottom: 0.25rem; }
+        .config-value { font-size: 0.875rem; word-break: break-all; }
+        .config-value.mono { font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.8125rem; }
+        .config-value a { color: var(--tblr-primary); text-decoration: none; }
+        .config-value .masked { color: var(--tblr-muted); letter-spacing: 2px; font-family: monospace; }
+
+        .badge {
+            display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+            font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+        }
+        .badge-active { background: #dcfce7; color: #166534; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+
+        /* API key config */
+        .api-key-row { display: flex; gap: 0.5rem; align-items: center; }
+        .api-key-field {
+            flex: 1; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.8125rem; padding: 0.5rem 0.75rem;
+            border: 1px solid var(--tblr-border-color); border-radius: 6px; background: #f8fafc;
+        }
+
+        /* Connection test */
+        .test-results { margin-top: 1rem; }
+        .test-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.625rem 0; border-bottom: 1px solid var(--tblr-border-color-light);
+        }
+        .test-row:last-child { border-bottom: none; }
+        .test-name { font-size: 0.8125rem; font-weight: 500; }
+        .test-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; }
+        .test-status.pass { color: var(--tblr-success); }
+        .test-status.fail { color: var(--tblr-danger); }
+        .test-status.pending { color: var(--tblr-muted); }
+
+        .curl-card { background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 1.5rem; }
+        .curl-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.625rem 1rem; background: #334155; font-size: 0.75rem; color: #94a3b8;
+        }
+        .curl-card-header button { background: none; border: 1px solid #475569; color: #94a3b8; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.6875rem; }
+        .curl-card-header button:hover { background: #475569; color: white; }
+        .curl-body { padding: 1rem; }
+        .curl-body pre { color: #e2e8f0; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all; }
+
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; padding: 0.75rem 1.25rem;
+            background: var(--tblr-dark); color: white; border-radius: 8px; font-size: 0.8125rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); opacity: 0; transform: translateY(10px);
+            transition: all 0.3s; z-index: 999; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) { .config-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <div class="breadcrumb"><a href="index.html">Dashboard</a> / Connector Settings</div>
+                <h1>⚙️ Connector Settings</h1>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="runHealthCheck()">🏥 Health Check</button>
+            <button class="btn btn-primary" onclick="runConnectionTest()">🧪 Connection Test</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Health Status -->
+        <div class="health-bar" id="healthBar">
+            <div class="health-item"><div class="health-dot green"></div><div class="health-info"><div class="health-name">Control Plane</div><div class="health-status">Healthy</div></div><div class="health-latency" style="color:var(--tblr-success);">12ms</div></div>
+            <div class="health-item"><div class="health-dot green"></div><div class="health-info"><div class="health-name">Data Plane</div><div class="health-status">Healthy</div></div><div class="health-latency" style="color:var(--tblr-success);">8ms</div></div>
+            <div class="health-item"><div class="health-dot green"></div><div class="health-info"><div class="health-name">HashiCorp Vault</div><div class="health-status">Connected</div></div><div class="health-latency" style="color:var(--tblr-success);">23ms</div></div>
+            <div class="health-item"><div class="health-dot green"></div><div class="health-info"><div class="health-name">IdentityHub</div><div class="health-status">DID Resolved</div></div><div class="health-latency" style="color:var(--tblr-success);">45ms</div></div>
+            <div class="health-item"><div class="health-dot amber"></div><div class="health-info"><div class="health-name">BDRS Client</div><div class="health-status">Degraded</div></div><div class="health-latency" style="color:var(--tblr-warning);">210ms</div></div>
+        </div>
+
+        <div class="config-grid">
+            <!-- Identity & Protocol -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">🪪 Identity & Protocol</span></div>
+                <div class="card-body">
+                    <div class="config-item">
+                        <div class="config-label">Participant ID (BPN)</div>
+                        <div class="config-value mono">BPNL00000003SELF</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">DID</div>
+                        <div class="config-value mono" style="font-size:0.75rem;">did:web:connector.catena-x.net:BPNL00000003SELF</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">DCP Protocol</div>
+                        <div class="config-value"><span class="badge badge-active">DCP v1.0</span></div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">DSP Protocol Version</div>
+                        <div class="config-value">Dataspace Protocol HTTP v2025/1</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Connector Version</div>
+                        <div class="config-value">Tractus-X EDC 0.10.0-SNAPSHOT</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">EDC Core Version</div>
+                        <div class="config-value">0.12.0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endpoints -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">🌐 Endpoints</span></div>
+                <div class="card-body">
+                    <div class="config-item">
+                        <div class="config-label">Management API</div>
+                        <div class="config-value mono">https://connector.catena-x.net/management</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">DSP Protocol Endpoint</div>
+                        <div class="config-value mono">https://connector.catena-x.net/api/v1/dsp</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Public Data Plane</div>
+                        <div class="config-value mono">https://connector.catena-x.net/public</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Control API</div>
+                        <div class="config-value mono">https://connector.catena-x.net/control</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">IdentityHub Base</div>
+                        <div class="config-value mono">https://identityhub.catena-x.net</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">BDRS Server</div>
+                        <div class="config-value mono">https://bdrs.catena-x.net/api/directory</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vault & Secrets -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">🔐 Vault & Secrets</span></div>
+                <div class="card-body">
+                    <div class="config-item">
+                        <div class="config-label">Vault Type</div>
+                        <div class="config-value">HashiCorp Vault</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Vault URL</div>
+                        <div class="config-value mono">https://vault.catena-x.net</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Vault Token</div>
+                        <div class="config-value"><span class="masked">••••••••••••••••</span></div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Secret Path (Transfer Proxy)</div>
+                        <div class="config-value mono">secret/data/edc/transfer-proxy</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Secret Path (DCP Key)</div>
+                        <div class="config-value mono">secret/data/edc/dcp-key</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Key Configuration -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🔑 API Key</span>
+                    <button class="btn btn-sm btn-secondary" onclick="toggleApiKey()">👁️ Reveal</button>
+                </div>
+                <div class="card-body">
+                    <div class="config-item">
+                        <div class="config-label">Header Name</div>
+                        <div class="config-value mono">X-Api-Key</div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Current Key</div>
+                        <div class="config-value">
+                            <div class="api-key-row">
+                                <input type="password" class="api-key-field" id="apiKeyField" value="s3cr3t-ap1-k3y-f0r-m4n4g3m3nt" readonly>
+                                <button class="btn btn-sm btn-secondary" onclick="copyApiKey()">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="config-item">
+                        <div class="config-label">Note</div>
+                        <div class="config-value" style="color:var(--tblr-muted);font-size:0.8125rem;">This is a mock key for the UI demo. In production, use a proper secret management solution.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Test Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🧪 Connection Test Results</span>
+                <button class="btn btn-sm btn-primary" onclick="runConnectionTest()">Run Test</button>
+            </div>
+            <div class="card-body">
+                <div class="test-results" id="testResults">
+                    <div class="test-row"><div class="test-name">Management API — GET /readiness</div><div class="test-status pending" id="test1">⏳ Not tested</div></div>
+                    <div class="test-row"><div class="test-name">DSP Endpoint — GET /.well-known</div><div class="test-status pending" id="test2">⏳ Not tested</div></div>
+                    <div class="test-row"><div class="test-name">Data Plane — Health Check</div><div class="test-status pending" id="test3">⏳ Not tested</div></div>
+                    <div class="test-row"><div class="test-name">Vault — Connectivity</div><div class="test-status pending" id="test4">⏳ Not tested</div></div>
+                    <div class="test-row"><div class="test-name">IdentityHub — DID Resolution</div><div class="test-status pending" id="test5">⏳ Not tested</div></div>
+                    <div class="test-row"><div class="test-name">BDRS — Directory Lookup</div><div class="test-status pending" id="test6">⏳ Not tested</div></div>
+                    <div class="test-row"><div class="test-name">PostgreSQL — Database Connection</div><div class="test-status pending" id="test7">⏳ Not tested</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- cURL -->
+        <div class="curl-card">
+            <div class="curl-card-header"><span>cURL — Check Readiness</span><button onclick="copyCurl()">📋 Copy</button></div>
+            <div class="curl-body"><pre id="curlPreview">curl -X GET "https://connector.catena-x.net/api/check/readiness" \
+  -H "X-Api-Key: {{API_KEY}}"</pre></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        var apiKeyVisible = false;
+
+        function toggleApiKey() {
+            var field = document.getElementById('apiKeyField');
+            apiKeyVisible = !apiKeyVisible;
+            field.type = apiKeyVisible ? 'text' : 'password';
+        }
+
+        function copyApiKey() {
+            var field = document.getElementById('apiKeyField');
+            navigator.clipboard.writeText(field.value);
+            showToast('API key copied');
+        }
+
+        function runHealthCheck() {
+            showToast('Running health check...');
+            // Simulate health check with random latencies
+            var items = document.querySelectorAll('.health-item');
+            items.forEach(function(item, idx) {
+                setTimeout(function() {
+                    var dot = item.querySelector('.health-dot');
+                    var latency = item.querySelector('.health-latency');
+                    var ms = Math.floor(Math.random() * 50) + 5;
+                    if (idx === 4) ms = Math.floor(Math.random() * 300) + 150; // BDRS stays slow
+                    latency.textContent = ms + 'ms';
+                    if (ms < 100) { dot.className = 'health-dot green'; latency.style.color = 'var(--tblr-success)'; }
+                    else if (ms < 250) { dot.className = 'health-dot amber'; latency.style.color = 'var(--tblr-warning)'; }
+                    else { dot.className = 'health-dot red'; latency.style.color = 'var(--tblr-danger)'; }
+                }, idx * 200);
+            });
+            setTimeout(function() { showToast('Health check complete'); }, 1200);
+        }
+
+        function runConnectionTest() {
+            var tests = [
+                { id: 'test1', delay: 300, pass: true },
+                { id: 'test2', delay: 500, pass: true },
+                { id: 'test3', delay: 700, pass: true },
+                { id: 'test4', delay: 900, pass: true },
+                { id: 'test5', delay: 1100, pass: true },
+                { id: 'test6', delay: 1400, pass: false },
+                { id: 'test7', delay: 1600, pass: true }
+            ];
+
+            // Reset all
+            tests.forEach(function(t) {
+                var el = document.getElementById(t.id);
+                el.className = 'test-status pending';
+                el.innerHTML = '⏳ Testing...';
+            });
+
+            showToast('Running connection tests...');
+
+            tests.forEach(function(t) {
+                setTimeout(function() {
+                    var el = document.getElementById(t.id);
+                    if (t.pass) {
+                        var ms = Math.floor(Math.random() * 80) + 5;
+                        el.className = 'test-status pass';
+                        el.innerHTML = '✅ Pass (' + ms + 'ms)';
+                    } else {
+                        el.className = 'test-status fail';
+                        el.innerHTML = '❌ Timeout (>5000ms)';
+                    }
+                }, t.delay);
+            });
+
+            setTimeout(function() { showToast('Connection test complete — 6/7 passed'); }, 1800);
+        }
+
+        function copyCurl() {
+            navigator.clipboard.writeText(document.getElementById('curlPreview').textContent);
+            showToast('cURL copied');
+        }
+
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+    </script>
+</body>
+</html>

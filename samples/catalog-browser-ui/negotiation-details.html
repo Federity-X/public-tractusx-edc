@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negotiation Details - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--tblr-font-size); line-height: var(--tblr-line-height);
+            color: var(--tblr-body-color); background: var(--tblr-body-bg);
+        }
+        .header {
+            background: white; border-bottom: 1px solid var(--tblr-border-color);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .breadcrumb { font-size: 0.8125rem; color: var(--tblr-muted); }
+        .breadcrumb a { color: var(--tblr-primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .header h1 { font-size: 1.25rem; font-weight: 600; color: var(--tblr-dark); }
+        .header-actions { display: flex; gap: 0.75rem; }
+        .btn {
+            padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem;
+            font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-primary { background: var(--tblr-primary); color: white; }
+        .btn-primary:hover { background: #004494; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-success { background: var(--tblr-success); color: white; }
+        .btn-success:hover { background: #27a03d; }
+        .btn-danger { background: var(--tblr-danger); color: white; }
+        .btn-danger:hover { background: #c22c73; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        .badge {
+            display: inline-block; padding: 0.25rem 0.625rem; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .badge-requesting { background: #fef3c7; color: #92400e; }
+        .badge-requested { background: #fef3c7; color: #92400e; }
+        .badge-agreeing { background: #dbeafe; color: #1e40af; }
+        .badge-agreed { background: #dbeafe; color: #1e40af; }
+        .badge-verified { background: #e0f2fe; color: #075985; }
+        .badge-finalized { background: #dcfce7; color: #166534; }
+        .badge-terminated { background: #fee2e2; color: #991b1b; }
+        .badge-provider { background: #ede9fe; color: #6d28d9; }
+        .badge-consumer { background: #fff7ed; color: #9a3412; }
+
+        .card {
+            background: white; border: 1px solid var(--tblr-border-color); border-radius: 8px;
+            margin-bottom: 1.5rem; overflow: hidden;
+        }
+        .card-header {
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--tblr-border-color);
+            display: flex; align-items: center; justify-content: space-between; background: white;
+        }
+        .card-title { font-weight: 600; font-size: 1rem; }
+        .card-body { padding: 1.5rem; }
+
+        /* State machine */
+        .state-machine {
+            display: flex; align-items: center; gap: 0; padding: 1.5rem 0;
+            overflow-x: auto;
+        }
+        .state-node {
+            display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
+            min-width: 100px; position: relative;
+        }
+        .state-circle {
+            width: 40px; height: 40px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 0.875rem;
+            border: 3px solid var(--tblr-border-color); background: white; color: var(--tblr-muted);
+            transition: all 0.3s;
+        }
+        .state-node.completed .state-circle { border-color: var(--tblr-success); background: var(--tblr-success); color: white; }
+        .state-node.current .state-circle { border-color: var(--tblr-primary); background: var(--tblr-primary); color: white; animation: pulse 2s infinite; }
+        .state-node.error .state-circle { border-color: var(--tblr-danger); background: var(--tblr-danger); color: white; }
+        .state-label { font-size: 0.6875rem; font-weight: 600; color: var(--tblr-muted); text-align: center; }
+        .state-node.completed .state-label { color: var(--tblr-success); }
+        .state-node.current .state-label { color: var(--tblr-primary); }
+        .state-node.error .state-label { color: var(--tblr-danger); }
+        .state-connector {
+            flex: 1; height: 3px; background: var(--tblr-border-color); min-width: 30px;
+        }
+        .state-connector.done { background: var(--tblr-success); }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(var(--tblr-primary-rgb), 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(var(--tblr-primary-rgb), 0); }
+        }
+
+        /* Detail grid */
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .detail-item { padding: 0.75rem 0; border-bottom: 1px solid var(--tblr-border-color-light); }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.4px; color: var(--tblr-muted); margin-bottom: 0.25rem; }
+        .detail-value { font-size: 0.875rem; word-break: break-all; }
+        .detail-value.mono { font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.8125rem; }
+        .detail-value a { color: var(--tblr-primary); text-decoration: none; }
+        .detail-value a:hover { text-decoration: underline; }
+
+        /* Timeline */
+        .timeline { position: relative; padding-left: 2rem; }
+        .timeline::before {
+            content: ''; position: absolute; left: 0.5rem; top: 0.5rem; bottom: 0.5rem;
+            width: 2px; background: var(--tblr-border-color);
+        }
+        .timeline-item { position: relative; padding-bottom: 1.5rem; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute; left: -1.625rem; top: 0.25rem; width: 10px; height: 10px;
+            border-radius: 50%; border: 2px solid white; z-index: 1;
+        }
+        .timeline-dot.green { background: var(--tblr-success); }
+        .timeline-dot.blue { background: var(--tblr-info); }
+        .timeline-dot.amber { background: var(--tblr-warning); }
+        .timeline-dot.red { background: var(--tblr-danger); }
+        .timeline-dot.gray { background: var(--tblr-muted); }
+        .timeline-content { font-size: 0.8125rem; }
+        .timeline-content strong { color: var(--tblr-dark); }
+        .timeline-time { font-size: 0.6875rem; color: var(--tblr-muted); margin-top: 0.125rem; }
+
+        /* Two col */
+        .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+
+        /* Error banner */
+        .error-banner {
+            padding: 0.875rem 1.25rem; background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 8px; color: #991b1b; font-size: 0.8125rem; margin-bottom: 1.5rem;
+            display: flex; align-items: flex-start; gap: 0.5rem;
+        }
+
+        /* JSON viewer */
+        .json-viewer {
+            background: #1e293b; border-radius: 8px; padding: 1rem; overflow-x: auto;
+        }
+        .json-viewer pre {
+            color: #e2e8f0; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.75rem; white-space: pre-wrap; word-break: break-all;
+        }
+        .json-key { color: #7dd3fc; }
+        .json-string { color: #86efac; }
+        .json-number { color: #fde68a; }
+
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 2px solid var(--tblr-border-color); }
+        .tab {
+            padding: 0.75rem 1.25rem; font-size: 0.8125rem; font-weight: 600; color: var(--tblr-muted);
+            cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s;
+            background: none; border-top: none; border-left: none; border-right: none;
+        }
+        .tab:hover { color: var(--tblr-dark); }
+        .tab.active { color: var(--tblr-primary); border-bottom-color: var(--tblr-primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* cURL */
+        .curl-card { background: #1e293b; border-radius: 8px; overflow: hidden; margin-top: 1.5rem; }
+        .curl-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.625rem 1rem; background: #334155; font-size: 0.75rem; color: #94a3b8;
+        }
+        .curl-card-header button { background: none; border: 1px solid #475569; color: #94a3b8; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.6875rem; }
+        .curl-card-header button:hover { background: #475569; color: white; }
+        .curl-body { padding: 1rem; }
+        .curl-body pre { color: #e2e8f0; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all; }
+
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; padding: 0.75rem 1.25rem;
+            background: var(--tblr-dark); color: white; border-radius: 8px; font-size: 0.8125rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); opacity: 0; transform: translateY(10px);
+            transition: all 0.3s; z-index: 999; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } .detail-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <div class="breadcrumb"><a href="index.html">Dashboard</a> / <a href="negotiations-list.html">Negotiations</a> / Details</div>
+                <h1>🤝 Negotiation Details</h1>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="refreshNegotiation()">🔄 Refresh</button>
+            <button class="btn btn-secondary" onclick="copyId()">📋 Copy ID</button>
+            <button class="btn btn-success" id="transferBtn" onclick="initiateTransfer()" style="display:none;">🚀 Initiate Transfer</button>
+            <button class="btn btn-danger" id="terminateBtn" onclick="terminateNegotiation()" style="display:none;">⛔ Terminate</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Error banner (shown only for terminated) -->
+        <div class="error-banner" id="errorBanner" style="display:none;">
+            <span>⚠️</span>
+            <div><strong>Negotiation Terminated</strong><br><span id="errorText"></span></div>
+        </div>
+
+        <!-- State Machine Visualization -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">State Machine</span>
+                <span id="stateBadge"></span>
+            </div>
+            <div class="card-body" style="padding:0.5rem 1.5rem;">
+                <div class="state-machine" id="stateMachine"></div>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div>
+                <!-- Details Card with Tabs -->
+                <div class="card">
+                    <div class="tabs" id="tabs">
+                        <button class="tab active" onclick="switchTab('overview')">Overview</button>
+                        <button class="tab" onclick="switchTab('policy')">Policy / Offer</button>
+                        <button class="tab" onclick="switchTab('timeline')">Timeline</button>
+                        <button class="tab" onclick="switchTab('raw')">Raw JSON</button>
+                    </div>
+
+                    <!-- Overview Tab -->
+                    <div class="tab-content active" id="tab-overview">
+                        <div class="card-body">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Negotiation ID</div>
+                                    <div class="detail-value mono" id="negId"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">State</div>
+                                    <div class="detail-value" id="negState"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Role</div>
+                                    <div class="detail-value" id="negRole"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Protocol</div>
+                                    <div class="detail-value" id="negProtocol"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Counterparty BPN</div>
+                                    <div class="detail-value mono" id="negCounterparty"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">DSP Endpoint</div>
+                                    <div class="detail-value mono" id="negDsp"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Asset ID</div>
+                                    <div class="detail-value mono" id="negAsset"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Agreement ID</div>
+                                    <div class="detail-value" id="negAgreement"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Created</div>
+                                    <div class="detail-value" id="negCreated"></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Last Updated</div>
+                                    <div class="detail-value" id="negUpdated"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Policy Tab -->
+                    <div class="tab-content" id="tab-policy">
+                        <div class="card-body">
+                            <div class="json-viewer">
+                                <pre id="policyJson"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Tab -->
+                    <div class="tab-content" id="tab-timeline">
+                        <div class="card-body">
+                            <div class="timeline" id="timelineContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Raw JSON Tab -->
+                    <div class="tab-content" id="tab-raw">
+                        <div class="card-body">
+                            <div class="json-viewer">
+                                <pre id="rawJson"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Related Resources -->
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Related Resources</span></div>
+                    <div class="card-body" style="padding:0;">
+                        <div id="relatedLinks" style="padding:1rem 1.5rem;"></div>
+                    </div>
+                </div>
+
+                <!-- cURL -->
+                <div class="curl-card">
+                    <div class="curl-card-header">
+                        <span>cURL — Get Negotiation</span>
+                        <button onclick="copyCurl()">📋 Copy</button>
+                    </div>
+                    <div class="curl-body">
+                        <pre id="curlPreview"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Mock negotiation data (keyed by ID)
+        var MOCK_NEGOTIATIONS = {
+            'neg-a1b2c3d4-e5f6-7890-abcd-ef1234567890': {
+                id: 'neg-a1b2c3d4-e5f6-7890-abcd-ef1234567890', state: 'FINALIZED', role: 'CONSUMER',
+                counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp',
+                protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:battery-passport:v2.0',
+                agreementId: 'agr-001-battery', createdAt: '2026-04-07T08:15:00Z', updatedAt: '2026-04-07T08:16:45Z',
+                policy: {
+                    "@type": "Set", "permission": [{
+                        "action": "use", "constraint": { "and": [
+                            { "leftOperand": "cx-policy:Membership", "operator": "eq", "rightOperand": "active" },
+                            { "leftOperand": "cx-policy:FrameworkAgreement", "operator": "eq", "rightOperand": "BatteryPass:1.0" }
+                        ]}
+                    }]
+                }
+            },
+            'neg-c3d4e5f6-a7b8-9012-cdef-123456789012': {
+                id: 'neg-c3d4e5f6-a7b8-9012-cdef-123456789012', state: 'REQUESTING', role: 'CONSUMER',
+                counterpartyId: 'BPNL00000003AZQP', counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp',
+                protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:quality-data:v3.0',
+                agreementId: null, createdAt: '2026-04-07T10:00:00Z', updatedAt: '2026-04-07T10:00:15Z',
+                policy: {
+                    "@type": "Set", "permission": [{
+                        "action": "use", "constraint": { "and": [
+                            { "leftOperand": "cx-policy:Membership", "operator": "eq", "rightOperand": "active" }
+                        ]}
+                    }]
+                }
+            },
+            'neg-f6a7b8c9-d0e1-2345-fabc-456789012345': {
+                id: 'neg-f6a7b8c9-d0e1-2345-fabc-456789012345', state: 'TERMINATED', role: 'CONSUMER',
+                counterpartyId: 'BPNL00000003QRST', counterpartyAddress: 'https://provider-q.catena-x.net/api/v1/dsp',
+                protocol: 'dataspace-protocol-http', assetId: 'urn:cx:asset:bom-lifecycle:v2.0',
+                agreementId: null, createdAt: '2026-04-05T16:10:00Z', updatedAt: '2026-04-05T16:12:00Z',
+                errorDetail: 'Policy evaluation failed: Membership constraint not satisfied',
+                policy: {
+                    "@type": "Set", "permission": [{
+                        "action": "use", "constraint": { "and": [
+                            { "leftOperand": "cx-policy:Membership", "operator": "eq", "rightOperand": "active" },
+                            { "leftOperand": "cx-policy:UsagePurpose", "operator": "eq", "rightOperand": "cx.bom.lifecycle:1" }
+                        ]}
+                    }]
+                }
+            }
+        };
+
+        var STATES_ORDER = ['REQUESTING', 'REQUESTED', 'AGREEING', 'AGREED', 'VERIFIED', 'FINALIZED'];
+        var negotiation = null;
+
+        function init() {
+            var params = new URLSearchParams(window.location.search);
+            var id = params.get('id');
+
+            // Look up or generate mock
+            negotiation = MOCK_NEGOTIATIONS[id] || generateMock(id);
+            render();
+        }
+
+        function generateMock(id) {
+            return {
+                id: id || 'neg-' + Date.now(),
+                state: 'FINALIZED', role: 'CONSUMER',
+                counterpartyId: 'BPNL00000003AZQP',
+                counterpartyAddress: 'https://provider-a.catena-x.net/api/v1/dsp',
+                protocol: 'dataspace-protocol-http',
+                assetId: 'urn:cx:asset:example:v1.0',
+                agreementId: 'agr-' + Date.now(),
+                createdAt: new Date(Date.now() - 3600000).toISOString(),
+                updatedAt: new Date().toISOString(),
+                policy: { "@type": "Set", "permission": [{ "action": "use", "constraint": { "and": [{ "leftOperand": "cx-policy:Membership", "operator": "eq", "rightOperand": "active" }]}}]}
+            };
+        }
+
+        function render() {
+            var n = negotiation;
+            // Title
+            document.title = 'Negotiation ' + n.id.substring(0, 12) + '... - EDC Management';
+
+            // State badge
+            var stateClass = 'badge-' + n.state.toLowerCase();
+            document.getElementById('stateBadge').innerHTML = '<span class="badge ' + stateClass + '">' + n.state + '</span>';
+
+            // Error banner
+            if (n.state === 'TERMINATED' && n.errorDetail) {
+                document.getElementById('errorBanner').style.display = 'flex';
+                document.getElementById('errorText').textContent = n.errorDetail;
+            }
+
+            // Action buttons
+            if (n.state === 'FINALIZED' && n.agreementId) {
+                document.getElementById('transferBtn').style.display = 'inline-flex';
+            }
+            if (n.state !== 'FINALIZED' && n.state !== 'TERMINATED') {
+                document.getElementById('terminateBtn').style.display = 'inline-flex';
+            }
+
+            // State machine
+            renderStateMachine(n.state);
+
+            // Overview
+            document.getElementById('negId').textContent = n.id;
+            document.getElementById('negState').innerHTML = '<span class="badge ' + stateClass + '">' + n.state + '</span>';
+            document.getElementById('negRole').innerHTML = '<span class="badge badge-' + n.role.toLowerCase() + '">' + n.role + '</span>';
+            document.getElementById('negProtocol').textContent = n.protocol;
+            document.getElementById('negCounterparty').textContent = n.counterpartyId;
+            document.getElementById('negDsp').textContent = n.counterpartyAddress;
+            document.getElementById('negAsset').textContent = n.assetId;
+            if (n.agreementId) {
+                document.getElementById('negAgreement').innerHTML = '<a href="contract-details.html?id=' + encodeURIComponent(n.agreementId) + '">' + n.agreementId + '</a>';
+            } else {
+                document.getElementById('negAgreement').innerHTML = '<span style="color:var(--tblr-muted);">—</span>';
+            }
+            document.getElementById('negCreated').textContent = new Date(n.createdAt).toLocaleString();
+            document.getElementById('negUpdated').textContent = new Date(n.updatedAt).toLocaleString();
+
+            // Policy
+            document.getElementById('policyJson').innerHTML = syntaxHighlight(JSON.stringify(n.policy, null, 2));
+
+            // Timeline
+            renderTimeline(n);
+
+            // Raw JSON
+            var raw = {
+                "@context": { "@vocab": "https://w3id.org/edc/v0.0.1/ns/" },
+                "@type": "ContractNegotiation",
+                "@id": n.id,
+                "state": n.state,
+                "type": n.role,
+                "counterPartyId": n.counterpartyId,
+                "counterPartyAddress": n.counterpartyAddress,
+                "protocol": n.protocol,
+                "contractAgreementId": n.agreementId,
+                "createdAt": new Date(n.createdAt).getTime()
+            };
+            document.getElementById('rawJson').innerHTML = syntaxHighlight(JSON.stringify(raw, null, 2));
+
+            // Related links
+            renderRelated(n);
+
+            // cURL
+            var curl = 'curl -X GET "https://consumer-controlplane.catena-x.net/management/v3/contractnegotiations/' + n.id + '" \\\n' +
+                '  -H "X-Api-Key: {{API_KEY}}"';
+            document.getElementById('curlPreview').textContent = curl;
+        }
+
+        function renderStateMachine(currentState) {
+            var isTerminated = currentState === 'TERMINATED';
+            var currentIdx = STATES_ORDER.indexOf(currentState);
+            var html = '';
+
+            for (var i = 0; i < STATES_ORDER.length; i++) {
+                var state = STATES_ORDER[i];
+                var nodeClass = '';
+                if (isTerminated) {
+                    nodeClass = i === 0 ? 'error' : '';
+                } else if (i < currentIdx) {
+                    nodeClass = 'completed';
+                } else if (i === currentIdx) {
+                    nodeClass = currentState === 'FINALIZED' ? 'completed' : 'current';
+                }
+
+                if (i > 0) {
+                    var connClass = '';
+                    if (!isTerminated && i <= currentIdx) connClass = 'done';
+                    html += '<div class="state-connector ' + connClass + '"></div>';
+                }
+                var icon = nodeClass === 'completed' ? '✓' : (nodeClass === 'error' ? '✕' : (i + 1));
+                html += '<div class="state-node ' + nodeClass + '">' +
+                    '<div class="state-circle">' + icon + '</div>' +
+                    '<div class="state-label">' + state + '</div>' +
+                    '</div>';
+            }
+
+            if (isTerminated) {
+                html += '<div class="state-connector"></div>';
+                html += '<div class="state-node error"><div class="state-circle">✕</div><div class="state-label">TERMINATED</div></div>';
+            }
+
+            document.getElementById('stateMachine').innerHTML = html;
+        }
+
+        function renderTimeline(n) {
+            var events = [];
+            events.push({ dot: 'blue', label: 'Negotiation initiated', time: n.createdAt });
+            if (STATES_ORDER.indexOf(n.state) >= 1 || n.state === 'TERMINATED') {
+                events.push({ dot: 'blue', label: 'Request sent to ' + n.counterpartyId, time: n.createdAt });
+            }
+            if (STATES_ORDER.indexOf(n.state) >= 3) {
+                events.push({ dot: 'amber', label: 'Counterparty agreed to terms', time: n.createdAt });
+            }
+            if (STATES_ORDER.indexOf(n.state) >= 4) {
+                events.push({ dot: 'blue', label: 'Agreement verified', time: n.updatedAt });
+            }
+            if (n.state === 'FINALIZED') {
+                events.push({ dot: 'green', label: 'Negotiation finalized — Agreement ' + (n.agreementId || 'created'), time: n.updatedAt });
+            }
+            if (n.state === 'TERMINATED') {
+                events.push({ dot: 'red', label: 'Negotiation terminated: ' + (n.errorDetail || 'Unknown reason'), time: n.updatedAt });
+            }
+
+            var html = '';
+            events.reverse().forEach(function(e) {
+                html += '<div class="timeline-item">' +
+                    '<div class="timeline-dot ' + e.dot + '"></div>' +
+                    '<div class="timeline-content"><strong>' + e.label + '</strong>' +
+                    '<div class="timeline-time">' + new Date(e.time).toLocaleString() + '</div></div></div>';
+            });
+            document.getElementById('timelineContent').innerHTML = html;
+        }
+
+        function renderRelated(n) {
+            var html = '';
+            if (n.agreementId) {
+                html += '<div style="margin-bottom:0.75rem;"><a href="contract-details.html?id=' + encodeURIComponent(n.agreementId) + '" style="color:var(--tblr-primary);text-decoration:none;font-weight:600;">✅ Agreement: ' + n.agreementId + '</a></div>';
+            }
+            html += '<div style="margin-bottom:0.75rem;"><a href="assets-list.html" style="color:var(--tblr-primary);text-decoration:none;font-weight:600;">📦 Asset: ' + n.assetId + '</a></div>';
+            if (n.agreementId) {
+                html += '<div style="margin-bottom:0.75rem;"><a href="transfers-history.html" style="color:var(--tblr-primary);text-decoration:none;font-weight:600;">🚀 Transfer History</a></div>';
+                html += '<div><a href="edr-management.html" style="color:var(--tblr-primary);text-decoration:none;font-weight:600;">🔑 EDR Tokens</a></div>';
+            }
+            document.getElementById('relatedLinks').innerHTML = html || '<span style="color:var(--tblr-muted);">No related resources yet</span>';
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+            document.getElementById('tab-' + tabId).classList.add('active');
+            // Find the tab button
+            var tabs = document.querySelectorAll('.tab');
+            tabs.forEach(function(t) {
+                if (t.textContent.toLowerCase().replace(/[^a-z]/g, '').indexOf(tabId.replace(/[^a-z]/g, '')) !== -1 ||
+                    t.getAttribute('onclick').indexOf(tabId) !== -1) {
+                    t.classList.add('active');
+                }
+            });
+        }
+
+        function syntaxHighlight(json) {
+            return json.replace(/("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(\.\d+)?([eE][+\-]?\d+)?)/g, function(match) {
+                var cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) { cls = 'json-key'; }
+                    else { cls = 'json-string'; }
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function refreshNegotiation() { showToast('Negotiation refreshed'); }
+        function copyId() { navigator.clipboard.writeText(negotiation.id); showToast('Negotiation ID copied'); }
+        function initiateTransfer() { window.location.href = 'initiate-transfer.html?agreementId=' + encodeURIComponent(negotiation.agreementId) + '&assetId=' + encodeURIComponent(negotiation.assetId); }
+        function terminateNegotiation() {
+            if (confirm('Are you sure you want to terminate this negotiation?')) { showToast('Terminate request sent'); }
+        }
+        function copyCurl() { navigator.clipboard.writeText(document.getElementById('curlPreview').textContent); showToast('cURL copied'); }
+
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

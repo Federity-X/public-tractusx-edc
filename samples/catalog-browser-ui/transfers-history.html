@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer History - EDC Management</title>
+    <style>
+        :root {
+            --tblr-primary: #0054a6;
+            --tblr-primary-rgb: 0, 84, 166;
+            --tblr-secondary: #667382;
+            --tblr-success: #2fb344;
+            --tblr-info: #4299E1;
+            --tblr-warning: #f59f00;
+            --tblr-danger: #d63384;
+            --tblr-light: #f8fafc;
+            --tblr-dark: #1e293b;
+            --tblr-muted: #64748b;
+            --tblr-border-color: #e6e7e9;
+            --tblr-border-color-light: #f1f5f9;
+            --tblr-body-bg: #f8fafc;
+            --tblr-body-color: #1e293b;
+            --tblr-font-size: 0.875rem;
+            --tblr-line-height: 1.4285714286;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--tblr-body-bg);
+            color: var(--tblr-body-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+        }
+
+        .stat-card.total {
+            border-left-color: #3b82f6;
+        }
+
+        .stat-card.completed {
+            border-left-color: #10b981;
+        }
+
+        .stat-card.active {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-card.failed {
+            border-left-color: #ef4444;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .filters-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filters-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-family: inherit;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .table-count {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th.sortable:hover {
+            background: #f1f5f9;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .transfer-id {
+            font-family: 'Courier New', monospace;
+            color: #3b82f6;
+            font-size: 0.813rem;
+            cursor: pointer;
+        }
+
+        .transfer-id:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-started {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-requested {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .badge-provisioned {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-provisioning {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .badge-terminated {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-suspended {
+            background: #fce7f3;
+            color: #831843;
+        }
+
+        .badge-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-initial {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-type-pull {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-type-push {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            color: #64748b;
+            transition: color 0.2s;
+            font-size: 1rem;
+        }
+
+        .action-btn:hover {
+            color: #3b82f6;
+        }
+
+        .pagination {
+            padding: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #3b82f6;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .duration {
+            font-size: 0.813rem;
+            color: #64748b;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.completed {
+            background: #10b981;
+        }
+
+        .progress-bar.failed {
+            background: #ef4444;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: #991b1b;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: scroll;
+            }
+
+            table {
+                min-width: 1000px;
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Tabler theme overrides — map Tailwind blue to Catena-X primary */
+        .btn-primary { background: var(--tblr-primary); }
+        .btn-primary:hover { background: #004494; }
+        .stat-card.total { border-left-color: var(--tblr-primary); }
+        .stat-card.completed { border-left-color: var(--tblr-success); }
+        .stat-card.active { border-left-color: var(--tblr-warning); }
+        .stat-card.failed { border-left-color: var(--tblr-danger); }
+        .filter-input:focus, .filter-select:focus { border-color: var(--tblr-primary); box-shadow: 0 0 0 3px rgba(var(--tblr-primary-rgb), 0.1); }
+        .transfer-id { color: var(--tblr-primary); }
+        .action-btn:hover { color: var(--tblr-primary); }
+        .page-btn:hover:not(:disabled) { border-color: var(--tblr-primary); }
+        .page-btn.active { background: var(--tblr-primary); border-color: var(--tblr-primary); }
+        .progress-bar { background: var(--tblr-primary); }
+        .progress-bar.completed { background: var(--tblr-success); }
+        .progress-bar.failed { background: var(--tblr-danger); }
+        .header h1 { color: var(--tblr-dark); }
+        .header { border-bottom: 1px solid var(--tblr-border-color); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <div class="breadcrumb" style="font-size:0.8125rem;color:#64748b;"><a href="index.html" style="color:var(--tblr-primary);text-decoration:none;">Dashboard</a> / Transfer History</div>
+                <h1>🚀 Transfer History</h1>
+            </div>
+        </div>
+        <div class="header-actions">
+            <label class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                Auto-refresh (30s)
+            </label>
+            <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+            <button class="btn btn-secondary" onclick="exportData()">📥 Export</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total Transfers</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-value" id="stat-completed">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-value" id="stat-active">0</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="stat-value" id="stat-failed">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-card">
+            <div class="filters-header">
+                <div class="filters-title">🔍 Filters</div>
+                <button class="btn btn-secondary" onclick="clearFilters()" style="padding: 0.25rem 0.75rem; font-size: 0.813rem;">Clear All</button>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" class="filter-input" id="searchInput" placeholder="Transfer ID, Asset ID..." onkeyup="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">State</label>
+                    <select class="filter-select" id="stateFilter" onchange="applyFilters()">
+                        <option value="">All States</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="STARTED">Started</option>
+                        <option value="REQUESTED">Requested</option>
+                        <option value="PROVISIONED">Provisioned</option>
+                        <option value="PROVISIONING">Provisioning</option>
+                        <option value="TERMINATED">Terminated</option>
+                        <option value="SUSPENDED">Suspended</option>
+                        <option value="INITIAL">Initial</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Type</label>
+                    <select class="filter-select" id="typeFilter" onchange="applyFilters()">
+                        <option value="">All Types</option>
+                        <option value="PULL">Consumer Pull</option>
+                        <option value="PUSH">Provider Push</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select class="filter-select" id="dateFilter" onchange="applyFilters()">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">Last 7 Days</option>
+                        <option value="month">Last 30 Days</option>
+                        <option value="year">Last Year</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">Transfer Processes</div>
+                <div class="table-count">Showing <span id="showingCount">0</span> of <span id="totalCount">0</span></div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('id')">Transfer ID ▼</th>
+                            <th class="sortable" onclick="sortTable('state')">State</th>
+                            <th class="sortable" onclick="sortTable('type')">Type</th>
+                            <th>Asset ID</th>
+                            <th>Consumer BPN</th>
+                            <th class="sortable" onclick="sortTable('createdAt')">Started</th>
+                            <th>Duration</th>
+                            <th>Progress</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transfersTableBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="pagination-info">
+                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="pageTotal">0</span> transfers
+                </div>
+                <div class="pagination-controls">
+                    <select class="filter-select" id="perPageSelect" onchange="changePerPage()" style="width: auto;">
+                        <option value="10">10 per page</option>
+                        <option value="25" selected>25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                    <button class="page-btn" id="prevBtn" onclick="previousPage()">← Previous</button>
+                    <span id="pageNumbers"></span>
+                    <button class="page-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allTransfers = [];
+        let filteredTransfers = [];
+        let currentPage = 1;
+        let perPage = 25;
+        let sortColumn = 'createdAt';
+        let sortDirection = 'desc';
+        let autoRefreshInterval = null;
+
+        // API Configuration
+        const apiEndpoint = 'https://dataprovider-controlplane.c.dsaas.tvsdevops.co.uk/management/v3/transferprocesses';
+        const apiKey = 'TEST2';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTransfers();
+        });
+
+        function loadTransfers() {
+            // For demo/testing with sample data
+            // Comment this out and uncomment the fetch() call to use live API
+            setTimeout(() => {
+                allTransfers = generateSampleTransfers(50);
+                processData();
+            }, 500);
+
+            // Uncomment to use live API
+            /*
+            fetch(apiEndpoint + '/request', {
+                method: 'POST',
+                headers: {
+                    'X-Api-Key': apiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "@context": {
+                        "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+                    },
+                    "@type": "QuerySpec"
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                allTransfers = data.map(transformTransfer);
+                processData();
+            })
+            .catch(error => {
+                console.error('Error loading transfers:', error);
+                document.getElementById('transfersTableBody').innerHTML = 
+                    '<tr><td colspan="9" style="text-align: center; color: #dc2626; padding: 2rem;">Failed to load transfers. Please check your connection and try again.</td></tr>';
+            });
+            */
+        }
+
+        function transformTransfer(transferData) {
+            return {
+                id: transferData['@id'],
+                state: transferData.state,
+                type: transferData.type || 'PULL',
+                assetId: transferData.assetId,
+                consumerBpn: transferData.counterPartyAddress || transferData.callbackAddresses?.[0]?.uri?.split('@')?.[1] || 'Unknown',
+                agreementId: transferData.contractId,
+                createdAt: transferData.createdAt || Date.now(),
+                stateTimestamp: transferData.stateTimestamp || Date.now(),
+                errorDetail: transferData.errorDetail,
+                raw: transferData
+            };
+        }
+
+        function generateSampleTransfers(count) {
+            const states = ['COMPLETED', 'STARTED', 'REQUESTED', 'PROVISIONED', 'PROVISIONING', 'TERMINATED', 'SUSPENDED', 'INITIAL'];
+            const types = ['PULL', 'PUSH'];
+            const bpns = ['BPNL00000003CRHK', 'BPNL00000003AZQP', 'BPNL00000003AYRE', 'BPNL00000003B3NX', 'BPNL00000003CNKC'];
+            const transfers = [];
+
+            for (let i = 0; i < count; i++) {
+                const createdAt = Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000; // Last 30 days
+                const state = states[Math.floor(Math.random() * states.length)];
+                const stateTimestamp = createdAt + Math.random() * 5 * 60 * 60 * 1000; // Add up to 5 hours
+
+                transfers.push({
+                    id: `transfer-process-${1000 + i}`,
+                    state: state,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    assetId: `asset-${Math.floor(Math.random() * 20) + 1}`,
+                    consumerBpn: bpns[Math.floor(Math.random() * bpns.length)],
+                    agreementId: `agreement-${Math.floor(Math.random() * 100)}`,
+                    createdAt: createdAt,
+                    stateTimestamp: stateTimestamp,
+                    errorDetail: state === 'TERMINATED' || state === 'SUSPENDED' ? 'Connection timeout' : null
+                });
+            }
+
+            return transfers.sort((a, b) => b.createdAt - a.createdAt);
+        }
+
+        function processData() {
+            applyFilters();
+            updateStatistics();
+        }
+
+        function updateStatistics() {
+            const total = allTransfers.length;
+            const completed = allTransfers.filter(t => t.state === 'COMPLETED').length;
+            const active = allTransfers.filter(t => ['STARTED', 'REQUESTED', 'PROVISIONED', 'PROVISIONING'].includes(t.state)).length;
+            const failed = allTransfers.filter(t => ['TERMINATED', 'SUSPENDED'].includes(t.state)).length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-failed').textContent = failed;
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const stateFilter = document.getElementById('stateFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            filteredTransfers = allTransfers.filter(transfer => {
+                // Search filter
+                if (searchTerm && !transfer.id.toLowerCase().includes(searchTerm) && 
+                    !transfer.assetId.toLowerCase().includes(searchTerm) &&
+                    !transfer.consumerBpn.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+
+                // State filter
+                if (stateFilter && transfer.state !== stateFilter) {
+                    return false;
+                }
+
+                // Type filter
+                if (typeFilter && transfer.type !== typeFilter) {
+                    return false;
+                }
+
+                // Date filter
+                if (dateFilter) {
+                    const now = Date.now();
+                    const transferDate = transfer.createdAt;
+                    const dayMs = 24 * 60 * 60 * 1000;
+
+                    switch (dateFilter) {
+                        case 'today':
+                            if (now - transferDate > dayMs) return false;
+                            break;
+                        case 'week':
+                            if (now - transferDate > 7 * dayMs) return false;
+                            break;
+                        case 'month':
+                            if (now - transferDate > 30 * dayMs) return false;
+                            break;
+                        case 'year':
+                            if (now - transferDate > 365 * dayMs) return false;
+                            break;
+                    }
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('stateFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            applyFilters();
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredTransfers.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (column === 'createdAt' || column === 'stateTimestamp') {
+                    aVal = new Date(aVal).getTime();
+                    bVal = new Date(bVal).getTime();
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('transfersTableBody');
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            const pageTransfers = filteredTransfers.slice(start, end);
+
+            document.getElementById('showingCount').textContent = filteredTransfers.length;
+            document.getElementById('totalCount').textContent = allTransfers.length;
+
+            if (pageTransfers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🔍</div>
+                                <div>No transfers found matching your filters</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = pageTransfers.map(transfer => {
+                const duration = calculateDuration(transfer.createdAt, transfer.stateTimestamp);
+                const progress = getTransferProgress(transfer.state);
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="transfer-id" onclick="viewTransferDetails('${transfer.id}')" title="Click to view details">
+                                ${transfer.id}
+                            </div>
+                            ${transfer.errorDetail ? `<div class="error-message">⚠️ ${transfer.errorDetail}</div>` : ''}
+                        </td>
+                        <td><span class="badge badge-${transfer.state.toLowerCase()}">${transfer.state}</span></td>
+                        <td><span class="badge badge-type-${transfer.type.toLowerCase()}">${transfer.type}</span></td>
+                        <td><code style="font-size: 0.813rem;">${transfer.assetId}</code></td>
+                        <td><code style="font-size: 0.813rem;">${transfer.consumerBpn}</code></td>
+                        <td>${new Date(transfer.createdAt).toLocaleString()}</td>
+                        <td><span class="duration">${duration}</span></td>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar ${transfer.state.toLowerCase()}" style="width: ${progress}%"></div>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #64748b;">${progress}%</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn" onclick="viewTransferDetails('${transfer.id}')" title="View Details">👁️</button>
+                                ${['STARTED', 'REQUESTED', 'PROVISIONED', 'PROVISIONING'].includes(transfer.state) 
+                                    ? `<button class="action-btn" onclick="terminateTransfer('${transfer.id}')" title="Terminate">⏹️</button>` 
+                                    : ''}
+                                <button class="action-btn" onclick="exportTransfer('${transfer.id}')" title="Export">📥</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            updatePagination();
+        }
+
+        function calculateDuration(startTime, endTime) {
+            const diffMs = endTime - startTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
+            if (diffHours > 0) return `${diffHours}h ${diffMins % 60}m`;
+            if (diffMins > 0) return `${diffMins}m`;
+            return '< 1m';
+        }
+
+        function getTransferProgress(state) {
+            const progressMap = {
+                'INITIAL': 5,
+                'PROVISIONING': 20,
+                'PROVISIONED': 40,
+                'REQUESTED': 60,
+                'STARTED': 80,
+                'COMPLETED': 100,
+                'TERMINATED': 0,
+                'SUSPENDED': 0
+            };
+            return progressMap[state] || 0;
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredTransfers.length / perPage);
+            const start = (currentPage - 1) * perPage + 1;
+            const end = Math.min(currentPage * perPage, filteredTransfers.length);
+
+            document.getElementById('pageStart').textContent = filteredTransfers.length > 0 ? start : 0;
+            document.getElementById('pageEnd').textContent = end;
+            document.getElementById('pageTotal').textContent = filteredTransfers.length;
+
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages || totalPages === 0;
+
+            // Page numbers
+            let pageNumbersHtml = '';
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 1) {
+                pageNumbersHtml += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) pageNumbersHtml += `<span style="padding: 0.5rem;">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pageNumbersHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) pageNumbersHtml += `<span style="padding: 0.5rem;">...</span>`;
+                pageNumbersHtml += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            document.getElementById('pageNumbers').innerHTML = pageNumbersHtml;
+        }
+
+        function changePerPage() {
+            perPage = parseInt(document.getElementById('perPageSelect').value);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredTransfers.length / perPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+        }
+
+        function viewTransferDetails(transferId) {
+            // In production, navigate to transfer details page
+            window.open(`transfer-details.html?id=${transferId}`, '_blank');
+            // For demo:
+            // alert('View transfer details: ' + transferId);
+        }
+
+        function terminateTransfer(transferId) {
+            if (confirm('Are you sure you want to terminate transfer: ' + transferId + '?')) {
+                alert('Terminate functionality would call: POST ' + apiEndpoint + '/' + transferId + '/terminate');
+                // In production, call API to terminate transfer
+                /*
+                fetch(apiEndpoint + '/' + transferId + '/terminate', {
+                    method: 'POST',
+                    headers: {
+                        'X-Api-Key': apiKey
+                    }
+                })
+                .then(() => {
+                    loadTransfers();
+                });
+                */
+            }
+        }
+
+        function exportTransfer(transferId) {
+            const transfer = allTransfers.find(t => t.id === transferId);
+            if (transfer) {
+                const json = JSON.stringify(transfer, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = transferId + '.json';
+                a.click();
+            }
+        }
+
+        function refreshData() {
+            loadTransfers();
+        }
+
+        function exportData() {
+            const json = JSON.stringify(filteredTransfers, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transfers-export-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(() => {
+                    loadTransfers();
+                }, 30000); // 30 seconds
+                console.log('Auto-refresh enabled (30s interval)');
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                console.log('Auto-refresh disabled');
+            }
+        }
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
